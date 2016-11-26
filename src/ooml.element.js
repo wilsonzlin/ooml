@@ -18,8 +18,11 @@ OOMLElementProto.assign = function() {
 	var oomlInstance = this;
 
 	for (var i = 0; i < arguments.length; i++) {
-		Object.keys(arguments[i]).forEach(function(prop) {
-			oomlInstance[prop] = $.clone(arguments[i][prop]);
+
+		var source = arguments[i];
+
+		Object.keys(source).forEach(function(prop) {
+			oomlInstance[prop] = $.clone(source[prop]);
 		});
 	}
 
