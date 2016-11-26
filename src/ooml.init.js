@@ -29,8 +29,8 @@ OOML.init = function(settings) {
 				Utils.pushAll(toProcess, current.attributes, current.childNodes);
 			} else if (current instanceof Attr || current instanceof Text) {
 				var paramsData = Utils.splitStringByParamholders(current.textContent);
-				current.__oomlFormatStr = paramsData.parts;
-				current.__oomlParamMap = paramsData.map;
+				current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
+				current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
 
 				Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
 					var propNameParts = fullPropName.split('.');
@@ -71,8 +71,8 @@ OOML.init = function(settings) {
 							console.log('called listener on setter function on global object', fullPropName, newVal);
 							globalPropertiesMap[fullPropName].forEach(function(node) {
 
-								var formatStr = node.__oomlFormatStr;
-								node.__oomlParamMap[fullPropName].forEach(function(offset) {
+								var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
+								node[OOML_NODE_PROPNAME_FORMATPARAMMAP][fullPropName].forEach(function(offset) {
 									formatStr[offset] = newVal;
 								});
 
@@ -94,6 +94,7 @@ OOML.init = function(settings) {
 			var localPropertiesMap = {};
 
 			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
+				$instanceDom = $(instanceDom),
 				toProcess = [instanceDom],
 				current;
 
@@ -101,8 +102,8 @@ OOML.init = function(settings) {
 				if (current instanceof Element) {
 					Utils.pushAll(toProcess, current.attributes, current.childNodes);
 				} else if (current instanceof Attr || current instanceof Text) {
-					if (current.__oomlParamMap) {
-						for (var propName in current.__oomlParamMap) {
+					if (current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
+						for (var propName in current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
 							if (propName.indexOf('this.') === 0) {
 								propName = propName.slice(5);
 								if (!localPropertiesMap[propName]) {
@@ -132,8 +133,8 @@ OOML.init = function(settings) {
 					set: function(newVal) {
 
 						localPropertiesMap[prop].forEach(function(node) {
-							var formatStr = node.__oomlFormatStr;
-							node.__oomlParamMap['this.' + prop].forEach(function(offset) {
+							var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
+							node[OOML_NODE_PROPNAME_FORMATPARAMMAP]['this.' + prop].forEach(function(offset) {
 								formatStr[offset] = newVal;
 							});
 							OOMLNodesWithUnwrittenChanges.add(node);
@@ -153,12 +154,12 @@ OOML.init = function(settings) {
 				},
 				__oomlDomAppendTo: {
 					value: function(appendTo) {
-						$(instanceDom).appendTo(appendTo);
+						$instanceDom.appendTo(appendTo);
 					},
 				},
 				__oomlDomInsertAfter: {
 					value: function(insertAfter) {
-						$(instanceDom).insertAfter(insertAfter);
+						$instanceDom.insertAfter(insertAfter);
 					},
 				},
 			});

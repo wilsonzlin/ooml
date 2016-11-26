@@ -5,12 +5,15 @@
 			if (OOMLWriteChangesSetTimeout) clearTimeout(OOMLWriteChangesSetTimeout);
 			OOMLWriteChangesSetTimeout = setTimeout(function() {
 				OOMLNodesWithUnwrittenChanges.forEach(function(node) {
-					node.textContent = node.__oomlFormatStr.join('');
+					node.textContent = node[OOML_NODE_PROPNAME_TEXTFORMAT].join('');
 				});
 
 				OOMLNodesWithUnwrittenChanges.clear();
 			}, 50);
 		};
+
+	var OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
+		OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap';
 
 	<ZC-IMPORT[utils]>
 

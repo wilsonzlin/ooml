@@ -46,8 +46,8 @@ var Utils = {
 	},
 	cloneElemForInstantiation: function cloneElemForInstantiation(rootElem) {
 		var clonedElem = rootElem.cloneNode();
-		if (rootElem.__oomlFormatStr) clonedElem.__oomlFormatStr = rootElem.__oomlFormatStr.slice();
-		if (rootElem.__oomlParamMap) clonedElem.__oomlParamMap = $.clone(rootElem.__oomlParamMap, true);
+		if (rootElem[OOML_NODE_PROPNAME_TEXTFORMAT]) clonedElem[OOML_NODE_PROPNAME_TEXTFORMAT] = rootElem[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
+		if (rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]) clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = $.clone(rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP], true);
 
 		if (rootElem.childNodes) {
 			for (var i = 0; i < rootElem.childNodes.length; i++) {
