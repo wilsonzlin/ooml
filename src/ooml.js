@@ -1,19 +1,14 @@
 (function(undefined) {
-	var Utils = {
-			querySelectorAll: function(sel) {
-				return [].slice.call((this || document).querySelectorAll(sel));
-			},
-		};
+	<ZC-IMPORT[utils]>
 
 	var OOML = {};
+	<ZC-IMPORT[array]>
+	<ZC-IMPORT[element]>
+	<ZC-IMPORT[init]>
 
-	OOML.init = function() {
-		Utils.querySelectorAll('[ooml-class]').forEach(function(elem) {
-
-		});
-	};
-
-	OOML.class = function() {
-
-	};
+	if (typeof exports == "object") {
+		module.exports = OOML;
+	} else {
+		window.OOML = OOML;
+	}
 })();
