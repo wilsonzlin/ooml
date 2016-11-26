@@ -1,4 +1,6 @@
 (function(undefined) {
+	"use strict";
+
 	var OOMLNodesWithUnwrittenChanges = new Set(),
 		OOMLWriteChangesSetTimeout,
 		OOMLWriteChanges = function() {

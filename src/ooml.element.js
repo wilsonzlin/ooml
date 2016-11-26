@@ -28,3 +28,20 @@ OOMLElementProto.assign = function() {
 
 	return this;
 };
+if (typeof Symbol == "function") {
+	OOMLElementProto[Symbol.iterator] = function() {
+		var i = -1,
+			inst = this,
+			objectKeys = this.__oomlProperties;
+
+		return {
+			next: function() {
+				if (++i == objectKeys.length) {
+					return { done: true };
+				}
+
+				return { value: inst[objectKeys[i]], done: false };
+			}
+		};
+	};
+}

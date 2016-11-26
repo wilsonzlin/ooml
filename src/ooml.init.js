@@ -9,6 +9,7 @@ OOML.init = function(settings) {
 		var $classTemplateElem = $(classTemplateElem);
 
 		var className = $classTemplateElem.attr('ooml-class');
+		if (classes[className]) throw new SyntaxError('The class ' + className + ' has already been initialised');
 
 		var localPropertyNames = Object.create(null),
 			globalPropertiesMap = Object.create(null);
@@ -37,7 +38,7 @@ OOML.init = function(settings) {
 					if (propNameParts[0] == 'this') {
 						localPropertyNames[propNameParts[1]] = true;
 					} else if (!globalPropertiesMap[fullPropName]) {
-						console.log('detected global property usage', fullPropName);
+						globalPropertiesMap[fullPropName] = [];
 						var objectToWatch = globals[propNameParts.shift()],
 							_,
 							endPropertyName = propNameParts.pop();
@@ -46,11 +47,9 @@ OOML.init = function(settings) {
 							objectToWatch = objectToWatch[_];
 						}
 
-						console.log('going to set setter on', objectToWatch);
-
-						var d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName),
-							globalPropertyValueHolder; // Needed otherwise property won't be set due to setter but no getter
+						var d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName);
 						if (!d.set) {
+							var globalPropertyValueHolder = objectToWatch[endPropertyName]; // Needed otherwise property won't be set due to setter but no getter
 							Object.defineProperty(objectToWatch, endPropertyName, {
 								get: function() {
 									return globalPropertyValueHolder;
@@ -61,9 +60,9 @@ OOML.init = function(settings) {
 										listener.call(objectToWatch, fullPropName, newVal);
 									});
 									globalPropertyValueHolder = newVal;
-								}
+								},
 							});
-							d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName);
+							d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName); // Refresh to get newly set setter
 							d.set.__oomlListeners = [];
 						}
 						d.set.__oomlListeners.push(function(fullPropName, newVal) {
@@ -111,9 +110,6 @@ OOML.init = function(settings) {
 								}
 								localPropertiesMap[propName].push(current);
 							} else {
-								if (!globalPropertiesMap[propName]) {
-									globalPropertiesMap[propName] = [];
-								}
 								globalPropertiesMap[propName].push(current);
 							}
 						}
@@ -175,6 +171,8 @@ OOML.init = function(settings) {
 		var instDetails = $instanceInstantiationElem.attr('ooml-instantiate').split(' '),
 			className = instDetails[0],
 			instanceName = instDetails[1];
+
+		if (objects[instanceName]) throw new SyntaxError('An object already exists with the name ' + instanceName);
 
 		var instance = new classes[className];
 
