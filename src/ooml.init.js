@@ -32,12 +32,12 @@ OOML.init = function(settings) {
 				current.__oomlFormatStr = paramsData.parts;
 				current.__oomlParamMap = paramsData.map;
 
-				Object.keys(paramsData.map).forEach(function(propName) { // Use Object.keys to avoid scope issues
-					var propNameParts = propName.split('.');
+				Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
+					var propNameParts = fullPropName.split('.');
 					if (propNameParts[0] == 'this') {
 						localPropertyNames[propNameParts[1]] = true;
-					} else {
-						console.log('detected global property usage', propName);
+					} else if (!globalPropertiesMap[fullPropName]) {
+						console.log('detected global property usage', fullPropName);
 						var objectToWatch = globals[propNameParts.shift()],
 							_,
 							endPropertyName = propNameParts.pop();
@@ -58,7 +58,7 @@ OOML.init = function(settings) {
 								set: function setter(newVal) {
 									console.log('called setter on global object', objectToWatch);
 									setter.__oomlListeners.forEach(function(listener) {
-										listener.call(objectToWatch, propName, newVal);
+										listener.call(objectToWatch, fullPropName, newVal);
 									});
 									globalPropertyValueHolder = newVal;
 								}
@@ -67,17 +67,19 @@ OOML.init = function(settings) {
 							d.set.__oomlListeners = [];
 						}
 						d.set.__oomlListeners.push(function(fullPropName, newVal) {
+
 							console.log('called listener on setter function on global object', fullPropName, newVal);
-							globalPropertiesMap[fullPropName].forEach(function(nodeAndInstance) {
-								var node = nodeAndInstance.node;
+							globalPropertiesMap[fullPropName].forEach(function(node) {
 
 								var formatStr = node.__oomlFormatStr;
 								node.__oomlParamMap[fullPropName].forEach(function(offset) {
 									formatStr[offset] = newVal;
 								});
 
-								nodeAndInstance.instance.__oomlAddChanges(node);
+								OOMLNodesWithUnwrittenChanges.add(node);
 							});
+
+							OOMLWriteChanges();
 						});
 					}
 				});
@@ -88,19 +90,6 @@ OOML.init = function(settings) {
 
 		classes[className] = function(args) {
 			var instance = this;
-
-			var nodesWithUnwrittenChanges = new Set(),
-				writeChangesSetTimeout,
-				writeChanges = function() {
-					if (writeChangesSetTimeout) clearTimeout(writeChangesSetTimeout);
-					writeChangesSetTimeout = setTimeout(function() {
-						nodesWithUnwrittenChanges.forEach(function(node) {
-							node.textContent = node.__oomlFormatStr.join('');
-						});
-
-						nodesWithUnwrittenChanges.clear();
-					}, 50);
-				};
 
 			var localPropertiesMap = {};
 
@@ -124,10 +113,7 @@ OOML.init = function(settings) {
 								if (!globalPropertiesMap[propName]) {
 									globalPropertiesMap[propName] = [];
 								}
-								globalPropertiesMap[propName].push({
-									node: current,
-									instance: instance,
-								});
+								globalPropertiesMap[propName].push(current);
 							}
 						}
 					}
@@ -144,15 +130,16 @@ OOML.init = function(settings) {
 						return instancePropertyValues[prop];
 					},
 					set: function(newVal) {
+
 						localPropertiesMap[prop].forEach(function(node) {
 							var formatStr = node.__oomlFormatStr;
 							node.__oomlParamMap['this.' + prop].forEach(function(offset) {
 								formatStr[offset] = newVal;
 							});
-							nodesWithUnwrittenChanges.add(node);
+							OOMLNodesWithUnwrittenChanges.add(node);
 						});
 
-						writeChanges();
+						OOMLWriteChanges();
 
 						instancePropertyValues[prop] = newVal;
 					},
@@ -163,12 +150,6 @@ OOML.init = function(settings) {
 			Object.assign(propertiesGetterSetterFuncs, {
 				__oomlProperties: {
 					value: localPropertyNames,
-				},
-				__oomlAddChanges: {
-					value: function(node) {
-						nodesWithUnwrittenChanges.add(node);
-						writeChanges();
-					},
 				},
 				__oomlDomAppendTo: {
 					value: function(appendTo) {

@@ -1,4 +1,17 @@
 (function(undefined) {
+	var OOMLNodesWithUnwrittenChanges = new Set(),
+		OOMLWriteChangesSetTimeout,
+		OOMLWriteChanges = function() {
+			if (OOMLWriteChangesSetTimeout) clearTimeout(OOMLWriteChangesSetTimeout);
+			OOMLWriteChangesSetTimeout = setTimeout(function() {
+				OOMLNodesWithUnwrittenChanges.forEach(function(node) {
+					node.textContent = node.__oomlFormatStr.join('');
+				});
+
+				OOMLNodesWithUnwrittenChanges.clear();
+			}, 50);
+		};
+
 	<ZC-IMPORT[utils]>
 
 	var OOML = {};
