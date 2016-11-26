@@ -97,6 +97,8 @@ OOML.init = function(settings) {
 						nodesWithUnwrittenChanges.forEach(function(node) {
 							node.textContent = node.__oomlFormatStr.join('');
 						});
+
+						nodesWithUnwrittenChanges.clear();
 					}, 50);
 				};
 
