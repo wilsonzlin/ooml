@@ -5,13 +5,14 @@ OOMLElementProto.toJSON = function(returnUnserialised) {
 	var instance = this;
 	var json = {};
 
-	this.__oomlProperties.forEach(function(propName) {
+	this.constructor.__oomlProperties.forEach(function(propName) {
 		if (typeof instance[propName] != "object") {
 			json[propName] = instance[propName];
 		} else {
 			json[propName] = instance[propName].toJSON(true);
 		}
 	});
+
 	return returnUnserialised ? json : JSON.stringify(json);
 };
 OOMLElementProto.assign = function() {
@@ -32,7 +33,7 @@ if (typeof Symbol == "function") {
 	OOMLElementProto[Symbol.iterator] = function() {
 		var i = -1,
 			inst = this,
-			objectKeys = this.__oomlProperties;
+			objectKeys = this.constructor.__oomlProperties;
 
 		return {
 			next: function() {

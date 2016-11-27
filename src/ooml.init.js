@@ -145,9 +145,6 @@ OOML.init = function(settings) {
 			});
 
 			Object.assign(propertiesGetterSetterFuncs, {
-				__oomlProperties: {
-					value: localPropertyNames,
-				},
 				__oomlDomAppendTo: {
 					value: function(appendTo) {
 						$instanceDom.appendTo(appendTo);
@@ -158,11 +155,18 @@ OOML.init = function(settings) {
 						$instanceDom.insertAfter(insertAfter);
 					},
 				},
+				__oomlDomRemove: {
+					value: function() {
+						$instanceDom.remove();
+					},
+				},
 			});
 
 			Object.defineProperties(this, propertiesGetterSetterFuncs);
 		};
-		classes[className].prototype = OOML.Element.prototype;
+		classes[className].__oomlProperties = localPropertyNames;
+		classes[className].prototype = Object.create(OOML.Element.prototype);
+		classes[className].prototype.constructor = classes[className];
 	});
 
 	$(rootElem).find('[ooml-instantiate]').each(function(instanceInstantiationElem) {

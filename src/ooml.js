@@ -14,7 +14,10 @@
 			}, 50);
 		};
 
-	var OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
+	var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
+		OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
+
+		OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
 		OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap';
 
 	<ZC-IMPORT[utils]>
