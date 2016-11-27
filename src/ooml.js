@@ -14,6 +14,10 @@
 			}, 50);
 		};
 
+	var OOMLInstanceDestructedError = function() {
+		throw new Error('This instance is no longer available to use');
+	};
+
 	var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
 		OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
 

@@ -38,7 +38,7 @@ OOML.init = function(settings) {
 					if (propNameParts[0] == 'this') {
 						localPropertyNames[propNameParts[1]] = true;
 					} else if (!globalPropertiesMap[fullPropName]) {
-						globalPropertiesMap[fullPropName] = [];
+						globalPropertiesMap[fullPropName] = new Set();
 						var objectToWatch = globals[propNameParts.shift()],
 							_,
 							endPropertyName = propNameParts.pop();
@@ -65,6 +65,7 @@ OOML.init = function(settings) {
 							d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName); // Refresh to get newly set setter
 							d.set.__oomlListeners = [];
 						}
+
 						d.set.__oomlListeners.push(function(fullPropName, newVal) {
 
 							console.log('called listener on setter function on global object', fullPropName, newVal);
@@ -88,9 +89,12 @@ OOML.init = function(settings) {
 		localPropertyNames = Object.freeze(Object.keys(localPropertyNames));
 
 		classes[className] = function(args) {
-			var instance = this;
+			var instance = this,
+				instanceIsDestructed = false,
+				instanceIsAttached = false;
 
-			var localPropertiesMap = {};
+			var localPropertiesMap = {},
+				localGlobalPropertiesMap = {}; // For destructuring; to remember what to remove from globalPropertiesMap
 
 			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
 				$instanceDom = $(instanceDom),
@@ -110,7 +114,11 @@ OOML.init = function(settings) {
 								}
 								localPropertiesMap[propName].push(current);
 							} else {
-								globalPropertiesMap[propName].push(current);
+								globalPropertiesMap[propName].add(current);
+								if (!localGlobalPropertiesMap[propName]) {
+									localGlobalPropertiesMap[propName] = [];
+								}
+								localGlobalPropertiesMap[propName].push(current);
 							}
 						}
 					}
@@ -145,21 +153,70 @@ OOML.init = function(settings) {
 			});
 
 			Object.assign(propertiesGetterSetterFuncs, {
-				__oomlDomAppendTo: {
-					value: function(appendTo) {
-						$instanceDom.appendTo(appendTo);
+				__oomlAttach: {
+					value: function(settings) {
+						if (instanceIsDestructed) {
+							OOMLInstanceDestructedError();
+						}
+
+						if (instanceIsAttached) {
+							throw new Error('This instance is already in use');
+						}
+
+						if (settings.appendTo) {
+							$instanceDom.appendTo(settings.appendTo);
+						} else if (settings.insertAfter) {
+							$instanceDom.insertAfter(settings.insertAfter);
+						}
+
+						instanceIsAttached = true;
 					},
 				},
-				__oomlDomInsertAfter: {
-					value: function(insertAfter) {
-						$instanceDom.insertAfter(insertAfter);
-					},
-				},
-				__oomlDomRemove: {
+				__oomlDetach: {
 					value: function() {
+						if (instanceIsDestructed) {
+							OOMLInstanceDestructedError();
+						}
+
+						if (!instanceIsAttached) {
+							throw new Error('This instance is not in use');
+						}
+
 						$instanceDom.remove();
+						instanceIsAttached = false;
 					},
 				},
+				__oomlDestruct: {
+					value: function() {
+						if (instanceIsDestructed) {
+							throw new InternalError('Attempted to destruct already-destructed instance');
+						}
+
+						var thisInstance = this;
+
+						// Detach if not already detached
+						if (instanceIsAttached) {
+							thisInstance.__oomlDetach();
+						}
+
+						// Reject getting and setting local properties
+						localPropertyNames.forEach(function(prop) {
+							Object.defineProperty(thisInstance, prop, {
+								get: OOMLInstanceDestructedError,
+								set: OOMLInstanceDestructedError,
+							});
+						});
+
+						// Remove nodes from globalPropertiesMap
+						Object.keys(localGlobalPropertiesMap).forEach(function(globalPropName) {
+							localGlobalPropertiesMap.forEach(function(nodeToRemove) {
+								globalPropertiesMap[globalPropName].delete(nodeToRemove);
+							});
+						});
+
+						instanceIsDestructed = true;
+					},
+				}
 			});
 
 			Object.defineProperties(this, propertiesGetterSetterFuncs);

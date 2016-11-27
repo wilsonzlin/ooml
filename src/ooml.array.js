@@ -22,7 +22,7 @@ OOMLArrayProto.get = function(idx) {
 
 	var instance = arr[realIdx];
 	if (!instance) {
-		throw new ReferenceError('The offset at index ' + idx + ' is not a valid offset');
+		throw new RangeError('The offset at index ' + idx + ' is not a valid offset');
 	}
 
 	return instance;
@@ -37,18 +37,25 @@ OOMLArrayProto.set = function(idx, newVal) {
 
 	var instance = arr[realIdx];
 	if (!instance && idx !== this.length) {
-		throw new ReferenceError('The offset at index ' + idx + ' is not a valid offset');
+		throw new RangeError('The offset at index ' + idx + ' is not a valid offset');
 	}
+
+	instance.__oomlDestruct();
 
 
 };
-OOMLArrayProto.toJSON = function(returnUnserialised) {
+OOMLArrayProto.toJSON = function(returnUnserialised, startIdx, endIdx) {
+
+	var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
+
+	startIdx = startIdx || 0;
+	endIdx = endIdx == undefined ? this.length : endIdx;
 
 	var json = [];
 
-	this.forEach(function(instanceElem) {
-		json.push(instanceElem.toJSON(true));
-	});
+	for (var i = startIdx; i < endIdx; i++) {
+		json.push(arr[i].toJSON(true));
+	}
 
 	return returnUnserialised ? json : JSON.stringify(json);
 };
