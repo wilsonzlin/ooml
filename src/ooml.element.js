@@ -1,19 +1,22 @@
 OOML.Element = function() {};
 var OOMLElementProto = OOML.Element.prototype;
-OOMLElementProto.toJSON = function(returnUnserialised) {
+OOMLElementProto.toObject = function() {
 
 	var instance = this;
-	var json = {};
+	var obj = {};
 
 	this.constructor.__oomlProperties.forEach(function(propName) {
 		if (typeof instance[propName] != "object") {
-			json[propName] = instance[propName];
+			obj[propName] = instance[propName];
 		} else {
-			json[propName] = instance[propName].toJSON(true);
+			obj[propName] = instance[propName].toObject();
 		}
 	});
 
-	return returnUnserialised ? json : JSON.stringify(json);
+	return obj;
+};
+OOMLElementProto.toJSON = function() {
+	return JSON.stringify(this.toObject());
 };
 OOMLElementProto.assign = function() {
 	var oomlInstance = this;

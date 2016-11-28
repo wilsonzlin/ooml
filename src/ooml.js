@@ -7,7 +7,7 @@
 			if (OOMLWriteChangesSetTimeout) clearTimeout(OOMLWriteChangesSetTimeout);
 			OOMLWriteChangesSetTimeout = setTimeout(function() {
 				OOMLNodesWithUnwrittenChanges.forEach(function(node) {
-					node.textContent = node[OOML_NODE_PROPNAME_TEXTFORMAT].join('');
+					node.nodeValue = node[OOML_NODE_PROPNAME_TEXTFORMAT].join('');
 				});
 
 				OOMLNodesWithUnwrittenChanges.clear();

@@ -29,7 +29,7 @@ OOML.init = function(settings) {
 			if (current instanceof Element) {
 				Utils.pushAll(toProcess, current.attributes, current.childNodes);
 			} else if (current instanceof Attr || current instanceof Text) {
-				var paramsData = Utils.splitStringByParamholders(current.textContent);
+				var paramsData = Utils.splitStringByParamholders(current.nodeValue);
 				current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
 				current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
 
@@ -240,8 +240,9 @@ OOML.init = function(settings) {
 
 		var instance = new classes[className];
 
-		instance.__oomlDomInsertAfter(instanceInstantiationElem);
+		instance.__oomlAttach({ insertAfter: instanceInstantiationElem });
 
+		// Remove after attaching constructed $elem
 		$instanceInstantiationElem.remove();
 
 		objects[instanceName] = instance;

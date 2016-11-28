@@ -21,18 +21,21 @@ OOMLArrayProto.lastIndexOf = function(elem, fromIdx) {
 OOMLArrayProto.toString = function() {
 	return this.toJSON();
 };
-OOMLArrayProto.toJSON = function(returnUnserialised, startIdx, endIdx) {
+OOMLArrayProto.toArray = function(startIdx, endIdx) {
 
 	var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
 
 	startIdx = startIdx || 0;
 	endIdx = endIdx == undefined ? this.length : endIdx;
 
-	var json = [];
+	var arr = [];
 
 	for (var i = startIdx; i < endIdx; i++) {
-		json.push(arr[i].toJSON(true));
+		arr.push(arr[i].toJSON(true));
 	}
 
-	return returnUnserialised ? json : JSON.stringify(json);
+	return arr;
+};
+OOMLArrayProto.toJSON = function(startIdx, endIdx) {
+	return JSON.stringify(this.toArray(startIdx, endIdx));
 };
