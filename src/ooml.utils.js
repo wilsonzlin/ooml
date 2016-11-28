@@ -12,6 +12,18 @@ var Utils = {
 			arr.push.apply(arr, arguments[i]);
 		}
 	},
+	isObjectLiteral: function(obj) {
+		return obj.constructor == Object;
+	},
+	constructElement: function(elemConstructor, obj) {
+		if (obj instanceof elemConstructor) {
+			return obj;
+		} else if (!Utils.isObjectLiteral(obj)) {
+			throw new TypeError('Unable to construct new instance; the provided object is not of the correct type');
+		}
+
+		return new elemConstructor(newVal);
+	},
 	splitStringByParamholders: function(str) {
 		var strParts = [],
 			paramMap = Object.create(null);

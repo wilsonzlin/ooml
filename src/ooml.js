@@ -20,6 +20,7 @@
 
 	var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
 		OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
+		OOML_ARRAY_PROPNAME_PARENTDOMELEM = '__oomlContainerDOMElem',
 
 		OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
 		OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap';
@@ -28,6 +29,10 @@
 
 	var OOML = {};
 	<ZC-IMPORT[array]>
+	<ZC-IMPORT[array-methods-getset]>
+	<ZC-IMPORT[array-methods-mutation]>
+	<ZC-IMPORT[array-methods-access]>
+	<ZC-IMPORT[array-methods-iteration]>
 	<ZC-IMPORT[element]>
 	<ZC-IMPORT[init]>
 

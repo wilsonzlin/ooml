@@ -153,6 +153,9 @@ OOML.init = function(settings) {
 			});
 
 			Object.assign(propertiesGetterSetterFuncs, {
+				__oomlDomElem: {
+					value: $instanceDom,
+				},
 				__oomlAttach: {
 					value: function(settings) {
 						if (instanceIsDestructed) {
