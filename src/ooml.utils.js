@@ -2,14 +2,14 @@ var Utils = {
 	merge: function() {
 		var ret = [].slice.call(arguments[0]);
 		for (var i = 1; i < arguments.length; i++) {
-			ret.push.apply(ret, arguments[i]);
+			Array.prototype.push.apply(ret, arguments[i]);
 		}
 		return ret;
 	},
 	pushAll: function() {
 		var arr = arguments[0];
 		for (var i = 1; i < arguments.length; i++) {
-			arr.push.apply(arr, arguments[i]);
+			Array.prototype.push.apply(arr, arguments[i]);
 		}
 	},
 	isObjectLiteral: function(obj) {
@@ -57,14 +57,39 @@ var Utils = {
 		};
 	},
 	cloneElemForInstantiation: function cloneElemForInstantiation(rootElem) {
-		var clonedElem = rootElem.cloneNode();
-		if (rootElem[OOML_NODE_PROPNAME_TEXTFORMAT]) clonedElem[OOML_NODE_PROPNAME_TEXTFORMAT] = rootElem[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
-		if (rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]) clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = $.clone(rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP], true);
+		if (rootElem instanceof Element) {
 
-		if (rootElem.childNodes) {
+			var clonedElem = document.createElement(rootElem.nodeName);
+
+			for (var i = 0; i < rootElem.attributes.length; i++) {
+				var rootAttr = rootElem.attributes[i];
+				var clonedAttr = document.createAttribute(rootAttr.name);
+				clonedAttr.nodeValue = rootAttr.nodeValue;
+
+				if (rootAttr[OOML_NODE_PROPNAME_TEXTFORMAT]) {
+					clonedAttr[OOML_NODE_PROPNAME_TEXTFORMAT] = rootAttr[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
+				}
+				if (rootAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
+					clonedAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP] = $.clone(rootAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP], true);
+				}
+
+				clonedElem.setAttributeNode(clonedAttr);
+			}
+
 			for (var i = 0; i < rootElem.childNodes.length; i++) {
 				clonedElem.appendChild( cloneElemForInstantiation(rootElem.childNodes[i]) );
 			}
+
+		} else if (rootElem instanceof Text) {
+
+			var clonedElem = document.createTextNode(rootElem.nodeValue);
+			if (rootElem[OOML_NODE_PROPNAME_TEXTFORMAT]) {
+				clonedElem[OOML_NODE_PROPNAME_TEXTFORMAT] = rootElem[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
+			}
+			if (rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
+				clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = $.clone(rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP], true);
+			}
+
 		}
 
 		return clonedElem;
