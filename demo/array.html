@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+    <div id="texteditor-package">
+        <template ooml-class="TextEditor">
+            <textarea>{{ this.value }}</textarea>
+        </template>
+    </div>
+    <main>
+        <template ooml-class="Friend">
+            <li><a href="{{ this.userId }}">{{ this.name }}</a></li>
+        </template>
+
+        <template ooml-class="PerformanceEntry">
+            <div class="tr">
+                <div class="td">{{ this.id }}</div>
+                <div class="td">{{ this.jobTitle }}</div>
+                <div class="td">{{ this.score }}</div>
+            </div>
+        </template>
+
+        <template ooml-class="User">
+            <article>
+                <h1>Welcome {{ this.name }} (@{{ this.username }})!</h1>
+                <span>Here's what we know about you as of {{ this.lastUpdated }}</span>
+                <h2>Personal</h2>
+                <dl>
+                    <dt>Age</dt>
+                    <dd>{{ this.age }} (born {{ this.birthday }})</dd>
+                    <dt>Gender</dt>
+                    <dd>{{ this.gender }}</dd>
+                    <dt>Ethnicity</dt>
+                    <dd>{{ this.ethnicity }}</dd>
+                </dl>
+
+                <h2>Account</h2>
+                <span>Note: not all information may be up to date. Last updated: {{ service.lastUpdated }}</span>
+                <label>
+                    Username
+                    <input value="{{ this.username }}">
+                </label>
+                <label>
+                    Password
+                    <input type="password" value="{{ this.password }}">
+                </label>
+                <a href="/profiles/{{ this.userId }}">Go to my profile</a>
+                <button>Temporary disable my account</button>
+                <button>Delete my account</button>
+
+                <h2>Recently contacted friends</h2>
+                <ul>
+                    { for Friend of this.contactedFriends }
+                </ul>
+                <span>Send a message</span>
+                <div>{ TextEditor.class this.postMessage }</div>
+
+                <h2>Performance</h2>
+                <div class="table">
+                    <div class="thead">
+                        <div class="th">ID</div>
+                        <div class="th">Job Title</div>
+                        <div class="th">Score</div>
+                    </div>
+                    <div class="tbody">
+                        { for PerformanceEntry of this.performanceData }
+                    </div>
+                </div>
+            </article>
+        </template>
+
+        <article ooml-instantiate="User wilson"></article>
+    </main>
+
+    <script src="/zQuery.js"></script>
+    <script src="/ooml.js"></script>
+    <script>
+        var TextEditor = OOML.init({
+                rootElem: '#texteditor-package'
+            });
+
+        var globals = {
+                TextEditor: {
+                    class: TextEditor.classes.TextEditor,
+                },
+                service: {
+                    lastUpdated: new Date(2015, 9, 23),
+                }
+            };
+
+        var ooml = OOML.init({
+            rootElem: 'main',
+            globals: globals,
+        });
+
+        var wilson = ooml.objects.wilson;
+        wilson.assign({
+            name: "Wilson Lin",
+            username: "XxX_MLG_360_NO_SCOPE_1337_COD_xXx",
+            lastUpdated: new Date(2016, 9, 3, 7, 1, 1),
+            age: 14,
+            birthday: new Date(1931, 4, 5),
+            gender: 'Undecided voter',
+            ethnicity: 'PCMaster',
+            password: 'l33th4ck3r',
+            contactedFriends: [
+                { userId: 2349243589, name: "John Joe" },
+                { userId: 2349243589, name: "Jane Joe" },
+                { userId: 2349243589, name: "Joe Donn" },
+                { userId: 2349243589, name: "Jane Yo" },
+                { userId: 2349243589, name: "Bon Joe" },
+                { userId: 2349243589, name: "Von Jour" },
+                { userId: 2349243589, name: "Spanish Inquisition" },
+                { userId: 2349243589, name: "Donald Trump" },
+            ],
+            postMessage: {
+                value: "Send something to ya mates",
+            },
+            performanceData: [
+                { id: 234908, jobTitle: 'Head of no-scoping', score: 420 },
+                { id: 543255, jobTitle: 'Noob pawning', score: 6969 },
+                { id: 727224, jobTitle: 'Master String Reverser', score: 321 },
+                { id: 123467, jobTitle: 'Bureau of bureaucracy', score: 9001 },
+                { id: 578546, jobTitle: 'Console Pleb Tears Collection', score: 1337 },
+                { id: 248968, jobTitle: 'Government worker (Beneficiary)', score: 99 },
+            ],
+        });
+    </script>
+</body>
+
+</html>

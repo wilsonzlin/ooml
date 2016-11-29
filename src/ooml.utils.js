@@ -12,17 +12,22 @@ var Utils = {
 			Array.prototype.push.apply(arr, arguments[i]);
 		}
 	},
+	isPrimitiveValue: function(val) {
+		return ['number', 'boolean', 'string'].indexOf(typeof val) > -1
+	},
 	isObjectLiteral: function(obj) {
 		return obj.constructor == Object;
 	},
 	constructElement: function(elemConstructor, obj) {
 		if (obj instanceof elemConstructor) {
 			return obj;
+		} else if (elemConstructor == OOML.Element) {
+			throw new SyntaxError('Unable to construct new instance; OOML.Element is an abstract class');
 		} else if (!Utils.isObjectLiteral(obj)) {
 			throw new TypeError('Unable to construct new instance; the provided object is not of the correct type');
 		}
 
-		return new elemConstructor(newVal);
+		return new elemConstructor(obj);
 	},
 	splitStringByParamholders: function(str) {
 		var strParts = [],
@@ -61,6 +66,10 @@ var Utils = {
 
 			var clonedElem = document.createElement(rootElem.nodeName);
 
+			if (rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
+				clonedElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]; // Probably don't need to clone as it will never be mutilated
+			}
+
 			for (var i = 0; i < rootElem.attributes.length; i++) {
 				var rootAttr = rootElem.attributes[i];
 				var clonedAttr = document.createAttribute(rootAttr.name);
@@ -70,7 +79,7 @@ var Utils = {
 					clonedAttr[OOML_NODE_PROPNAME_TEXTFORMAT] = rootAttr[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
 				}
 				if (rootAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
-					clonedAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP] = $.clone(rootAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP], true);
+					clonedAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP] = rootAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP]; // Probably don't need to clone as it will never be mutilated
 				}
 
 				clonedElem.setAttributeNode(clonedAttr);
@@ -87,7 +96,7 @@ var Utils = {
 				clonedElem[OOML_NODE_PROPNAME_TEXTFORMAT] = rootElem[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
 			}
 			if (rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
-				clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = $.clone(rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP], true);
+				clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]; // Probably don't need to clone as it will never be mutilated
 			}
 
 		}

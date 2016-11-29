@@ -3,6 +3,7 @@ OOML.Array = function(elementConstructor, $parentDomElem, nonOomlArray) {
 
 	Object.defineProperty(this, OOML_ARRAY_PROPNAME_INTERNALARRAY, {
 		value: internalArray,
+		writable: true, // For .initialize()
 	});
 	Object.defineProperty(this, OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR, {
 		value: elementConstructor,

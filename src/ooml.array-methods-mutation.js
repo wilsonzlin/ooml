@@ -1,6 +1,26 @@
 /*
 	MUTATION
 */
+OOMLArrayProto.initialize = function(arr) {
+	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR],
+		$parent = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
+
+	arr = arr.map(function(elem) {
+		return Utils.constructElement(elemConstructor, elem);
+	});
+
+	this[OOML_ARRAY_PROPNAME_INTERNALARRAY].forEach(function(elemToDestruct) {
+		elemToDestruct.__oomlDestruct();
+	});
+	arr.forEach(function(elemToAttach) {
+		elemToAttach.__oomlAttach({ appendTo: $parent });
+	});
+
+	this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = arr;
+
+	return this.length;
+};
+
 OOMLArrayProto.pop = function() {
 	var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
 
@@ -28,9 +48,10 @@ OOMLArrayProto.reverse = function() {
         $lastElem = arr[arr.length - 1].__oomlDomElem;
 
     for (var i = 0; i < this.length - 1; i++) {
-        var $elem = arr[i].__oomlDomElem;
-        $elem.insertAfter($lastElem);
+        arr[i].__oomlDomElem.insertAfter($lastElem);
     }
+
+	arr.reverse();
 
     return this;
 };

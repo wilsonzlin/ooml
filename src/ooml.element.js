@@ -6,10 +6,14 @@ OOMLElementProto.toObject = function() {
 	var obj = {};
 
 	this.constructor.__oomlProperties.forEach(function(propName) {
-		if (typeof instance[propName] != "object") {
-			obj[propName] = instance[propName];
-		} else {
-			obj[propName] = instance[propName].toObject();
+		var value = instance[propName];
+		if (value !== undefined) {
+			if (Utils.isPrimitiveValue(value)) {
+				obj[propName] = value;
+			} else {
+				console.log(propName, value);
+				obj[propName] = value == null ? null : value.toObject();
+			}
 		}
 	});
 

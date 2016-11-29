@@ -33,6 +33,7 @@ OOMLArrayProto.set = function(idx, newVal) {
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
+	// Attach first to ensure that elem is attachable
 	newElem.__oomlAttach({
 		insertAfter: instance.__oomlDomElem,
 	});
