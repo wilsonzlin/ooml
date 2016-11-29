@@ -322,7 +322,8 @@ OOML.init = function(settings) {
 
 			Object.defineProperties(this, propertiesGetterSetterFuncs);
 
-			if (initState) Object.assign(this, initState);
+			// This works, as instances are constructed AFTER classes are initialised (including prototypes)
+			if (initState) this.assign(initState);
 		};
 		classes[className].__oomlProperties = localPropertyNames;
 		classes[className].prototype = Object.create(OOML.Element.prototype);

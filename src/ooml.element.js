@@ -29,8 +29,9 @@ OOMLElementProto.assign = function() {
 
 		var source = arguments[i];
 
+		// Don't use Object.assign because 1) compatibility 2) it sets non-existent properties
 		Object.keys(source).forEach(function(prop) {
-			oomlInstance[prop] = $.clone(source[prop]);
+			oomlInstance[prop] = source[prop]; // Probably don't need to clone as not mutated
 		});
 	}
 
