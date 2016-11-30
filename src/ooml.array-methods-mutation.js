@@ -33,10 +33,12 @@ OOMLArrayProto.pop = function() {
 };
 
 OOMLArrayProto.push = function(newVal) {
-	var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
+	var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
+		parent = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
+	newElem.__oomlAttach({ appendTo: parent });
 
 	arr.push(newElem);
 
@@ -105,10 +107,12 @@ OOMLArrayProto.splice = function(start, deleteCount) {
 };
 
 OOMLArrayProto.unshift = function(newVal) {
-    var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
+    var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
+		parent = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
+	newElem.__oomlAttach({ prependTo: parent });
 
 	arr.unshift(newElem);
 

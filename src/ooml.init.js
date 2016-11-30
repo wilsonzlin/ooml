@@ -268,6 +268,8 @@ OOML.init = function(settings) {
 
 						if (settings.appendTo) {
 							settings.appendTo.appendChild(instanceDom);
+						} else if (settings.prependTo) {
+							settings.prependTo.insertBefore(instanceDom, settings.prependTo.childNodes[0] || null);
 						} else if (settings.insertAfter) {
 							settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
 						}
