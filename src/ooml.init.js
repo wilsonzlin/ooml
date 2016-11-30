@@ -243,6 +243,7 @@ OOML.init = function(settings) {
 					},
 					set: setter,
 					enumerable: true,
+					configurable: true, // For updating get/set on destruct
 				};
 			});
 
@@ -311,7 +312,7 @@ OOML.init = function(settings) {
 
 						// Remove nodes from globalPropertiesMap
 						Object.keys(localGlobalPropertiesMap).forEach(function(globalPropName) {
-							localGlobalPropertiesMap.forEach(function(nodeToRemove) {
+							localGlobalPropertiesMap[globalPropName].forEach(function(nodeToRemove) {
 								globalPropertiesMap[globalPropName].delete(nodeToRemove);
 							});
 						});
