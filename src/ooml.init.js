@@ -15,8 +15,8 @@ OOML.init = function(settings) {
 		var localPropertyNames = Object.create(null),
 			globalPropertiesMap = Object.create(null),
 
-			localArrayProperties = Object.create(null),
-			localElemProperties = Object.create(null);
+			localArrayProperties = Object.create(null), // Used to check for duplicates as well as in setters in instance proerties
+			localElemProperties = Object.create(null); // Used to check for duplicates as well as in setters in instance properties
 
 		var toProcess = Array.prototype.slice.call(document.importNode(classTemplateElem.content, true).childNodes);
 
@@ -78,9 +78,9 @@ OOML.init = function(settings) {
 					}
 
 					if (isArraySubstitution) {
-						localArrayProperties[propName] = elemConstructor;
+						localArrayProperties[propName] = true;
 					} else {
-						localElemProperties[propName] = elemConstructor;
+						localElemProperties[propName] = true;
 					}
 
 					current.parentNode[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = { elemConstructor: elemConstructor, propName: propName, isArray: isArraySubstitution };

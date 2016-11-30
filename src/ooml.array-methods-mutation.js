@@ -18,7 +18,7 @@ OOMLArrayProto.initialize = function(arr) {
 
 	this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = arr;
 
-	return this.length;
+	return this;
 };
 
 OOMLArrayProto.pop = function() {

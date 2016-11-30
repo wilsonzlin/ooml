@@ -1,5 +1,5 @@
-OOML.Array = function(elementConstructor, parentDomElem, nonOomlArray) {
-	var internalArray = nonOomlArray ? Utils.merge(nonOomlArray) : [];
+OOML.Array = function(elementConstructor, parentDomElem) {
+	var internalArray = [];
 
 	Object.defineProperty(this, OOML_ARRAY_PROPNAME_INTERNALARRAY, {
 		get: function() { return internalArray; },
