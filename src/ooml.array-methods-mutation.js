@@ -68,12 +68,22 @@ OOMLArrayProto.shift = function() {
     return instanceToDetach;
 };
 
-OOMLArrayProto.sortAscending = function(propName) {
+OOMLArrayProto.sort = function(propName, ascending) {
+	var ascendingMultiplier = ascending ? 1 : -1;
 
-};
+	var sorted = this[OOML_ARRAY_PROPNAME_INTERNALARRAY].sort(function(a, b) {
+		if (a[propName] < b[propName]) return -1 * ascendingMultiplier;
+		else if (a[propName] === b[propName]) return 0;
+		else return 1 * ascendingMultiplier;
+	});
 
-OOMLArrayProto.sortDescending = function(propName) {
+	var parentElem = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
 
+	sorted.forEach(function(elem) {
+		parentElem.appendChild(elem.__oomlDomElem);
+	});
+
+	this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = sorted;
 };
 
 OOMLArrayProto.splice = function(start, deleteCount) {
