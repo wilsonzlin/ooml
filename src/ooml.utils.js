@@ -1,6 +1,11 @@
 var Utils = {
+	DOM: {
+		find: function(rootElem, sel) {
+			return Array.prototype.slice.call(rootElem.querySelectorAll(sel));
+		},
+	},
 	merge: function() {
-		var ret = [].slice.call(arguments[0]);
+		var ret = Array.prototype.slice.call(arguments[0]);
 		for (var i = 1; i < arguments.length; i++) {
 			Array.prototype.push.apply(ret, arguments[i]);
 		}

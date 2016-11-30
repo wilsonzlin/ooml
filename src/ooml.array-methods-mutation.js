@@ -3,7 +3,7 @@
 */
 OOMLArrayProto.initialize = function(arr) {
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR],
-		$parent = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
+		parent = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
 
 	arr = arr.map(function(elem) {
 		return Utils.constructElement(elemConstructor, elem);
@@ -13,7 +13,7 @@ OOMLArrayProto.initialize = function(arr) {
 		elemToDestruct.__oomlDestruct();
 	});
 	arr.forEach(function(elemToAttach) {
-		elemToAttach.__oomlAttach({ appendTo: $parent });
+		elemToAttach.__oomlAttach({ appendTo: parent });
 	});
 
 	this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = arr;
@@ -45,10 +45,11 @@ OOMLArrayProto.push = function(newVal) {
 
 OOMLArrayProto.reverse = function() {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
-        $lastElem = arr[arr.length - 1].__oomlDomElem;
+        lastElem = arr[arr.length - 1].__oomlDomElem;
 
     for (var i = 0; i < this.length - 1; i++) {
-        arr[i].__oomlDomElem.insertAfter($lastElem);
+		var node = arr[i].__oomlDomElem;
+        node.parentNode.insertBefore(node, lastElem.nextSibling);
     }
 
 	arr.reverse();

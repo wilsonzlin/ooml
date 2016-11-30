@@ -10,9 +10,12 @@ OOMLElementProto.toObject = function() {
 		if (value !== undefined) {
 			if (Utils.isPrimitiveValue(value)) {
 				obj[propName] = value;
+			} else if (value == null) {
+				obj[propName] = null;
+			} else if (value instanceof OOML.Array) {
+				obj[propName] = value.toArray();
 			} else {
-				console.log(propName, value);
-				obj[propName] = value == null ? null : value.toObject();
+				obj[propName] = value.toObject();
 			}
 		}
 	});

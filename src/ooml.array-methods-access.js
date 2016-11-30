@@ -28,13 +28,13 @@ OOMLArrayProto.toArray = function(startIdx, endIdx) {
 	startIdx = startIdx || 0;
 	endIdx = endIdx == undefined ? this.length : endIdx;
 
-	var arr = [];
+	var ret = [];
 
 	for (var i = startIdx; i < endIdx; i++) {
-		arr.push(arr[i].toJSON(true));
+		ret.push(arr[i].toObject());
 	}
 
-	return arr;
+	return ret;
 };
 OOMLArrayProto.toJSON = function(startIdx, endIdx) {
 	return JSON.stringify(this.toArray(startIdx, endIdx));

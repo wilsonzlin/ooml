@@ -5,10 +5,11 @@ OOML.init = function(settings) {
 	var classes = {},
 		objects = {};
 
-	$(rootElem).find('template[ooml-class]').each(function(classTemplateElem) {
-		var $classTemplateElem = $(classTemplateElem);
+	if (typeof rootElem == "string") rootElem = document.querySelector(rootElem);
 
-		var className = $classTemplateElem.attr('ooml-class');
+	Utils.DOM.find(rootElem, 'template[ooml-class]').forEach(function(classTemplateElem) {
+
+		var className = classTemplateElem.getAttribute('ooml-class');
 		if (classes[className]) throw new SyntaxError('The class ' + className + ' has already been initialised');
 
 		var localPropertyNames = Object.create(null),
@@ -17,16 +18,17 @@ OOML.init = function(settings) {
 			localArrayProperties = Object.create(null),
 			localElemProperties = Object.create(null);
 
-		var toProcess = $classTemplateElem.import().get();
+		var toProcess = Array.prototype.slice.call(document.importNode(classTemplateElem.content, true).childNodes);
 
-		// Only use the first element for the class's DOM
-		while (!(toProcess[0] instanceof Element)) toProcess.shift();
-		toProcess = toProcess.slice(0, 1);
+		// Only use the first element for the class's DOM tree
+		while (toProcess.length && !(toProcess[0] instanceof Element)) toProcess.shift();
+		if (!toProcess.length) throw new SyntaxError('The class ' + className + ' is empty');
+		toProcess = [toProcess[0]];
 
 		var rootElemOfClass = toProcess[0],
 			current;
 
-		$classTemplateElem.remove();
+		classTemplateElem.parentNode.removeChild(classTemplateElem);
 
 		while (current = toProcess.shift()) {
 			if (current instanceof Element) {
@@ -156,7 +158,6 @@ OOML.init = function(settings) {
 			var instancePropertyValues = {};
 
 			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
-				$instanceDom = $(instanceDom),
 				toProcess = [instanceDom],
 				current;
 
@@ -166,9 +167,9 @@ OOML.init = function(settings) {
 					if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
 						var config = current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG];
 						if (config.isArray) {
-							instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, $(current));
+							instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, current);
 						} else {
-							localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, $parent: $(current) };
+							localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, parent: current };
 						}
 					}
 				} else if (current instanceof Attr || current instanceof Text) {
@@ -208,7 +209,7 @@ OOML.init = function(settings) {
 
 						// Attach first to ensure that element is attachable
 						var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
-						newElem.__oomlAttach({appendTo: elemDetails.$parent});
+						newElem.__oomlAttach({appendTo: elemDetails.parent});
 
 						if (instancePropertyValues[prop]) {
 							instancePropertyValues[prop].__oomlDetach();
@@ -252,7 +253,7 @@ OOML.init = function(settings) {
 					},
 				},
 				__oomlDomElem: {
-					value: $instanceDom,
+					value: instanceDom,
 				},
 				__oomlAttach: {
 					value: function(settings) {
@@ -265,9 +266,9 @@ OOML.init = function(settings) {
 						}
 
 						if (settings.appendTo) {
-							$instanceDom.appendTo(settings.appendTo);
+							settings.appendTo.appendChild(instanceDom);
 						} else if (settings.insertAfter) {
-							$instanceDom.insertAfter(settings.insertAfter);
+							settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
 						}
 
 						instanceIsAttached = true;
@@ -283,7 +284,7 @@ OOML.init = function(settings) {
 							throw new Error('This instance is not in use');
 						}
 
-						$instanceDom.remove();
+						instanceDom.parentNode.removeChild(instanceDom);
 						instanceIsAttached = false;
 					},
 				},
@@ -330,10 +331,9 @@ OOML.init = function(settings) {
 		classes[className].prototype.constructor = classes[className];
 	});
 
-	$(rootElem).find('[ooml-instantiate]').each(function(instanceInstantiationElem) {
-		var $instanceInstantiationElem = $(instanceInstantiationElem);
+	Utils.DOM.find(rootElem, '[ooml-instantiate]').forEach(function(instanceInstantiationElem) {
 
-		var instDetails = $instanceInstantiationElem.attr('ooml-instantiate').split(' '),
+		var instDetails = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' '),
 			className = instDetails[0],
 			instanceName = instDetails[1];
 
@@ -343,8 +343,8 @@ OOML.init = function(settings) {
 
 		instance.__oomlAttach({ insertAfter: instanceInstantiationElem });
 
-		// Remove after attaching constructed $elem
-		$instanceInstantiationElem.remove();
+		// Remove after attaching constructed elem
+		instanceInstantiationElem.parentNode.removeChild(instanceInstantiationElem);
 
 		objects[instanceName] = instance;
 	});
