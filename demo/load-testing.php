@@ -57,7 +57,7 @@
         </template>
 
         <?php
-            for ($i = 0; $i < 1000; $i++) {
+            for ($i = 0; $i < $_GET['times']; $i++) {
                 echo '<article ooml-instantiate="Class1 class1elem' . $i . '"></article>';
             }
         ?>
