@@ -1,23 +1,24 @@
 (function(undefined) {
 	"use strict";
 
-	var OOMLCompatBrowserIsIE = navigator.userAgent.indexOf('Trident') > -1;
+	var OOMLCompatBrowserIsIE = navigator.userAgent.indexOf('Trident') > -1,
+		OOMLCompatBrowserIsIE10OrLess = OOMLCompatBrowserIsIE && navigator.userAgent.indexOf('rv') == -1;
 
 	var NodeSet;
-	if (OOMLCompatBrowserIsIE) {
+	if (OOMLCompatBrowserIsIE10OrLess) {
 		var NodeSetIdCounter = 0,
 			NODESET_NODE_PROPNAME_ID = '__nodesetId';
 
 		NodeSet = function() {
 			var instance = this;
 
-			var internalMap = {};
+			var internalMap = Object.create(null);
 			// Don't have an additional internal array for easier iteration as deletion would be difficult
 
 			this.__internalMap = internalMap;
 			this.size = 0;
 			this.clear = function() {
-				internalMap = {};
+				internalMap = Object.create(null);
 				instance.size = 0;
 			};
 		};

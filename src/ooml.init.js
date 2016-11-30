@@ -158,14 +158,16 @@ OOML.init = function(settings) {
 				instanceIsDestructed = false,
 				instanceIsAttached = false;
 
-			var localPropertiesMap = {},
-				localGlobalPropertiesMap = {}; // For destructuring; to remember what to remove from globalPropertiesMap
+			var localPropertiesMap = Object.create(null),
+				localGlobalPropertiesMap = Object.create(null); // For destructuring; to remember what to remove from globalPropertiesMap
 
-			var instancePropertyValues = {};
+			var instancePropertyValues = Object.create(null);
 
 			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
 				toProcess = [instanceDom],
 				current;
+
+			console.log(instanceDom);
 
 			while (current = toProcess.shift()) {
 				if (current instanceof Element) {
@@ -176,6 +178,7 @@ OOML.init = function(settings) {
 							instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, current);
 						} else {
 							localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, parent: current };
+							console.log('Added ' + config.propName + ' to localPropertiesMap');
 						}
 					}
 				} else if (current instanceof Attr || current instanceof Text) {
@@ -186,7 +189,9 @@ OOML.init = function(settings) {
 								if (!localPropertiesMap[propName]) {
 									localPropertiesMap[propName] = [];
 								}
+								console.log('Pushed a node to ' + propName + ' in localPropertiesMap');
 								localPropertiesMap[propName].push(current);
+								console.log(localPropertiesMap);
 							} else {
 								globalPropertiesMap[propName].add(current);
 								if (!localGlobalPropertiesMap[propName]) {
@@ -265,11 +270,11 @@ OOML.init = function(settings) {
 						});
 
 						// Remove nodes from globalPropertiesMap
-						Object.keys(localGlobalPropertiesMap).forEach(function(globalPropName) {
+						for (var globalPropName in localGlobalPropertiesMap) {
 							localGlobalPropertiesMap[globalPropName].forEach(function(nodeToRemove) {
 								globalPropertiesMap[globalPropName].delete(nodeToRemove);
 							});
-						});
+						}
 
 						instanceIsDestructed = true;
 					},
@@ -282,6 +287,7 @@ OOML.init = function(settings) {
 
 				if (localArrayProperties[prop]) {
 					setter = function(newVal) {
+						console.log('setting local array property');
 						instancePropertyValues[prop].initialize(newVal);
 					};
 				} else if (localElemProperties[prop]) {

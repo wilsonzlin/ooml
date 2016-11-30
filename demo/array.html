@@ -160,6 +160,11 @@
                 { id: 248968, jobTitle: 'Government worker (Beneficiary)', score: 99 },
             ],
         });
+
+        setTimeout(function() {
+            console.log('Updating...');
+            wilson.performanceData = [{ id: Math.random(), jobTitle: Math.random(), score: Math.random() }];
+        }, 500);
     </script>
 </body>
 

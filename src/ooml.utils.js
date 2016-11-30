@@ -66,6 +66,19 @@ var Utils = {
 			map: paramMap,
 		};
 	},
+	clone: function(obj) {
+		if (Array.isArray(obj)) {
+			return obj.map(function(val) { return Utils.clone(val); });
+		} else if (Utils.isObjectLiteral(obj)) {
+			var ret = {};
+			Object.keys(obj).forEach(function(prop) {
+				ret[prop] = Utils.clone(obj[prop]);
+			});
+			return ret;
+		} else {
+			return obj;
+		}
+	},
 	cloneElemForInstantiation: function cloneElemForInstantiation(rootElem) {
 		if (rootElem instanceof Element) {
 

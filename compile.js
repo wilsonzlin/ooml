@@ -12,6 +12,7 @@ require('zcompile')({
 	src: SRC_DIR,
 	dst: dest,
 
+	minifyJS: !debug,
 	files: ['ooml.js'],
 	debug: debug,
 });
