@@ -193,62 +193,7 @@ OOML.init = function(settings) {
 				}
 			}
 
-			var propertiesGetterSetterFuncs = {};
-
-			localPropertyNames.forEach(function(prop) {
-
-				var setter;
-
-				if (localArrayProperties[prop]) {
-					setter = function(newVal) {
-						instancePropertyValues[prop].initialize(newVal);
-					};
-				} else if (localElemProperties[prop]) {
-					setter = function(newVal) {
-						var elemDetails = localPropertiesMap[prop];
-
-						// Attach first to ensure that element is attachable
-						var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
-						newElem.__oomlAttach({appendTo: elemDetails.parent});
-
-						// Element may not be OOML.Element and therefore may not need destructing
-						if (instancePropertyValues[prop] && instancePropertyValues[prop].__oomlDestruct) {
-							instancePropertyValues[prop].__oomlDestruct();
-						}
-
-						instancePropertyValues[prop] = newElem;
-					};
-				} else {
-					setter = function(newVal) {
-						if (!Utils.isPrimitiveValue(newVal)) {
-							newVal = '' + newVal;
-						}
-
-						localPropertiesMap[prop].forEach(function(node) {
-							var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
-							node[OOML_NODE_PROPNAME_FORMATPARAMMAP]['this.' + prop].forEach(function(offset) {
-								formatStr[offset] = newVal;
-							});
-							OOMLNodesWithUnwrittenChanges.add(node);
-						});
-
-						OOMLWriteChanges();
-
-						instancePropertyValues[prop] = newVal;
-					};
-				}
-
-				propertiesGetterSetterFuncs[prop] = {
-					get: function() {
-						return instancePropertyValues[prop];
-					},
-					set: setter,
-					enumerable: true,
-					configurable: true, // For updating get/set on destruct
-				};
-			});
-
-			Object.assign(propertiesGetterSetterFuncs, {
+			var propertiesGetterSetterFuncs = {
 				data: {
 					get: function() {
 						return instanceDom.dataset;
@@ -322,7 +267,60 @@ OOML.init = function(settings) {
 
 						instanceIsDestructed = true;
 					},
+				},
+			};
+
+			localPropertyNames.forEach(function(prop) {
+
+				var setter;
+
+				if (localArrayProperties[prop]) {
+					setter = function(newVal) {
+						instancePropertyValues[prop].initialize(newVal);
+					};
+				} else if (localElemProperties[prop]) {
+					setter = function(newVal) {
+						var elemDetails = localPropertiesMap[prop];
+
+						// Attach first to ensure that element is attachable
+						var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
+						newElem.__oomlAttach({appendTo: elemDetails.parent});
+
+						// Element may not be OOML.Element and therefore may not need destructing
+						if (instancePropertyValues[prop] && instancePropertyValues[prop].__oomlDestruct) {
+							instancePropertyValues[prop].__oomlDestruct();
+						}
+
+						instancePropertyValues[prop] = newElem;
+					};
+				} else {
+					setter = function(newVal) {
+						if (!Utils.isPrimitiveValue(newVal)) {
+							newVal = '' + newVal;
+						}
+
+						localPropertiesMap[prop].forEach(function(node) {
+							var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
+							node[OOML_NODE_PROPNAME_FORMATPARAMMAP]['this.' + prop].forEach(function(offset) {
+								formatStr[offset] = newVal;
+							});
+							OOMLNodesWithUnwrittenChanges.add(node);
+						});
+
+						OOMLWriteChanges();
+
+						instancePropertyValues[prop] = newVal;
+					};
 				}
+
+				propertiesGetterSetterFuncs[prop] = {
+					get: function() {
+						return instancePropertyValues[prop];
+					},
+					set: setter,
+					enumerable: true,
+					configurable: true, // For updating get/set on destruct
+				};
 			});
 
 			Object.defineProperties(this, propertiesGetterSetterFuncs);
