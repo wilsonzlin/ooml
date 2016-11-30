@@ -4,6 +4,10 @@
 <head>
     <meta charset="utf-8">
     <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Ubuntu, Cantarell, Oxygen, Droid Sans, Fira Sans, sans-serif;
+        }
+
         .table {
             display: table;
             border-collapse: collapse;
@@ -26,7 +30,7 @@
             font-weight: bold;
         }
     </style>
-    
+
     <script src="/ooml.js"></script>
 </head>
 
@@ -50,9 +54,9 @@
         </template>
 
         <template ooml-class="User">
-            <article>
-                <h1>Welcome {{ this.name }} (@{{ this.username }})!</h1>
-                <span>Here's what we know about you as of {{ this.lastUpdated }}</span>
+            <article class="user">
+                <h1 class="title">Welcome {{ this.name }} (@{{ this.username }})</h1>
+                <span class="subtitle">Here's what we know about you as of {{ this.lastUpdated }}</span>
                 <h2>Personal</h2>
                 <dl>
                     <dt>Age</dt>
@@ -65,15 +69,19 @@
 
                 <h2>Account</h2>
                 <span>Note: not all information may be up to date. Last updated: {{ service.lastUpdated }}</span>
+                <br>
                 <label>
                     Username
                     <input value="{{ this.username }}">
                 </label>
+                <br>
                 <label>
                     Password
                     <input type="password" value="{{ this.password }}">
                 </label>
+                <br>
                 <a href="/profiles/{{ this.userId }}">Go to my profile</a>
+                <br>
                 <button>Temporary disable my account</button>
                 <button>Delete my account</button>
 

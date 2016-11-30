@@ -211,8 +211,9 @@ OOML.init = function(settings) {
 						var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
 						newElem.__oomlAttach({appendTo: elemDetails.parent});
 
-						if (instancePropertyValues[prop]) {
-							instancePropertyValues[prop].__oomlDetach();
+						// Element may not be OOML.Element and therefore may not need destructing
+						if (instancePropertyValues[prop] && instancePropertyValues[prop].__oomlDestruct) {
+							instancePropertyValues[prop].__oomlDestruct();
 						}
 
 						instancePropertyValues[prop] = newElem;
