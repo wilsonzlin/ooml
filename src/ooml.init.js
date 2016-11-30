@@ -18,7 +18,12 @@ OOML.init = function(settings) {
 			localArrayProperties = Object.create(null), // Used to check for duplicates as well as in setters in instance proerties
 			localElemProperties = Object.create(null); // Used to check for duplicates as well as in setters in instance properties
 
-		var toProcess = Array.prototype.slice.call(document.importNode(classTemplateElem.content, true).childNodes);
+		var toProcess;
+		if (OOMLCompatBrowserIsIE) {
+			toProcess = Array.prototype.slice.call(classTemplateElem.cloneNode(true).childNodes);
+		} else {
+			toProcess = Array.prototype.slice.call(document.importNode(classTemplateElem.content, true).childNodes);
+		}
 
 		// Only use the first element for the class's DOM tree
 		while (toProcess.length && !(toProcess[0] instanceof Element)) toProcess.shift();
@@ -97,7 +102,7 @@ OOML.init = function(settings) {
 						if (propNameParts[0] == 'this') {
 							localPropertyNames[propNameParts[1]] = true;
 						} else if (!globalPropertiesMap[fullPropName]) {
-							globalPropertiesMap[fullPropName] = new Set();
+							globalPropertiesMap[fullPropName] = new NodeSet();
 							var objectToWatch = globals[propNameParts.shift()],
 								_,
 								endPropertyName = propNameParts.pop();
@@ -145,7 +150,8 @@ OOML.init = function(settings) {
 			}
 		}
 
-		localPropertyNames = Object.freeze(Object.keys(localPropertyNames));
+		// Don't Object.freeze this as it loses .forEach in IE
+		localPropertyNames = Object.keys(localPropertyNames);
 
 		classes[className] = function(initState) {
 			var instance = this,
