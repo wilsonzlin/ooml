@@ -72,14 +72,14 @@
                 <br>
                 <label>
                     Username
-                    <input ooml-expose="username" oninput="this.username = this.$username.value.trim();" value="{{ this.username }}">
+                    <input ooml-expose="newUsername" oninput="this.username = this.$newUsername.value.trim();" value="{{ this.username }}">
                 </label>
                 <br>
                 <label>
                     Password
-                    <input type="password" value="{{ this.password }}">
+                    <input ooml-expose="newPassword" type="password" value="{{ this.password }}">
                 </label>
-                <button onclick="alert(`Username: ${this.$username.value}`); console.log(arguments);">Submit</button>
+                <button onclick="alert(`Password: ${this.$newPassword.value}`); console.log(arguments);">Submit</button>
                 <br>
                 <a href="/profiles/{{ this.userId }}">Go to my profile</a>
                 <br>
