@@ -72,13 +72,14 @@
                 <br>
                 <label>
                     Username
-                    <input value="{{ this.username }}">
+                    <input ooml-expose="username" value="{{ this.username }}">
                 </label>
                 <br>
                 <label>
                     Password
                     <input type="password" value="{{ this.password }}">
                 </label>
+                <button onclick="alert(`Username: ${this.$username.value}`); console.log(arguments);">Submit</button>
                 <br>
                 <a href="/profiles/{{ this.userId }}">Go to my profile</a>
                 <br>
@@ -107,6 +108,9 @@
         </template>
 
         <article ooml-instantiate="User wilson"></article>
+        <br>
+        <hr style="border: 150px solid red;">
+        <br>
         <article ooml-instantiate="User test"></article>
     </main>
 

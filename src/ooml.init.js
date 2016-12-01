@@ -32,7 +32,19 @@ OOML.init = function(settings) {
 
 		while (current = toProcess.shift()) {
 			if (current instanceof Element) {
-				Utils.pushAll(toProcess, current.attributes, current.childNodes);
+
+				for (var i = 0; i < current.attributes.length; i++) {
+					var attr = current.attributes[i];
+					if (attr.name.indexOf('on') === 0) {
+						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = {};
+						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('globals', 'event', attr.nodeValue);
+						current.removeAttributeNode(attr);
+					} else {
+						toProcess.push(attr);
+					}
+				}
+
+				Utils.pushAll(toProcess, current.childNodes);
 			} else if (current instanceof Attr || current instanceof Text) {
 
 				var nodeValue = current.nodeValue,
@@ -156,7 +168,8 @@ OOML.init = function(settings) {
 			var localPropertiesMap = Object.create(null),
 				localGlobalPropertiesMap = Object.create(null); // For destructuring; to remember what to remove from globalPropertiesMap
 
-			var instancePropertyValues = Object.create(null);
+			var instancePropertyValues = Object.create(null),
+				instanceExposedDOMElems = {}; // { "key": HTMLElement }
 
 			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
 				toProcess = [instanceDom],
@@ -164,7 +177,7 @@ OOML.init = function(settings) {
 
 			while (current = toProcess.shift()) {
 				if (current instanceof Element) {
-					Utils.pushAll(toProcess, current.attributes, current.childNodes);
+
 					if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
 						var config = current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG];
 						if (config.isArray) {
@@ -173,6 +186,22 @@ OOML.init = function(settings) {
 							localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, parent: current };
 						}
 					}
+
+					if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
+						Object.keys(current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]).forEach(function(eventName) {
+							current[eventName] = current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName].bind(instance, globals); // event object will be provided when called by browser
+						});
+					}
+
+					var exposeKey = current.getAttribute('ooml-expose');
+					if (exposeKey) {
+						if (instanceExposedDOMElems[exposeKey]) throw new SyntaxError('A DOM element is already exposed with the key ' + exposeKey);
+						instanceExposedDOMElems[exposeKey] = current;
+						current.removeAttribute('ooml-expose');
+					}
+
+					Utils.pushAll(toProcess, current.attributes, current.childNodes);
+
 				} else if (current instanceof Attr || current instanceof Text) {
 					if (current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
 						for (var propName in current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
@@ -196,9 +225,7 @@ OOML.init = function(settings) {
 
 			var propertiesGetterSetterFuncs = {
 				data: {
-					get: function() {
-						return instanceDom.dataset;
-					},
+					value: instanceDom.dataset,
 				},
 				__oomlDomElem: {
 					value: instanceDom,
@@ -321,6 +348,12 @@ OOML.init = function(settings) {
 					set: setter,
 					enumerable: true,
 					configurable: true, // For updating get/set on destruct
+				};
+			});
+
+			Object.keys(instanceExposedDOMElems).forEach(function(keyName) {
+				propertiesGetterSetterFuncs['$' + keyName] = {
+					value: instanceExposedDOMElems[keyName],
 				};
 			});
 

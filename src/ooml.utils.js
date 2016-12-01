@@ -75,6 +75,9 @@ var Utils = {
 			if (rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
 				clonedElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]; // Probably don't need to clone as it will never be mutilated
 			}
+			if (rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
+				clonedElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]; // Don't clone; keep reference to original function
+			}
 
 			for (var i = 0; i < rootElem.attributes.length; i++) {
 				var rootAttr = rootElem.attributes[i];
