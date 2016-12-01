@@ -119,6 +119,13 @@ OOML.init = function(settings) {
 								objectToWatch = objectToWatch[_];
 							}
 
+							// Set the current node text to the current value of the global
+							var currentValue = objectToWatch[endPropertyName];
+							paramsData.map[fullPropName].forEach(function(offset) {
+								current[OOML_NODE_PROPNAME_TEXTFORMAT][offset] = currentValue;
+							});
+							current.nodeValue = current[OOML_NODE_PROPNAME_TEXTFORMAT].join(''); // Should be performant as this element is never actually rendered (so it's just setting a property)
+
 							var d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName);
 							if (!d.set) {
 								var globalPropertyValueHolder = objectToWatch[endPropertyName]; // Needed otherwise property won't be set due to setter but no getter
