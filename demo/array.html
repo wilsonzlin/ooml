@@ -72,7 +72,7 @@
                 <br>
                 <label>
                     Username
-                    <input ooml-expose="username" value="{{ this.username }}">
+                    <input ooml-expose="username" oninput="this.username = this.$username.value.trim();" value="{{ this.username }}">
                 </label>
                 <br>
                 <label>

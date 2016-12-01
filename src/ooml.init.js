@@ -33,8 +33,9 @@ OOML.init = function(settings) {
 		while (current = toProcess.shift()) {
 			if (current instanceof Element) {
 
-				for (var i = 0; i < current.attributes.length; i++) {
-					var attr = current.attributes[i];
+				var attrs = Utils.merge(current.attributes); // To prevent indexes from changing when removing inline event handler attributes
+
+				attrs.forEach(function(attr) {
 					if (attr.name.indexOf('on') === 0) {
 						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = {};
 						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('globals', 'event', attr.nodeValue);
@@ -42,7 +43,7 @@ OOML.init = function(settings) {
 					} else {
 						toProcess.push(attr);
 					}
-				}
+				});
 
 				Utils.pushAll(toProcess, current.childNodes);
 			} else if (current instanceof Attr || current instanceof Text) {
