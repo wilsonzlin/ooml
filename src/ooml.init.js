@@ -105,6 +105,8 @@ OOML.init = function(settings) {
 					current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
 					current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
 
+					var currentNodeValueNeedsUpdate = false;
+
 					Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
 						var propNameParts = fullPropName.split('.');
 						if (propNameParts[0] == 'this') {
@@ -124,7 +126,7 @@ OOML.init = function(settings) {
 							paramsData.map[fullPropName].forEach(function(offset) {
 								current[OOML_NODE_PROPNAME_TEXTFORMAT][offset] = currentValue;
 							});
-							current.nodeValue = current[OOML_NODE_PROPNAME_TEXTFORMAT].join(''); // Should be performant as this element is never actually rendered (so it's just setting a property)
+							currentNodeValueNeedsUpdate = true;
 
 							var d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName);
 							if (!d.set) {
@@ -161,6 +163,10 @@ OOML.init = function(settings) {
 						}
 					});
 
+					if (currentNodeValueNeedsUpdate) {
+						// Should be performant as this element is never actually rendered (so it's just setting a property)
+						current.nodeValue = current[OOML_NODE_PROPNAME_TEXTFORMAT].join('');
+					}
 				}
 			}
 		}
