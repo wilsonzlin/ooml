@@ -2,15 +2,12 @@ OOML.init = function(settings) {
 	var globals = settings.globals,
 		rootElem = settings.rootElem || document.body;
 
-	var classes = {},
-		objects = {};
-	
-	window.debugClassDOMTrees = [];
+	var classes = Object.create(null),
+		objects = Object.create(null);
 
 	if (typeof rootElem == "string") rootElem = document.querySelector(rootElem);
 
 	Utils.DOM.find(rootElem, 'template[ooml-class]').forEach(function(classTemplateElem) {
-		console.log(classTemplateElem);
 
 		var className = classTemplateElem.getAttribute('ooml-class');
 		if (classes[className]) throw new SyntaxError('The class ' + className + ' has already been initialised');
@@ -21,13 +18,7 @@ OOML.init = function(settings) {
 			localArrayProperties = Object.create(null), // Used to check for duplicates as well as in setters in instance proerties
 			localElemProperties = Object.create(null); // Used to check for duplicates as well as in setters in instance properties
 
-		var toProcess;
-		if (OOMLCompatBrowserIsIE) {
-			toProcess = Utils.merge(classTemplateElem.cloneNode(true).childNodes);
-		} else {
-			toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
-		}
-		console.log(toProcess);
+		var toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
 
 		// Only use the first element for the class's DOM tree
 		while (toProcess.length && !(toProcess[0] instanceof Element)) toProcess.shift();
@@ -38,7 +29,6 @@ OOML.init = function(settings) {
 			current;
 
 		classTemplateElem.parentNode.removeChild(classTemplateElem);
-		window.debugClassDOMTrees.push(rootElemOfClass);
 
 		while (current = toProcess.shift()) {
 			if (current instanceof Element) {
@@ -102,14 +92,12 @@ OOML.init = function(settings) {
 					current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
 					current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
 
-					console.log(current);
-
 					Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
 						var propNameParts = fullPropName.split('.');
 						if (propNameParts[0] == 'this') {
 							localPropertyNames[propNameParts[1]] = true;
 						} else if (!globalPropertiesMap[fullPropName]) {
-							globalPropertiesMap[fullPropName] = new NodeSet();
+							globalPropertiesMap[fullPropName] = new Set();
 							var objectToWatch = globals[propNameParts.shift()],
 								_,
 								endPropertyName = propNameParts.pop();
@@ -157,7 +145,7 @@ OOML.init = function(settings) {
 			}
 		}
 
-		// Don't Object.freeze this as it loses .forEach in IE
+		// Don't Object.freeze this as it's unnecessary
 		localPropertyNames = Object.keys(localPropertyNames);
 
 		classes[className] = function(initState) {
