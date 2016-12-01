@@ -57,13 +57,12 @@
         </template>
 
         <?php
-            for ($i = 0; $i < $_GET['times']; $i++) {
+            for ($i = 0; $i < array_keys($_GET)[0]; $i++) {
                 echo '<article ooml-instantiate="Class1 class1elem' . $i . '"></article>';
             }
         ?>
     </main>
 
-    <script src="/zQuery.js"></script>
     <script src="/ooml.js"></script>
     <script>
         if (confirm("OK?")) {
@@ -79,12 +78,6 @@
             var ooml = OOML.init({
                 rootElem: 'main',
                 globals: globals,
-            });
-
-            Object.assign(globals.user, {
-                name: 'Viliami',
-                age: 32,
-                gender: 'Apache Helicopter',
             });
         }
     </script>

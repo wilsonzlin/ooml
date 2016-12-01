@@ -4,10 +4,13 @@ OOML.init = function(settings) {
 
 	var classes = {},
 		objects = {};
+	
+	window.debugClassDOMTrees = [];
 
 	if (typeof rootElem == "string") rootElem = document.querySelector(rootElem);
 
 	Utils.DOM.find(rootElem, 'template[ooml-class]').forEach(function(classTemplateElem) {
+		console.log(classTemplateElem);
 
 		var className = classTemplateElem.getAttribute('ooml-class');
 		if (classes[className]) throw new SyntaxError('The class ' + className + ' has already been initialised');
@@ -20,10 +23,11 @@ OOML.init = function(settings) {
 
 		var toProcess;
 		if (OOMLCompatBrowserIsIE) {
-			toProcess = Array.prototype.slice.call(classTemplateElem.cloneNode(true).childNodes);
+			toProcess = Utils.merge(classTemplateElem.cloneNode(true).childNodes);
 		} else {
-			toProcess = Array.prototype.slice.call(document.importNode(classTemplateElem.content, true).childNodes);
+			toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
 		}
+		console.log(toProcess);
 
 		// Only use the first element for the class's DOM tree
 		while (toProcess.length && !(toProcess[0] instanceof Element)) toProcess.shift();
@@ -34,6 +38,7 @@ OOML.init = function(settings) {
 			current;
 
 		classTemplateElem.parentNode.removeChild(classTemplateElem);
+		window.debugClassDOMTrees.push(rootElemOfClass);
 
 		while (current = toProcess.shift()) {
 			if (current instanceof Element) {
@@ -96,6 +101,8 @@ OOML.init = function(settings) {
 					var paramsData = Utils.splitStringByParamholders(nodeValue);
 					current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
 					current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
+
+					console.log(current);
 
 					Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
 						var propNameParts = fullPropName.split('.');
@@ -167,8 +174,6 @@ OOML.init = function(settings) {
 				toProcess = [instanceDom],
 				current;
 
-			console.log(instanceDom);
-
 			while (current = toProcess.shift()) {
 				if (current instanceof Element) {
 					Utils.pushAll(toProcess, current.attributes, current.childNodes);
@@ -178,7 +183,6 @@ OOML.init = function(settings) {
 							instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, current);
 						} else {
 							localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, parent: current };
-							console.log('Added ' + config.propName + ' to localPropertiesMap');
 						}
 					}
 				} else if (current instanceof Attr || current instanceof Text) {
@@ -189,9 +193,7 @@ OOML.init = function(settings) {
 								if (!localPropertiesMap[propName]) {
 									localPropertiesMap[propName] = [];
 								}
-								console.log('Pushed a node to ' + propName + ' in localPropertiesMap');
 								localPropertiesMap[propName].push(current);
-								console.log(localPropertiesMap);
 							} else {
 								globalPropertiesMap[propName].add(current);
 								if (!localGlobalPropertiesMap[propName]) {
@@ -287,7 +289,6 @@ OOML.init = function(settings) {
 
 				if (localArrayProperties[prop]) {
 					setter = function(newVal) {
-						console.log('setting local array property');
 						instancePropertyValues[prop].initialize(newVal);
 					};
 				} else if (localElemProperties[prop]) {

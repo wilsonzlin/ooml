@@ -107,6 +107,7 @@
         </template>
 
         <article ooml-instantiate="User wilson"></article>
+        <article ooml-instantiate="User test"></article>
     </main>
 
     <script>
@@ -161,10 +162,38 @@
             ],
         });
 
-        setTimeout(function() {
-            console.log('Updating...');
-            wilson.performanceData = [{ id: Math.random(), jobTitle: Math.random(), score: Math.random() }];
-        }, 500);
+        var test = ooml.objects.test;
+        test.assign({
+            name: "Test",
+            username: "myusername",
+            lastUpdated: new Date(2016, 9, 3, 7, 1, 1),
+            age: 14,
+            birthday: new Date(1931, 4, 5).toDateString(),
+            gender: 'Republican',
+            ethnicity: 'Male',
+            password: 'password',
+            contactedFriends: [
+                { userId: 2349243589, name: "John Joe" },
+                { userId: 4594395534, name: "Jane Joe" },
+                { userId: 2586848393, name: "Joe Donn" },
+                { userId: 4568924323, name: "Jane Yo" },
+                { userId: 8934590834, name: "Bon Joe" },
+                { userId: 7923411114, name: "Von Jour" },
+                { userId: 9185724444, name: "Spanish Inquisition" },
+                { userId: 7852396541, name: "Donald Trump" },
+            ],
+            postMessage: {
+                value: "Send something to ya mates",
+            },
+            performanceData: [
+                { id: 234908, jobTitle: 'Head of no-scoping', score: 420 },
+                { id: 543255, jobTitle: 'Noob pawning', score: 6969 },
+                { id: 727224, jobTitle: 'Master String Reverser', score: 321 },
+                { id: 123467, jobTitle: 'Bureau of bureaucracy', score: 9001 },
+                { id: 578546, jobTitle: 'Console Pleb Tears Collection', score: 1337 },
+                { id: 248968, jobTitle: 'Government worker (Beneficiary)', score: 99 },
+            ],
+        });
     </script>
 </body>
 

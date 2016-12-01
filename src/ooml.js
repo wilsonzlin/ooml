@@ -67,13 +67,13 @@
 		throw new Error('This instance is no longer available to use');
 	};
 
-	var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
-		OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
-		OOML_ARRAY_PROPNAME_PARENTDOMELEM = '__oomlContainerDOMElem',
+	var OOML_ARRAY_PROPNAME_INTERNALARRAY = 'oomlInternalArray',
+		OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = 'oomlElementConstructor',
+		OOML_ARRAY_PROPNAME_PARENTDOMELEM = 'oomlContainerDOMElem',
 
-		OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
-		OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
-		OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyContainer';
+		OOML_NODE_PROPNAME_TEXTFORMAT = 'oomlFormatStr',
+		OOML_NODE_PROPNAME_FORMATPARAMMAP = 'oomlParamMap',
+		OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = 'oomlIsElemPropertyContainer';
 
 	<ZC-IMPORT[utils]>
 

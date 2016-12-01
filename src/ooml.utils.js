@@ -1,7 +1,7 @@
 var Utils = {
 	DOM: {
 		find: function(rootElem, sel) {
-			return Array.prototype.slice.call(rootElem.querySelectorAll(sel));
+			return Utils.merge(rootElem.querySelectorAll(sel));
 		},
 	},
 	merge: function() {
@@ -26,8 +26,8 @@ var Utils = {
 	constructElement: function(elemConstructor, obj) {
 		if (obj instanceof elemConstructor) {
 			return obj;
-		} else if (elemConstructor == OOML.Element) {
-			throw new SyntaxError('Unable to construct new instance; OOML.Element is an abstract class');
+		} else if (elemConstructor == OOML.Element || elemConstructor == HTMLElement) {
+			throw new SyntaxError('Unable to construct new instance; the type is an abstract class');
 		} else if (!Utils.isObjectLiteral(obj)) {
 			throw new TypeError('Unable to construct new instance; the provided object is not of the correct type');
 		}
@@ -66,20 +66,8 @@ var Utils = {
 			map: paramMap,
 		};
 	},
-	clone: function(obj) {
-		if (Array.isArray(obj)) {
-			return obj.map(function(val) { return Utils.clone(val); });
-		} else if (Utils.isObjectLiteral(obj)) {
-			var ret = {};
-			Object.keys(obj).forEach(function(prop) {
-				ret[prop] = Utils.clone(obj[prop]);
-			});
-			return ret;
-		} else {
-			return obj;
-		}
-	},
 	cloneElemForInstantiation: function cloneElemForInstantiation(rootElem) {
+
 		if (rootElem instanceof Element) {
 
 			var clonedElem = document.createElement(rootElem.nodeName);
