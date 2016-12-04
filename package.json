@@ -1,0 +1,23 @@
+{
+  "name": "ooml",
+  "version": "1.0.0",
+  "description": "Object-orientated modern web UI anti-framework",
+  "main": "dist/ooml.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lerouche/ooml.git"
+  },
+  "keywords": [
+    "ooml",
+    "dynamic",
+    "templating",
+    "ui",
+    "json"
+  ],
+  "author": "Wilson Lin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lerouche/ooml/issues"
+  },
+  "homepage": "https://github.com/lerouche/ooml#readme"
+}
