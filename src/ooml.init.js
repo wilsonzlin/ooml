@@ -1,4 +1,6 @@
 OOML.init = function(settings) {
+	settings = settings || {};
+
 	var globals = settings.globals,
 		rootElem = settings.rootElem || document.body;
 
