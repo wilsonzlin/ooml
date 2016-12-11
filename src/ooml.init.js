@@ -40,7 +40,7 @@ OOML.init = function(settings) {
 				attrs.forEach(function(attr) {
 					if (attr.name.indexOf('on') === 0) {
 						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = {};
-						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('globals', 'event', attr.nodeValue);
+						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('globals', 'event', 'event.preventDefault();' + attr.nodeValue);
 						current.removeAttributeNode(attr);
 					} else {
 						toProcess.push(attr);
