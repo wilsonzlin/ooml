@@ -385,13 +385,16 @@ OOML.init = function(settings) {
 
 	Utils.DOM.find(rootElem, '[ooml-instantiate]').forEach(function(instanceInstantiationElem) {
 
-		var instDetails = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' '),
-			className = instDetails[0],
+		var instDetails  = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' '),
+			className    = instDetails[0],
 			instanceName = instDetails[1];
 
 		if (objects[instanceName]) throw new SyntaxError('An object already exists with the name ' + instanceName);
 
-		var instance = new classes[className];
+		var initStateJSON = instanceInstantiationElem.textContent.trim(),
+			initState     = initStateJSON ? JSON.parse(initStateJSON) : undefined;
+
+		var instance = new classes[className](initState);
 
 		instance.__oomlAttach({ insertAfter: instanceInstantiationElem });
 
