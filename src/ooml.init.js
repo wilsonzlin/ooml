@@ -22,9 +22,34 @@ OOML.init = function(settings) {
 
 		var toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
 
-		// Only use the first element for the class's DOM tree
-		while (toProcess.length && !(toProcess[0] instanceof Element)) toProcess.shift();
+		// Don't need to remove ooml-property or ooml-method as parent template is removed after parsing
+		var predefinedProperties = Object.create(null);
+		var predefinedMethods = Object.create(null);
+
+		// Process predefined properties (properties must be defined first)
+		while (toProcess.length && (toProcess[0].nodeName == 'OOML-PROPERTY' || !(toProcess[0] instanceof Element))) {
+			var node = toProcess.shift();
+			if (node instanceof Element) {
+				var propName = node.getAttribute('name');
+				var evalValue = Utils.getEvalValue(node.textContent);
+
+				predefinedProperties[propName] = evalValue;
+				localPropertyNames[propName] = true;
+			}
+		}
+		// Process predefined properties (methods must be defined after properties)
+		while (toProcess.length && (toProcess[0].nodeName == 'OOML-METHOD' || !(toProcess[0] instanceof Element))) {
+			var node = toProcess.shift();
+			if (node instanceof Element) {
+				var propName = node.getAttribute('name');
+				var evalValue = Utils.getEvalValue(node.textContent);
+
+				predefinedMethods[propName] = evalValue;
+			}
+		}
+		// Trim non-elements from the right
 		while (toProcess[1] && !(toProcess[1] instanceof Element)) toProcess.pop();
+
 		if (toProcess.length !== 1) throw new SyntaxError('The class ' + className + ' is empty or contains more than one root element');
 		toProcess = [toProcess[0]];
 
@@ -69,7 +94,8 @@ OOML.init = function(settings) {
 					propName = regexpMatches[2];
 					isArraySubstitution = !!regexpMatches[3];
 
-					if (localPropertyNames[propName]) {
+					// Don't allow multiple element substitution of the same property, but allow that property to be predefined
+					if (localPropertyNames[propName] && !predefinedProperties[propName]) {
 						throw new SyntaxError('The property ' + propName + ' is already defined');
 					}
 
@@ -390,12 +416,18 @@ OOML.init = function(settings) {
 
 			Object.defineProperties(this, propertiesGetterSetterFuncs);
 
+			for (var propName in predefinedProperties) {
+				instance[propName] = predefinedProperties[propName];
+			}
 			// This works, as instances are constructed AFTER classes are initialised (including prototypes)
 			if (initState) this.assign(initState);
 		};
 		classes[className].__oomlProperties = localPropertyNames;
 		classes[className].prototype = Object.create(OOML.Element.prototype);
 		classes[className].prototype.constructor = classes[className];
+		for (var methodName in predefinedMethods) {
+			classes[className].prototype[methodName] = predefinedMethods[methodName];
+		}
 	});
 
 	Utils.DOM.find(rootElem, '[ooml-instantiate]').forEach(function(instanceInstantiationElem) {
@@ -406,8 +438,7 @@ OOML.init = function(settings) {
 
 		if (objects[instanceName]) throw new SyntaxError('An object already exists with the name ' + instanceName);
 
-		var initStateJSON = instanceInstantiationElem.textContent.trim(),
-			initState     = initStateJSON ? eval('(' + initStateJSON + ')') : undefined;
+		var initState = Utils.getEvalValue(instanceInstantiationElem.textContent);
 
 		var instance = new classes[className](initState);
 

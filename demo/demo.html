@@ -54,6 +54,21 @@
         </template>
 
         <template ooml-class="User">
+            <ooml-property name="name"></ooml-property>
+            <ooml-property name="performanceData">[
+                { id: 234908, jobTitle: 'Head of no-scoping', score: 420 },
+                { id: 543255, jobTitle: 'Noob pawning', score: 6969 },
+                { id: 727224, jobTitle: 'Master String Reverser', score: 321 },
+                { id: 123467, jobTitle: 'Bureau of bureaucracy', score: 9001 },
+                { id: 578546, jobTitle: 'Console Pleb Tears Collection', score: 1337 },
+                { id: 248968, jobTitle: 'Government worker (Beneficiary)', score: 99 },
+            ]</ooml-property>
+            <ooml-method name="countLettersInName">
+                function() {
+                    return this.name.length;
+                }
+            </ooml-method>
+
             <article class="user">
                 <h1 class="title">Welcome {{ this.name }} (@{{ this.username }})</h1>
                 <span class="subtitle">Here's what we know about you as of {{ this.lastUpdated }}</span>
@@ -130,37 +145,28 @@
         });
 
         var wilson = ooml.objects.wilson;
-        // wilson.assign({
-        //     name: "Wilson Lin",
-        //     username: "XxX_MLG_360_NO_SCOPE_1337_COD_xXx",
-        //     lastUpdated: new Date(2016, 9, 3, 7, 1, 1),
-        //     age: 14,
-        //     birthday: new Date(1931, 4, 5).toDateString(),
-        //     gender: 'Undecided voter',
-        //     ethnicity: 'PCMaster',
-        //     password: 'l33th4ck3r',
-        //     contactedFriends: [
-        //         { userId: 2349243589, name: "John Joe" },
-        //         { userId: 4594395534, name: "Jane Joe" },
-        //         { userId: 2586848393, name: "Joe Donn" },
-        //         { userId: 4568924323, name: "Jane Yo" },
-        //         { userId: 8934590834, name: "Bon Joe" },
-        //         { userId: 7923411114, name: "Von Jour" },
-        //         { userId: 9185724444, name: "Spanish Inquisition" },
-        //         { userId: 7852396541, name: "Donald Trump" },
-        //     ],
-        //     postMessage: {
-        //         value: "Send something to ya mates",
-        //     },
-        //     performanceData: [
-        //         { id: 234908, jobTitle: 'Head of no-scoping', score: 420 },
-        //         { id: 543255, jobTitle: 'Noob pawning', score: 6969 },
-        //         { id: 727224, jobTitle: 'Master String Reverser', score: 321 },
-        //         { id: 123467, jobTitle: 'Bureau of bureaucracy', score: 9001 },
-        //         { id: 578546, jobTitle: 'Console Pleb Tears Collection', score: 1337 },
-        //         { id: 248968, jobTitle: 'Government worker (Beneficiary)', score: 99 },
-        //     ],
-        // });
+        wilson.assign({
+            username: "appropriateUsername",
+            lastUpdated: new Date(2016, 9, 3, 7, 1, 1),
+            age: 14,
+            birthday: new Date(1931, 4, 5).toDateString(),
+            gender: 'Undecided voter',
+            ethnicity: 'PCMaster',
+            password: 'l33th4ck3r',
+            contactedFriends: [
+                { userId: 2349243589, name: "John Joe" },
+                { userId: 4594395534, name: "Jane Joe" },
+                { userId: 2586848393, name: "Joe Donn" },
+                { userId: 4568924323, name: "Jane Yo" },
+                { userId: 8934590834, name: "Bon Joe" },
+                { userId: 7923411114, name: "Von Jour" },
+                { userId: 9185724444, name: "Spanish Inquisition" },
+                { userId: 7852396541, name: "Donald Trump" },
+            ],
+            postMessage: {
+                value: "Send something to ya mates",
+            },
+        });
     </script>
 </body>
 
