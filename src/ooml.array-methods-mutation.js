@@ -71,6 +71,9 @@ OOMLArrayProto.shift = function() {
 };
 
 OOMLArrayProto.sort = function(propName, ascending) {
+	if (ascending == undefined) {
+		ascending = true;
+	}
 	var ascendingMultiplier = ascending ? 1 : -1;
 
 	var sorted = this[OOML_ARRAY_PROPNAME_INTERNALARRAY].sort(function(a, b) {
