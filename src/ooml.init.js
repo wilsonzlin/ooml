@@ -66,8 +66,7 @@ OOML.init = function(settings) {
 				attrs.forEach(function(attr) {
 					if (attr.name.indexOf('on') === 0) {
 						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = {};
-						var eventName = attr.name.slice(2);
-						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName] = Function('$self', 'globals', 'event', 'event.preventDefault();' + attr.nodeValue);
+						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('$self', 'globals', 'event', 'event.preventDefault();' + attr.nodeValue);
 						current.removeAttributeNode(attr);
 					} else {
 						toProcess.push(attr);
@@ -245,8 +244,7 @@ OOML.init = function(settings) {
 					if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
 						Object.keys(current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]).forEach(function(eventName) {
 							// Event object will be provided when called by browser
-							var boundHandler = current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName].bind(instance, current, globals);
-							current.addEventListener(eventName, boundHandler, CAPTURE_EVENTS.indexOf(eventName) > -1);
+							current[eventName] = current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName].bind(instance, current, globals);
 						});
 					}
 
