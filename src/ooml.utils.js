@@ -88,6 +88,9 @@ var Utils = {
 			if (rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
 				clonedElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]; // Don't clone; keep reference to original function
 			}
+			if (rootElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
+				clonedElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]; // Don't clone; keep reference to original function
+			}
 
 			for (var i = 0; i < rootElem.attributes.length; i++) {
 				var rootAttr = rootElem.attributes[i];

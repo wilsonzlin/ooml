@@ -64,9 +64,13 @@ OOML.init = function(settings) {
 				var attrs = Utils.merge(current.attributes); // To prevent indexes from changing when removing inline event handler attributes
 
 				attrs.forEach(function(attr) {
-					if (attr.name.indexOf('on') === 0) {
+					if (attr.name.indexOf('childon') === 0) {
+						if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = {};
+						current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'globals', 'data', attr.nodeValue);
+						current.removeAttributeNode(attr);
+					} else if (attr.name.indexOf('on') === 0) {
 						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = {};
-						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('$self', 'globals', 'event', 'event.preventDefault();' + attr.nodeValue);
+						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('$self', 'globals', 'dispatch', 'event', 'event.preventDefault();' + attr.nodeValue);
 						current.removeAttributeNode(attr);
 					} else {
 						toProcess.push(attr);
@@ -227,7 +231,13 @@ OOML.init = function(settings) {
 
 			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
 				toProcess = [instanceDom],
-				current;
+				current,
+
+				dispatchEventToParent = function(eventName, eventData) {
+					if (instanceDom.parentNode && instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] && instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName]) {
+						instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName](eventData);
+					}
+				};
 
 			while (current = toProcess.shift()) {
 				if (current instanceof Element) {
@@ -244,7 +254,13 @@ OOML.init = function(settings) {
 					if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
 						Object.keys(current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]).forEach(function(eventName) {
 							// Event object will be provided when called by browser
-							current[eventName] = current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName].bind(instance, current, globals);
+							current[eventName] = current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName].bind(instance, current, globals, dispatchEventToParent);
+						});
+					}
+					if (current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
+						Object.keys(current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]).forEach(function(eventName) {
+							// Event object will be provided when called by child OOML element
+							current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName].bind(instance, current, globals);
 						});
 					}
 
@@ -305,6 +321,9 @@ OOML.init = function(settings) {
 							throw new Error('Unrecognised parent');
 						}
 					},
+				},
+				dispatch: {
+					value: dispatchEventToParent,
 				},
 				__oomlDomElem: {
 					value: instanceDom,

@@ -42,7 +42,7 @@
     </div>
     <main>
         <template ooml-class="Friend">
-            <li><a href="{{ this.userId }}">{{ this.name }}</a></li>
+            <li><a href="{{ this.userId }}" onclick="dispatch('click', { friendName: this.name })">{{ this.name }}</a></li>
         </template>
 
         <template ooml-class="PerformanceEntry">
@@ -102,7 +102,7 @@
                 <button>Delete my account</button>
 
                 <h2>Recently contacted friends</h2>
-                <ul>
+                <ul childonclick="this.postMessage.value = data.friendName">
                     { for Friend of this.contactedFriends }
                 </ul>
                 <span>Send a message</span>
