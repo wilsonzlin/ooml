@@ -36,6 +36,7 @@ OOMLArrayProto.set = function(idx, newVal) {
 	// Attach first to ensure that elem is attachable
 	newElem.__oomlAttach({
 		insertAfter: instance.__oomlDomElem,
+		parent: this,
 	});
 
 	// Destroy after attaching new elem

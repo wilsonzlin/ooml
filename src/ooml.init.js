@@ -280,9 +280,33 @@ OOML.init = function(settings) {
 				}
 			}
 
+			var currentlyAttachedTo; // For public method .detach only; is not used to actually detach, it is used to call the parent object's method of detachment
+
 			var propertiesGetterSetterFuncs = {
 				attributes: {
 					value: instanceAttributes,
+				},
+				detach: {
+					value: function() {
+						if (instanceIsDestructed) {
+							OOMLInstanceDestructedError();
+						}
+
+						if (!instanceIsAttached) {
+							throw new Error('This instance is not in use');
+						}
+
+						var parent = currentlyAttachedTo.parent;
+						if (parent instanceof OOML.Array) {
+							var indexOfThis = parent.indexOf(this);
+							if (indexOfThis < 0) throw new Error('This instance could not be found on its parent array');
+							parent.splice(indexOfThis, 1); // This will call __oomlDetach
+						} else if (parent instanceof OOML.Element) {
+							parent[currentlyAttachedTo.property] = null; // This will call __oomlDetach
+						} else {
+							throw new Error('Unrecognised parent');
+						}
+					},
 				},
 				__oomlDomElem: {
 					value: instanceDom,
@@ -294,8 +318,13 @@ OOML.init = function(settings) {
 						}
 
 						if (instanceIsAttached) {
-							throw new InternalError('This instance is already in use');
+							throw new Error('This instance is already in use');
 						}
+
+						currentlyAttachedTo = {
+							parent: settings.parent,
+							property: settings.property,
+						};
 
 						if (settings.appendTo) {
 							settings.appendTo.appendChild(instanceDom);
@@ -315,8 +344,10 @@ OOML.init = function(settings) {
 						}
 
 						if (!instanceIsAttached) {
-							throw new InternalError('This instance is not in use');
+							throw new Error('This instance is not in use');
 						}
+
+						currentlyAttachedTo = undefined;
 
 						instanceDom.parentNode.removeChild(instanceDom);
 						instanceIsAttached = false;
@@ -325,7 +356,7 @@ OOML.init = function(settings) {
 				__oomlDestruct: {
 					value: function() {
 						if (instanceIsDestructed) {
-							throw new InternalError('Attempted to destruct already-destructed instance');
+							throw new Error('Attempted to destruct already-destructed instance');
 						}
 
 						var thisInstance = this;
@@ -368,11 +399,13 @@ OOML.init = function(settings) {
 						var elemDetails = localPropertiesMap[prop];
 
 						// Attach first to ensure that element is attachable
-						var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
-						newElem.__oomlAttach({appendTo: elemDetails.parent});
+						if (newVal != undefined) {
+							var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
+							newElem.__oomlAttach({ appendTo: elemDetails.parent, parent: this, property: prop });
+						}
 
-						// Element may not be OOML.Element and therefore may not need destructing
-						if (instancePropertyValues[prop] && instancePropertyValues[prop].__oomlDestruct) {
+						// Current element may not be OOML.Element and therefore may not need destructing
+						if (instancePropertyValues[prop] instanceof OOML.Element) {
 							instancePropertyValues[prop].__oomlDestruct();
 						}
 

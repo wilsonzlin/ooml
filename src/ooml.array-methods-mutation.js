@@ -3,7 +3,8 @@
 */
 OOMLArrayProto.initialize = function(arr) {
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR],
-		parent = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
+		parent = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM],
+		that = this;
 
 	arr = arr.map(function(elem) {
 		return Utils.constructElement(elemConstructor, elem);
@@ -13,7 +14,7 @@ OOMLArrayProto.initialize = function(arr) {
 		elemToDestruct.__oomlDestruct();
 	});
 	arr.forEach(function(elemToAttach) {
-		elemToAttach.__oomlAttach({ appendTo: parent });
+		elemToAttach.__oomlAttach({ appendTo: parent, parent: that });
 	});
 
 	this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = arr;
@@ -38,7 +39,7 @@ OOMLArrayProto.push = function(newVal) {
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
-	newElem.__oomlAttach({ appendTo: parent });
+	newElem.__oomlAttach({ appendTo: parent, parent: this });
 
 	arr.push(newElem);
 
@@ -115,7 +116,7 @@ OOMLArrayProto.unshift = function(newVal) {
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
-	newElem.__oomlAttach({ prependTo: parent });
+	newElem.__oomlAttach({ prependTo: parent, parent: this });
 
 	arr.unshift(newElem);
 
