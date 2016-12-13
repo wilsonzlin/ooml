@@ -24,7 +24,7 @@ OOML.init = function(settings) {
 
 		// Only use the first element for the class's DOM tree
 		while (toProcess.length && !(toProcess[0] instanceof Element)) toProcess.shift();
-		if (!toProcess.length) throw new SyntaxError('The class ' + className + ' is empty');
+		if (toProcess.length !== 1) throw new SyntaxError('The class ' + className + ' is empty or contains more than one root element');
 		toProcess = [toProcess[0]];
 
 		var rootElemOfClass = toProcess[0],
