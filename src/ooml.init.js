@@ -7,7 +7,7 @@ OOML.init = function(settings) {
 	var classes = Object.create(null),
 		objects = Object.create(null);
 
-	if (typeof rootElem == "string") rootElem = document.querySelector(rootElem);
+	if (typeof rootElem == 'string') rootElem = document.querySelector(rootElem);
 
 	Utils.DOM.find(rootElem, 'template[ooml-class]').forEach(function(classTemplateElem) {
 
@@ -24,6 +24,7 @@ OOML.init = function(settings) {
 
 		// Only use the first element for the class's DOM tree
 		while (toProcess.length && !(toProcess[0] instanceof Element)) toProcess.shift();
+		while (toProcess[1] && !(toProcess[1] instanceof Element)) toProcess.pop();
 		if (toProcess.length !== 1) throw new SyntaxError('The class ' + className + ' is empty or contains more than one root element');
 		toProcess = [toProcess[0]];
 
@@ -89,7 +90,7 @@ OOML.init = function(settings) {
 							return elemConstructor;
 						})();
 
-					if (typeof elemConstructor != "function") {
+					if (typeof elemConstructor != 'function') {
 						throw new TypeError(elemConstructorName + ' is not a valid class');
 					}
 
@@ -187,9 +188,6 @@ OOML.init = function(settings) {
 
 			var instancePropertyValues = Object.create(null),
 				instanceAttributes = new Proxy(Object.create(null), { // OOML instance attributes, not HTML/DOM attributes; use Proxy to keep types
-						get: function(target, key) {
-							return target[key];
-						},
 						set: function(target, key, newValue) {
 							instanceDom.dataset[key] = target[key] = newValue;
 							return true;
@@ -270,7 +268,7 @@ OOML.init = function(settings) {
 						}
 
 						if (instanceIsAttached) {
-							throw new Error('This instance is already in use');
+							throw new InternalError('This instance is already in use');
 						}
 
 						if (settings.appendTo) {
@@ -291,7 +289,7 @@ OOML.init = function(settings) {
 						}
 
 						if (!instanceIsAttached) {
-							throw new Error('This instance is not in use');
+							throw new InternalError('This instance is not in use');
 						}
 
 						instanceDom.parentNode.removeChild(instanceDom);
@@ -409,7 +407,7 @@ OOML.init = function(settings) {
 		if (objects[instanceName]) throw new SyntaxError('An object already exists with the name ' + instanceName);
 
 		var initStateJSON = instanceInstantiationElem.textContent.trim(),
-			initState     = initStateJSON ? eval("(" + initStateJSON + ")") : undefined;
+			initState     = initStateJSON ? eval('(' + initStateJSON + ')') : undefined;
 
 		var instance = new classes[className](initState);
 
