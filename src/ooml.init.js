@@ -434,15 +434,17 @@ OOML.init = function(settings) {
 							newVal = '' + newVal;
 						}
 
-						localPropertiesMap[prop].forEach(function(node) {
-							var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
-							node[OOML_NODE_PROPNAME_FORMATPARAMMAP]['this.' + prop].forEach(function(offset) {
-								formatStr[offset] = newVal;
+						if (localPropertiesMap[prop]) { // Some properties are unused in the DOM (e.g. predefined properties)
+							localPropertiesMap[prop].forEach(function(node) {
+								var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
+								node[OOML_NODE_PROPNAME_FORMATPARAMMAP]['this.' + prop].forEach(function(offset) {
+									formatStr[offset] = newVal;
+								});
+								OOMLNodesWithUnwrittenChanges.add(node);
 							});
-							OOMLNodesWithUnwrittenChanges.add(node);
-						});
 
-						OOMLWriteChanges();
+							OOMLWriteChanges();
+						}
 
 						instancePropertyValues[prop] = newVal;
 					};

@@ -2,3 +2,5 @@
 /src/
 /compile.js
 /update.sh
+/.gitignore
+/.npmignore
