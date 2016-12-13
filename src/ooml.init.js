@@ -186,7 +186,21 @@ OOML.init = function(settings) {
 				localGlobalPropertiesMap = Object.create(null); // For destructuring; to remember what to remove from globalPropertiesMap
 
 			var instancePropertyValues = Object.create(null),
-				instanceExposedDOMElems = {}; // { "key": HTMLElement }
+				instanceAttributes = new Proxy(Object.create(null), { // OOML instance attributes, not HTML/DOM attributes; use Proxy to keep types
+						get: function(target, key) {
+							return target[key];
+						},
+						set: function(target, key, newValue) {
+							instanceDom.dataset[key] = target[key] = newValue;
+							return true;
+						},
+						delete: function(target, key) {
+							delete instance.dataset[key];
+							delete target[key];
+							return true;
+						},
+					}),
+				instanceExposedDOMElems = Object.create(null); // { "key": HTMLElement }
 
 			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
 				toProcess = [instanceDom],
@@ -243,8 +257,8 @@ OOML.init = function(settings) {
 			}
 
 			var propertiesGetterSetterFuncs = {
-				data: {
-					value: instanceDom.dataset,
+				attributes: {
+					value: instanceAttributes,
 				},
 				__oomlDomElem: {
 					value: instanceDom,
@@ -395,7 +409,7 @@ OOML.init = function(settings) {
 		if (objects[instanceName]) throw new SyntaxError('An object already exists with the name ' + instanceName);
 
 		var initStateJSON = instanceInstantiationElem.textContent.trim(),
-			initState     = initStateJSON ? JSON.parse(initStateJSON) : undefined;
+			initState     = initStateJSON ? eval("(" + initStateJSON + ")") : undefined;
 
 		var instance = new classes[className](initState);
 
