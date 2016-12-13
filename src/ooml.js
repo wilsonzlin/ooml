@@ -25,7 +25,9 @@
 		OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
 		OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
 		OOML_NODE_PROPNAME_GENERICEVENTHANDLERS = '__oomlGenericEventHandlers',
-		OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyContainer';
+		OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyContainer',
+
+		CAPTURE_EVENTS = ['load', 'focus', 'blur', 'scroll', 'mouseenter', 'mouseleave', 'click'];
 
 	<ZC-IMPORT[utils]>
 
