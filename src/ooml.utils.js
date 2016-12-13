@@ -3,12 +3,6 @@ var Utils = {
 		find: function(rootElem, sel) {
 			return Utils.merge(rootElem.querySelectorAll(sel));
 		},
-		// UNUSED:
-		// children: function(elem, sel) {
-		// 	var children = Utils.merge(elem.children);
-		// 	if (sel) children = children.filter(function(node) { return node.matches(sel); });
-		// 	return children;
-		// },
 	},
 	getEvalValue: function(codeStr) {
 		codeStr = codeStr.trim() || undefined;

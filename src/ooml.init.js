@@ -259,7 +259,7 @@ OOML.init = function(settings) {
 					}
 					if (current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
 						Object.keys(current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]).forEach(function(eventName) {
-							// Event object will be provided when called by child OOML element
+							// Event data will be provided when called by child OOML element
 							current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName].bind(instance, current, globals);
 						});
 					}
