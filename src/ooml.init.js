@@ -66,7 +66,7 @@ OOML.init = function(settings) {
 				attrs.forEach(function(attr) {
 					if (attr.name.indexOf('childon') === 0) {
 						if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = {};
-						current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'globals', 'data', attr.nodeValue);
+						current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'globals', 'dispatch', 'data', attr.nodeValue);
 						current.removeAttributeNode(attr);
 					} else if (attr.name.indexOf('on') === 0) {
 						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = {};
@@ -260,7 +260,7 @@ OOML.init = function(settings) {
 					if (current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
 						Object.keys(current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]).forEach(function(eventName) {
 							// Event data will be provided when called by child OOML element
-							current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName].bind(instance, current, globals);
+							current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName].bind(instance, current, globals, dispatchEventToParent);
 						});
 					}
 
