@@ -65,11 +65,11 @@ OOML.init = function(settings) {
 
 				attrs.forEach(function(attr) {
 					if (attr.name.indexOf('childon') === 0) {
-						if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = {};
+						if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = Object.create(null);
 						current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'globals', 'dispatch', 'data', attr.nodeValue);
 						current.removeAttributeNode(attr);
 					} else if (attr.name.indexOf('on') === 0) {
-						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = {};
+						if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = Object.create(null);
 						current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('$self', 'globals', 'dispatch', 'event', 'event.preventDefault();' + attr.nodeValue);
 						current.removeAttributeNode(attr);
 					} else {
@@ -234,8 +234,8 @@ OOML.init = function(settings) {
 				current,
 
 				dispatchEventToParent = function(eventName, eventData) {
-					if (instanceDom.parentNode && instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] && instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName]) {
-						instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName](eventData);
+					if (instanceDom.parentNode && instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] && instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName]) {
+						instanceDom.parentNode[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName](eventData);
 					}
 				};
 
@@ -260,7 +260,8 @@ OOML.init = function(settings) {
 					if (current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
 						Object.keys(current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]).forEach(function(eventName) {
 							// Event data will be provided when called by child OOML element
-							current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName].bind(instance, current, globals, dispatchEventToParent);
+							if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] = Object.create(null);
+							current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName] = current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName].bind(instance, current, globals, dispatchEventToParent);
 						});
 					}
 
