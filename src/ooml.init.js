@@ -299,7 +299,13 @@ OOML.init = function(settings) {
 
 			var propertiesGetterSetterFuncs = {
 				attributes: {
-					value: instanceAttributes,
+					set: function(newObj) {
+						Object.keys(instanceAttributes).forEach(function(key) {
+							delete instanceAttributes[key];
+						});
+						Object.assign(instanceAttributes, newObj);
+					},
+					get: function() { return instanceAttributes; },
 				},
 				detach: {
 					value: function() {
