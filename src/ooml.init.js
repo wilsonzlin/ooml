@@ -222,7 +222,7 @@ OOML.init = function(settings) {
 							return true;
 						},
 						delete: function(target, key) {
-							delete instance.dataset[key];
+							delete instanceDom.dataset[key];
 							delete target[key];
 							return true;
 						},
