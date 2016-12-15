@@ -221,7 +221,7 @@ OOML.init = function(settings) {
 							instanceDom.dataset[key] = target[key] = newValue;
 							return true;
 						},
-						delete: function(target, key) {
+						deleteProperty: function(target, key) {
 							delete instanceDom.dataset[key];
 							delete target[key];
 							return true;
