@@ -38,6 +38,31 @@ var Utils = {
 
 		return new elemConstructor(obj);
 	},
+	parseElemSubstitutionCode: function(str) {
+		var props = [];
+
+		while (true) {
+			var posOfOpeningBraces = str.indexOf('{');
+			if (posOfOpeningBraces < 0) {
+				break;
+			}
+			str = str.slice(posOfOpeningBraces + 1);
+
+			var posOfClosingBraces = str.indexOf('}');
+			if (posOfClosingBraces < 0) {
+				throw new SyntaxError("Unexpected end of input; expected closing element substitution brace");
+			}
+			var param = str.slice(0, posOfClosingBraces).trim().split(' ');
+			props.push({
+				class: param[0],
+				propName: param[1].slice(5), // Remove "this."
+			});
+
+			str = str.slice(posOfClosingBraces + 1);
+		}
+
+		return props;
+	},
 	splitStringByParamholders: function(str) {
 		var strParts = [],
 			paramMap = Object.create(null);
