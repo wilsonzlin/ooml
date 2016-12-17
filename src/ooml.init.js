@@ -87,9 +87,9 @@ OOML.init = function(settings) {
 					isArraySubstitution,
 					propName;
 
-				if (current instanceof Text && current.parentNode.childNodes.length == 1 &&
-					((regexpMatches = / *\{ *for ([A-Za-z0-9._]+) of this\.([A-Za-z0-9_]+) *(\}) */.exec(nodeValue)) ||
-					(regexpMatches = / *\{ *([A-Za-z0-9._]+) this\.([A-Za-z0-9_]+) *\} */.exec(nodeValue)))
+				if (current instanceof Text &&
+					((regexpMatches = /\s*\{\s*for ([A-Za-z0-9._]+) of this\.([A-Za-z0-9_]+)\s*(\})\s*/.exec(nodeValue)) ||
+					(regexpMatches = /\s*\{\s*([A-Za-z0-9._]+) this\.([A-Za-z0-9_]+)\s*\}\s*/.exec(nodeValue)))
 				) {
 
 					// Match element substitution
@@ -125,12 +125,13 @@ OOML.init = function(settings) {
 
 					if (isArraySubstitution) {
 						localArrayProperties[propName] = true;
+						current.parentNode[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG] = { elemConstructor: elemConstructor, propName: propName };
+						current.parentNode.removeChild(current);
 					} else {
 						localElemProperties[propName] = true;
+						current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = { elemConstructor: elemConstructor, propName: propName };
 					}
 
-					current.parentNode[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = { elemConstructor: elemConstructor, propName: propName, isArray: isArraySubstitution };
-					current.parentNode.removeChild(current);
 
 				} else if (nodeValue.indexOf('{{') > -1) {
 
@@ -242,13 +243,9 @@ OOML.init = function(settings) {
 			while (current = toProcess.shift()) {
 				if (current instanceof Element) {
 
-					if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
-						var config = current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG];
-						if (config.isArray) {
-							instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, current);
-						} else {
-							localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, parent: current };
-						}
+					if (current[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG]) {
+						var config = current[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG];
+						instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, current);
 					}
 
 					if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
@@ -275,7 +272,13 @@ OOML.init = function(settings) {
 					Utils.pushAll(toProcess, current.attributes, current.childNodes);
 
 				} else if (current instanceof Attr || current instanceof Text) {
-					if (current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
+					if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) { // Only on Text nodes
+						var config = current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG];
+						var commentNodeMarker = document.createComment('');
+						current.parentNode.insertBefore(commentNodeMarker, current);
+						current.parentNode.removeChild(current);
+						localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, insertAfter: commentNodeMarker };
+					} else if (current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
 						for (var propName in current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
 							if (propName.indexOf('this.') === 0) {
 								propName = propName.slice(5);
@@ -425,7 +428,7 @@ OOML.init = function(settings) {
 						// Attach first to ensure that element is attachable
 						if (newVal != undefined) {
 							var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
-							newElem.__oomlAttach({ appendTo: elemDetails.parent, parent: this, property: prop });
+							newElem.__oomlAttach({ insertAfter: elemDetails.insertAfter, parent: this, property: prop });
 						}
 
 						// Current element may not be OOML.Element and therefore may not need destructing

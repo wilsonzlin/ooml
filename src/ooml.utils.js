@@ -76,8 +76,8 @@ var Utils = {
 
 			var clonedElem = document.createElement(rootElem.nodeName);
 
-			if (rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
-				clonedElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]; // Probably don't need to clone as it will never be mutilated
+			if (rootElem[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG]) {
+				clonedElem[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG]; // Probably don't need to clone as it will never be mutilated
 			}
 			if (rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
 				clonedElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]; // Don't clone; keep reference to original function
@@ -113,6 +113,9 @@ var Utils = {
 			}
 			if (rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
 				clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]; // Probably don't need to clone as it will never be mutilated
+			}
+			if (rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
+				clonedElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]; // Probably don't need to clone as it will never be mutilated
 			}
 
 		}
