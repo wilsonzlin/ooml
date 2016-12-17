@@ -88,8 +88,8 @@ OOML.init = function(settings) {
 					propName;
 
 				if (current instanceof Text &&
-					((regexpMatches = /\s*\{\s*for ([A-Za-z0-9._]+) of this\.([A-Za-z0-9_]+)\s*(\})\s*/.exec(nodeValue)) ||
-					(regexpMatches = /\s*\{\s*([A-Za-z0-9._]+) this\.([A-Za-z0-9_]+)\s*\}\s*/.exec(nodeValue)))
+					((regexpMatches = /^\s*\{\s*for ([A-Za-z0-9._]+) of this\.([A-Za-z0-9_]+)\s*(\})\s*$/.exec(nodeValue)) ||
+					(regexpMatches = /^\s*\{\s*([A-Za-z0-9._]+) this\.([A-Za-z0-9_]+)\s*\}\s*$/.exec(nodeValue)))
 				) {
 
 					// Match element substitution
