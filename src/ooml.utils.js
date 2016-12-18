@@ -27,7 +27,7 @@ var Utils = {
 		return val instanceof Date || ['undefined', 'number', 'boolean', 'string'].indexOf(typeof val) > -1
 	},
 	isObjectLiteral: function(obj) {
-		return obj.constructor == Object;
+		return obj.constructor == Object || (obj.__proto__ === undefined && obj instanceof Object);
 	},
 	constructElement: function(elemConstructor, obj) {
 		if (obj instanceof elemConstructor) {
@@ -105,9 +105,11 @@ var Utils = {
 	},
 	cloneElemForInstantiation: function cloneElemForInstantiation(rootElem) {
 
+	    var clonedElem;
+
 		if (rootElem instanceof Element) {
 
-			var clonedElem = document.createElement(rootElem.nodeName);
+			clonedElem = document.createElement(rootElem.nodeName);
 
 			if (rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
 				clonedElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]; // Don't clone; keep reference to original function
@@ -137,7 +139,7 @@ var Utils = {
 
 		} else if (rootElem instanceof Text) {
 
-			var clonedElem = document.createTextNode(rootElem.nodeValue);
+			clonedElem = document.createTextNode(rootElem.nodeValue);
 			if (rootElem[OOML_NODE_PROPNAME_TEXTFORMAT]) {
 				clonedElem[OOML_NODE_PROPNAME_TEXTFORMAT] = rootElem[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
 			}

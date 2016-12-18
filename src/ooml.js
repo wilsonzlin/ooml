@@ -33,6 +33,7 @@
         OOML_ELEMENT_PROPNAME_ATTACH = '__oomlAttach',
         OOML_ELEMENT_PROPNAME_DETACH = '__oomlDetach',
         OOML_ELEMENT_PROPNAME_DESTRUCT = '__oomlDestruct',
+        OOML_ELEMENT_PROPNAME_DETACHOWNELEMPROPELEM = '__oomlDetachElemPropElem',
 
         OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
         OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',

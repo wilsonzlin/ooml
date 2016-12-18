@@ -362,16 +362,40 @@ OOML.init = function(settings) {
                     if (parent instanceof OOML.Array) {
                         var indexOfThis = parent.indexOf(this);
                         if (indexOfThis < 0) throw new Error('This instance could not be found on its parent array');
-                        parent.splice(indexOfThis, 1); // This will call __oomlDetach
+                        // This will call __oomlDetach
+                        parent.splice(indexOfThis, 1);
                     } else if (parent instanceof OOML.Element) {
-                        parent[currentlyAttachedTo.property] = null; // This will call __oomlDetach
+                        // This will update property to null but not destruct existing element
+                        parent[OOML_ELEMENT_PROPNAME_DETACHOWNELEMPROPELEM](currentlyAttachedTo.property);
                     } else {
                         throw new Error('Unrecognised parent');
                     }
+
+                    return this;
                 },
             };
-            propertiesGetterSetterFuncs.dispatch = {
-                value: dispatchEventToParent,
+            propertiesGetterSetterFuncs.destruct = {
+                value: function() {
+                    if (instanceIsAttached) {
+                        throw new Error('This instance is still in use; detach it before destructing it');
+                    }
+
+                    this[OOML_ELEMENT_PROPNAME_DESTRUCT]();
+                }
+            };
+            propertiesGetterSetterFuncs[OOML_ELEMENT_PROPNAME_DETACHOWNELEMPROPELEM] = {
+                value: function(propName) {
+                    if (!CLASS_ELEM_PROPERTIES_NAMES.has(propName) || !this[propName]) {
+                        throw new Error('The property value for ' + propName + ' is not an element');
+                    }
+                    if (instanceIsDestructed) {
+                        OOMLInstanceDestructedError();
+                    }
+
+                    // Don't go through setter, directly update the internal values object
+                    instancePropertyValues[propName][OOML_ELEMENT_PROPNAME_DETACH]();
+                    instancePropertyValues[propName] = null;
+                }
             };
             propertiesGetterSetterFuncs[OOML_ELEMENT_PROPNAME_DOMELEM] = {
                 value: instanceDom,
