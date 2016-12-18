@@ -563,6 +563,13 @@ OOML.init = function(settings) {
 
 		instance.__oomlAttach({ insertAfter: instanceInstantiationElem });
 
+		// Copy attributes on instantiation element to new instance's root element
+		Utils.merge(instanceInstantiationElem.attributes).forEach(function(attr) {
+			if (attr.name != 'ooml-instantiate') {
+				instance.__oomlDomElem.setAttribute(attr.name, attr.value);
+			}
+		});
+
 		// Remove after attaching constructed elem
 		instanceInstantiationElem.parentNode.removeChild(instanceInstantiationElem);
 
