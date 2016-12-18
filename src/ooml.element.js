@@ -3,7 +3,7 @@ var OOMLElementProto = OOML.Element.prototype;
 OOMLElementProto.toObject = function() {
 
 	var instance = this;
-	var obj = {};
+	var obj = Object.create(null);
 
 	this.constructor[OOML_CLASS_PROPNAME_PROPNAMES].forEach(function(propName) {
 		var value = instance[propName];
