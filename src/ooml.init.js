@@ -14,17 +14,17 @@ OOML.init = function(settings) {
 		var classDeclarationParts = classTemplateElem.getAttribute('ooml-class').split(' ');
 
 		// Get new class name
-		var className = classDeclarationParts[0];
-		if (classes[className]) throw new SyntaxError('The class ' + className + ' has already been initialised');
+		var CLASS_NAME = classDeclarationParts[0];
+		if (classes[CLASS_NAME]) throw new SyntaxError('The class ' + CLASS_NAME + ' has already been initialised');
 
 		// Get parent class
-		var classExtends;
+		var CLASS_PARENT_CLASS;
 		if (classDeclarationParts[1] == 'extends') {
-			classExtends = classDeclarationParts[2];
-			if (!classes[classExtends]) throw new SyntaxError('The class ' + classExtends + ' does not exist');
-			classExtends = classes[classExtends];
+			CLASS_PARENT_CLASS = classDeclarationParts[2];
+			if (!classes[CLASS_PARENT_CLASS]) throw new SyntaxError('The class ' + CLASS_PARENT_CLASS + ' does not exist');
+			CLASS_PARENT_CLASS = classes[CLASS_PARENT_CLASS];
 		} else {
-			classExtends = OOML.Element;
+			CLASS_PARENT_CLASS = OOML.Element;
 		}
 
 
@@ -84,12 +84,13 @@ OOML.init = function(settings) {
 		// Trim non-elements from the right
 		while (toProcess[1] && !(toProcess[1] instanceof Element)) toProcess.pop();
 
-		if (toProcess.length !== 1) throw new SyntaxError('The class ' + className + ' is empty or contains more than one root element');
+		if (toProcess.length !== 1) throw new SyntaxError('The class ' + CLASS_NAME + ' is empty or contains more than one root element');
 		toProcess = [toProcess[0]];
 
 		var CLASS_ROOT_ELEM = toProcess[0];
         var current;
 
+        // Remove template (class declaration) element
 		classTemplateElem.parentNode.removeChild(classTemplateElem);
 
 		while (current = toProcess.shift()) {
@@ -114,69 +115,53 @@ OOML.init = function(settings) {
 				Utils.pushAll(toProcess, current.childNodes);
 			} else if (current instanceof Attr || current instanceof Text) {
 
-				var nodeValue = current.nodeValue,
-					elemArrayRegexpMatches;
+				var nodeValue = current.nodeValue;
 
 				if (current instanceof Text &&
-					(
-						(elemArrayRegexpMatches = /^\s*\{\s*for ([A-Za-z0-9._]+) of this\.([A-Za-z0-9_]+)\s*\}\s*$/.exec(nodeValue)) ||
-						/^(\s*\{\s*([A-Za-z0-9._]+) this\.([A-Za-z0-9_]+)\s*\}\s*)+$/.test(nodeValue)
-					)
+                    /^(\s*\{\s*(for [A-Za-z0-9._]+ of|[A-Za-z0-9._]+) this\.([A-Za-z0-9_]+)\s*\}\s*)+$/.test(nodeValue)
 				) {
 
-					if (elemArrayRegexpMatches) {
-						var toParse = [{ class: elemArrayRegexpMatches[1], propName: elemArrayRegexpMatches[2], isArray: true }];
-					} else { // Has to be elem substitution
-						var toParse = Utils.parseElemSubstitutionCode(nodeValue);
-					}
-
-					toParse.forEach(function(metadata) {
+                    Utils.parseElemSubstitutionCode(nodeValue).forEach(function(metadata) {
 						// Match element substitution
 						var elemConstructorName = metadata.class;
 						var propName = metadata.propName;
-						var isArraySubstitution = !!metadata.isArray;
+						var isArraySubstitution = metadata.isArray;
 
-						// Don't allow multiple element substitution of the same property, but allow that property to be predefined
+						// The property can be predefined but not already in use
+                        // NOTE: It's not possible for more than one element substitution of the same property
 						if (CLASS_PROPERTIES_NAMES.has(propName) && CLASS_PREDEFINED_PROPERTIES_VALUES[propName] === undefined) {
 							throw new SyntaxError('The property ' + propName + ' is already defined');
 						}
-
 						CLASS_PROPERTIES_NAMES.add(propName);
+
 						var elemConstructor =
-							elemConstructorName == 'HTMLElement' ? HTMLElement :
-							elemConstructorName == 'OOML.Element' ? OOML.Element :
-							elemConstructorName.indexOf('.') == -1 ? classes[elemConstructorName] :
-							(function() {
-								var parts = elemConstructorName.split('.'),
-									elemConstructor = globals,
-									part;
+                                elemConstructorName == 'HTMLElement' ? HTMLElement :
+                                elemConstructorName == 'OOML.Element' ? OOML.Element :
+                                elemConstructorName.indexOf('.') == -1 ? classes[elemConstructorName] :
+                                (function() {
+                                    var parts = elemConstructorName.split('.'),
+                                        elemConstructor = globals,
+                                        part;
 
-								while (part = parts.shift()) {
-									elemConstructor = elemConstructor[part];
-								}
+                                    while (part = parts.shift()) {
+                                        elemConstructor = elemConstructor[part];
+                                    }
 
-								return elemConstructor;
-							})();
+                                    return elemConstructor;
+                                })();
 
 						if (typeof elemConstructor != 'function') {
 							throw new TypeError(elemConstructorName + ' is not a valid class');
 						}
 
 						if (isArraySubstitution) {
-							if (CLASS_ARRAY_PROPERTIES_NAMES.has(propName)) {
-								throw new SyntaxError(propName + ' is already declared');
-							}
 							CLASS_ARRAY_PROPERTIES_NAMES.add(propName);
-							current.parentNode[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG] = { elemConstructor: elemConstructor, propName: propName };
-							current.parentNode.removeChild(current);
 						} else {
-							if (CLASS_ELEM_PROPERTIES_NAMES.has(propName)) {
-								throw new SyntaxError(propName + ' is already declared');
-							}
 							CLASS_ELEM_PROPERTIES_NAMES.add(propName);
-							if (!current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = [];
-							current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].push({ elemConstructor: elemConstructor, propName: propName });
 						}
+
+                        if (!current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = [];
+                        current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].push({ elemConstructor: elemConstructor, propName: propName, isArray: isArraySubstitution });
 					});
 
 				} else if (nodeValue.indexOf('{{') > -1) {
@@ -251,7 +236,7 @@ OOML.init = function(settings) {
 			}
 		}
 
-		classes[className] = function(initState) {
+		classes[CLASS_NAME] = function(initState) {
 			var instance = this,
 				instanceIsDestructed = false,
 				instanceIsAttached = false;
@@ -286,11 +271,6 @@ OOML.init = function(settings) {
 			while (current = toProcess.shift()) {
 				if (current instanceof Element) {
 
-					if (current[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG]) {
-						var config = current[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG];
-						instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, current);
-					}
-
 					if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
 						Object.keys(current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]).forEach(function(eventName) {
 							// Event object will be provided when called by browser
@@ -315,14 +295,27 @@ OOML.init = function(settings) {
 					Utils.pushAll(toProcess, current.attributes, current.childNodes);
 
 				} else if (current instanceof Attr || current instanceof Text) {
-					if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) { // Only on Text nodes
+
+					if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
+
+					    // Only on Text nodes
 						current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].forEach(function(config) {
 							var commentNodeMarker = document.createComment('');
 							current.parentNode.insertBefore(commentNodeMarker, current);
-							localPropertiesMap[config.propName] = { elemConstructor: config.elemConstructor, insertAfter: commentNodeMarker };
+							if (config.isArray) {
+                                instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, commentNodeMarker);
+                            } else {
+                                localPropertiesMap[config.propName] = {
+                                    elemConstructor: config.elemConstructor,
+                                    insertAfter: commentNodeMarker
+                                };
+                            }
 						});
+
 						current.parentNode.removeChild(current);
+
 					} else if (current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
+
 						for (var propName in current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
 							if (propName.indexOf('this.') === 0) {
 								propName = propName.slice(5);
@@ -339,6 +332,7 @@ OOML.init = function(settings) {
 							}
 						}
 					}
+
 				}
 			}
 
@@ -557,16 +551,16 @@ OOML.init = function(settings) {
 		};
 
 		// Set properties for accessing properties' names and predefined properties' values
-		classes[className][OOML_CLASS_PROPNAME_PROPNAMES] = CLASS_PROPERTIES_NAMES;
-		classes[className][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = CLASS_PREDEFINED_PROPERTIES_VALUES;
+		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PROPNAMES] = CLASS_PROPERTIES_NAMES;
+		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = CLASS_PREDEFINED_PROPERTIES_VALUES;
 
 		// Make class inherit from parent class
-		classes[className].prototype = Object.create(classExtends.prototype);
-		classes[className].prototype.constructor = classes[className];
+		classes[CLASS_NAME].prototype = Object.create(CLASS_PARENT_CLASS.prototype);
+		classes[CLASS_NAME].prototype.constructor = classes[CLASS_NAME];
 
 		// Set defined methods in class prototype
 		for (var methodName in CLASS_PREDEFINED_METHODS_FUNCTIONS) {
-			classes[className].prototype[methodName] = CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName];
+			classes[CLASS_NAME].prototype[methodName] = CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName];
 		}
 	});
 

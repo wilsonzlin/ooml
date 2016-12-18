@@ -55,9 +55,15 @@ var Utils = {
 				throw new SyntaxError("Unexpected end of input; expected closing element substitution brace");
 			}
 			var param = str.slice(0, posOfClosingBraces).trim().split(' ');
+
+			var isArray = param[0] == 'for';
+			var className = isArray ? param[1] : param[0];
+			var propName = (isArray ? param[3] : param[1]).slice(5); // Remove "this."
+
 			props.push({
-				class: param[0],
-				propName: param[1].slice(5), // Remove "this."
+				class: className,
+				propName: propName,
+                isArray: isArray,
 			});
 
 			str = str.slice(posOfClosingBraces + 1);

@@ -20,7 +20,7 @@
 
 	var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
 		OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
-		OOML_ARRAY_PROPNAME_PARENTDOMELEM = '__oomlContainerDOMElem',
+		OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
 
 		OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
 		OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
@@ -28,13 +28,11 @@
 		OOML_NODE_PROPNAME_CHILDEVENTHANDLERS = '__oomlChildEventHandlers',
 		OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
 		OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyPlaceholder',
-		OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG = '__oomlIsElemArrayContainer',
 
         OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
         OOML_ELEMENT_PROPNAME_ATTACH = '__oomlAttach',
         OOML_ELEMENT_PROPNAME_DETACH = '__oomlDetach',
         OOML_ELEMENT_PROPNAME_DESTRUCT = '__oomlDestruct',
-        OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
 
         OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
         OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
