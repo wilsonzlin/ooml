@@ -60,6 +60,9 @@ OOML.init = function(settings) {
 			if (node instanceof Element) {
 				var propName = node.getAttribute('name');
 				var evalValue = Utils.getEvalValue(node.textContent);
+				if (evalValue === undefined) {
+				    throw new TypeError('Predefined property value for ' + propName + ' cannot be undefined');
+                }
 
 				CLASS_PREDEFINED_PROPERTIES_VALUES[propName] = evalValue;
 				CLASS_PROPERTIES_NAMES.add(propName);
@@ -202,8 +205,8 @@ OOML.init = function(settings) {
 							});
 							currentNodeValueNeedsUpdate = true;
 
-							var d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName);
-							if (!d.set) {
+							var descriptor = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName);
+							if (!descriptor.set) {
 								var globalPropertyValueHolder = objectToWatch[endPropertyName]; // Needed otherwise property won't be set due to setter but no getter
 								Object.defineProperty(objectToWatch, endPropertyName, {
 									get: function() {
@@ -216,11 +219,11 @@ OOML.init = function(settings) {
 										globalPropertyValueHolder = newVal;
 									},
 								});
-								d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName); // Refresh to get newly set setter
-								d.set[OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS] = [];
+								descriptor = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName); // Refresh to get newly set setter
+								descriptor.set[OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS] = [];
 							}
 
-							d.set[OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS].push(function(fullPropName, newVal) {
+							descriptor.set[OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS].push(function(fullPropName, newVal) {
 
 								GLOBAL_PROPERTIES_MAP[fullPropName].forEach(function(node) {
 
