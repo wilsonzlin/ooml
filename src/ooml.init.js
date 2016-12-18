@@ -74,6 +74,9 @@ OOML.init = function(settings) {
 			if (node instanceof Element) {
 				var propName = node.getAttribute('name');
 				var evalValue = Utils.getEvalValue(node.textContent);
+				if (typeof evalValue != 'function') {
+				    throw new TypeError('Predefined method ' + propName + ' is not a function');
+                }
 
 				CLASS_PREDEFINED_METHODS_FUNCTIONS[propName] = evalValue;
 			}
