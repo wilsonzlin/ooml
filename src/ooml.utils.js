@@ -27,7 +27,7 @@ var Utils = {
 		return val instanceof Date || ['undefined', 'number', 'boolean', 'string'].indexOf(typeof val) > -1
 	},
 	isObjectLiteral: function(obj) {
-		return obj.constructor == Object || (obj.__proto__ === undefined && obj instanceof Object);
+		return !!obj && (obj.constructor == Object || (obj.__proto__ === undefined && obj instanceof Object));
 	},
 	constructElement: function(elemConstructor, obj) {
 		if (obj instanceof elemConstructor) {
