@@ -28,8 +28,14 @@ OOML.init = function(settings) {
 		var localPropertyNames = Object.create(null),
 			globalPropertiesMap = Object.create(null),
 
-			localArrayProperties = Object.create(null), // Used to check for duplicates as well as in setters in instance proerties
-			localElemProperties = Object.create(null); // Used to check for duplicates as well as in setters in instance properties
+			/*
+				localArrayProperties and localElemProperties are used:
+					- to check for duplicates
+					- conditionally create special setters for instance proerties
+					- conditionally destruct element properties when destructing
+			*/
+			localArrayProperties = new Set(),
+			localElemProperties = new Set();
 
 		var toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
 
@@ -140,11 +146,17 @@ OOML.init = function(settings) {
 						}
 
 						if (isArraySubstitution) {
-							localArrayProperties[propName] = true;
+							if (localArrayProperties.has(propName)) {
+								throw new SyntaxError(propName + ' is already declared');
+							}
+							localArrayProperties.add(propName);
 							current.parentNode[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG] = { elemConstructor: elemConstructor, propName: propName };
 							current.parentNode.removeChild(current);
 						} else {
-							localElemProperties[propName] = true;
+							if (localElemProperties.has(propName)) {
+								throw new SyntaxError(propName + ' is already declared');
+							}
+							localElemProperties.add(propName);
 							if (!current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = [];
 							current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].push({ elemConstructor: elemConstructor, propName: propName });
 						}
@@ -411,12 +423,12 @@ OOML.init = function(settings) {
 							thisInstance.__oomlDetach();
 						}
 
-						// Reject getting and setting local properties
-						localPropertyNames.forEach(function(prop) {
-							Object.defineProperty(thisInstance, prop, {
-								get: OOMLInstanceDestructedError,
-								set: OOMLInstanceDestructedError,
-							});
+						// Destruct any attached elements
+						localElemProperties.forEach(function(prop) {
+							thisInstance[prop] = undefined;
+						});
+						localArrayProperties.forEach(function(prop) {
+							thisInstance[prop] = [];
 						});
 
 						// Remove nodes from globalPropertiesMap
@@ -435,12 +447,20 @@ OOML.init = function(settings) {
 
 				var setter;
 
-				if (localArrayProperties[prop]) {
+				if (localArrayProperties.has(prop)) {
 					setter = function(newVal) {
+						if (instanceIsDestructed) {
+							OOMLInstanceDestructedError();
+						}
+
 						instancePropertyValues[prop].initialize(newVal);
 					};
-				} else if (localElemProperties[prop]) {
+				} else if (localElemProperties.has(prop)) {
 					setter = function(newVal) {
+						if (instanceIsDestructed) {
+							OOMLInstanceDestructedError();
+						}
+
 						var elemDetails = localPropertiesMap[prop];
 
 						// Attach first to ensure that element is attachable
@@ -458,8 +478,12 @@ OOML.init = function(settings) {
 					};
 				} else {
 					setter = function(newVal) {
+						if (instanceIsDestructed) {
+							OOMLInstanceDestructedError();
+						}
+
 						if (!Utils.isPrimitiveValue(newVal)) {
-							newVal = '' + newVal;
+							throw new TypeError('Cannot set new property value; unrecognised type');
 						}
 
 						if (localPropertiesMap[prop]) { // Some properties are unused in the DOM (e.g. predefined properties)
@@ -484,7 +508,6 @@ OOML.init = function(settings) {
 					},
 					set: setter,
 					enumerable: true,
-					configurable: true, // For updating get/set on destruct
 				};
 			});
 

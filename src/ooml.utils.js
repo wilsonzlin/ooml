@@ -22,7 +22,7 @@ var Utils = {
 		}
 	},
 	isPrimitiveValue: function(val) {
-		return val instanceof Date || ['number', 'boolean', 'string'].indexOf(typeof val) > -1
+		return val instanceof Date || ['undefined', 'number', 'boolean', 'string'].indexOf(typeof val) > -1
 	},
 	isObjectLiteral: function(obj) {
 		return obj.constructor == Object;
