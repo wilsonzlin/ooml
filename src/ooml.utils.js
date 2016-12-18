@@ -9,6 +9,8 @@ var Utils = {
 		return eval('(' + codeStr + ')');
 	},
 	merge: function() {
+	    // WARNING: Don't use .concat as that doesn't work with array-like objects
+        // e.g. [].concat(NodeList(div, span)) becomes [NodeList], not [div, span]
 		var ret = Array.prototype.slice.call(arguments[0]);
 		for (var i = 1; i < arguments.length; i++) {
 			Array.prototype.push.apply(ret, arguments[i]);

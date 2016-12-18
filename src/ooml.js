@@ -28,7 +28,18 @@
 		OOML_NODE_PROPNAME_CHILDEVENTHANDLERS = '__oomlChildEventHandlers',
 		OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
 		OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyPlaceholder',
-		OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG = '__oomlIsElemArrayContainer';
+		OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG = '__oomlIsElemArrayContainer',
+
+        OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
+        OOML_ELEMENT_PROPNAME_ATTACH = '__oomlAttach',
+        OOML_ELEMENT_PROPNAME_DETACH = '__oomlDetach',
+        OOML_ELEMENT_PROPNAME_DESTRUCT = '__oomlDestruct',
+        OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
+
+        OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
+        OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
+
+        OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS = '__oomlListeners';
 
 	<ZC-IMPORT[utils]>
 

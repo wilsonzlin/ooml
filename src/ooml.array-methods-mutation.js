@@ -11,10 +11,10 @@ OOMLArrayProto.initialize = function(arr) {
 	});
 
 	this[OOML_ARRAY_PROPNAME_INTERNALARRAY].forEach(function(elemToDestruct) {
-		elemToDestruct.__oomlDestruct();
+		elemToDestruct[OOML_ELEMENT_PROPNAME_DESTRUCT]();
 	});
 	arr.forEach(function(elemToAttach) {
-		elemToAttach.__oomlAttach({ appendTo: parent, parent: that });
+		elemToAttach[OOML_ELEMENT_PROPNAME_ATTACH]({ appendTo: parent, parent: that });
 	});
 
 	this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = arr;
@@ -27,7 +27,7 @@ OOMLArrayProto.pop = function() {
 
 	var instanceToDetach = arr.pop();
 	if (instanceToDetach) {
-		instanceToDetach.__oomlDetach();
+		instanceToDetach[OOML_ELEMENT_PROPNAME_DETACH]();
 	}
 
 	return instanceToDetach;
@@ -39,7 +39,7 @@ OOMLArrayProto.push = function(newVal) {
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
-	newElem.__oomlAttach({ appendTo: parent, parent: this });
+	newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ appendTo: parent, parent: this });
 
 	arr.push(newElem);
 
@@ -48,10 +48,10 @@ OOMLArrayProto.push = function(newVal) {
 
 OOMLArrayProto.reverse = function() {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
-        lastElem = arr[arr.length - 1].__oomlDomElem;
+        lastElem = arr[arr.length - 1][OOML_ELEMENT_PROPNAME_DOMELEM];
 
     for (var i = 0; i < this.length - 1; i++) {
-		var node = arr[i].__oomlDomElem;
+		var node = arr[i][OOML_ELEMENT_PROPNAME_DOMELEM];
         node.parentNode.insertBefore(node, lastElem.nextSibling);
     }
 
@@ -65,7 +65,7 @@ OOMLArrayProto.shift = function() {
 
     var instanceToDetach = arr.shift();
     if (instanceToDetach) {
-        instanceToDetach.__oomlDetach();
+        instanceToDetach[OOML_ELEMENT_PROPNAME_DETACH]();
     }
 
     return instanceToDetach;
@@ -86,7 +86,7 @@ OOMLArrayProto.sort = function(propName, ascending) {
 	var parentElem = this[OOML_ARRAY_PROPNAME_PARENTDOMELEM];
 
 	sorted.forEach(function(elem) {
-		parentElem.appendChild(elem.__oomlDomElem);
+		parentElem.appendChild(elem[OOML_ELEMENT_PROPNAME_DOMELEM]);
 	});
 
 	this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = sorted;
@@ -103,7 +103,7 @@ OOMLArrayProto.splice = function(start, deleteCount) {
     var spliced = Array.prototype.splice.apply(arr, arguments);
     spliced.forEach(function(elem) {
         if (elem) {
-            elem.__oomlDetach();
+            elem[OOML_ELEMENT_PROPNAME_DETACH]();
         }
     });
 
@@ -116,7 +116,7 @@ OOMLArrayProto.unshift = function(newVal) {
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
-	newElem.__oomlAttach({ prependTo: parent, parent: this });
+	newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ prependTo: parent, parent: this });
 
 	arr.unshift(newElem);
 

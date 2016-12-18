@@ -10,12 +10,14 @@ OOML.init = function(settings) {
 	if (typeof rootElem == 'string') rootElem = document.querySelector(rootElem);
 
 	Utils.DOM.find(rootElem, 'template[ooml-class]').forEach(function(classTemplateElem) {
-
+        // Parse declaration
 		var classDeclarationParts = classTemplateElem.getAttribute('ooml-class').split(' ');
 
+		// Get new class name
 		var className = classDeclarationParts[0];
 		if (classes[className]) throw new SyntaxError('The class ' + className + ' has already been initialised');
 
+		// Get parent class
 		var classExtends;
 		if (classDeclarationParts[1] == 'extends') {
 			classExtends = classDeclarationParts[2];
@@ -25,33 +27,42 @@ OOML.init = function(settings) {
 			classExtends = OOML.Element;
 		}
 
-		var localPropertyNames = Object.create(null),
-			globalPropertiesMap = Object.create(null),
 
-			/*
-				localArrayProperties and localElemProperties are used:
-					- to check for duplicates
-					- conditionally create special setters for instance proerties
-					- conditionally destruct element properties when destructing
-			*/
-			localArrayProperties = new Set(),
-			localElemProperties = new Set();
+        // A set containing all the properties' names in this class
+		var CLASS_PROPERTIES_NAMES = new Set();
 
+        // An object mapping global properties' names to a set containing nodes that use them
+        var GLOBAL_PROPERTIES_MAP = Object.create(null);
+
+        /*
+            CLASS_ARRAY_PROPERTIES_NAMES and CLASS_ELEM_PROPERTIES_NAMES are used:
+                - to check for duplicates
+                - conditionally create special setters for instance proerties
+                - conditionally destruct element properties when destructing
+        */
+        var CLASS_ARRAY_PROPERTIES_NAMES = new Set();
+        var CLASS_ELEM_PROPERTIES_NAMES = new Set();
+
+        // An object mapping class properties' names to their default value
+        var CLASS_PREDEFINED_PROPERTIES_VALUES = Object.create(null);
+
+        // An object mapping class properties' names to their function
+        var CLASS_PREDEFINED_METHODS_FUNCTIONS = Object.create(null);
+
+
+        // Get all nodes in template to process
 		var toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
 
-		// Don't need to remove ooml-property or ooml-method as parent template is removed after parsing
-		var predefinedProperties = Object.create(null);
-		var predefinedMethods = Object.create(null);
-
 		// Process predefined properties (properties must be defined first)
+        // Note: Don't need to remove ooml-property or ooml-method as parent template is removed after parsing
 		while (toProcess.length && (toProcess[0].nodeName == 'OOML-PROPERTY' || !(toProcess[0] instanceof Element))) {
 			var node = toProcess.shift();
 			if (node instanceof Element) {
 				var propName = node.getAttribute('name');
 				var evalValue = Utils.getEvalValue(node.textContent);
 
-				predefinedProperties[propName] = evalValue;
-				localPropertyNames[propName] = true;
+				CLASS_PREDEFINED_PROPERTIES_VALUES[propName] = evalValue;
+				CLASS_PROPERTIES_NAMES.add(propName);
 			}
 		}
 		// Process predefined properties (methods must be defined after properties)
@@ -61,7 +72,7 @@ OOML.init = function(settings) {
 				var propName = node.getAttribute('name');
 				var evalValue = Utils.getEvalValue(node.textContent);
 
-				predefinedMethods[propName] = evalValue;
+				CLASS_PREDEFINED_METHODS_FUNCTIONS[propName] = evalValue;
 			}
 		}
 		// Trim non-elements from the right
@@ -70,8 +81,8 @@ OOML.init = function(settings) {
 		if (toProcess.length !== 1) throw new SyntaxError('The class ' + className + ' is empty or contains more than one root element');
 		toProcess = [toProcess[0]];
 
-		var rootElemOfClass = toProcess[0],
-			current;
+		var CLASS_ROOT_ELEM = toProcess[0];
+        var current;
 
 		classTemplateElem.parentNode.removeChild(classTemplateElem);
 
@@ -120,11 +131,11 @@ OOML.init = function(settings) {
 						var isArraySubstitution = !!metadata.isArray;
 
 						// Don't allow multiple element substitution of the same property, but allow that property to be predefined
-						if (localPropertyNames[propName] && !predefinedProperties[propName]) {
+						if (CLASS_PROPERTIES_NAMES.has(propName) && CLASS_PREDEFINED_PROPERTIES_VALUES[propName] === undefined) {
 							throw new SyntaxError('The property ' + propName + ' is already defined');
 						}
 
-						localPropertyNames[propName] = true;
+						CLASS_PROPERTIES_NAMES.add(propName);
 						var elemConstructor =
 							elemConstructorName == 'HTMLElement' ? HTMLElement :
 							elemConstructorName == 'OOML.Element' ? OOML.Element :
@@ -146,17 +157,17 @@ OOML.init = function(settings) {
 						}
 
 						if (isArraySubstitution) {
-							if (localArrayProperties.has(propName)) {
+							if (CLASS_ARRAY_PROPERTIES_NAMES.has(propName)) {
 								throw new SyntaxError(propName + ' is already declared');
 							}
-							localArrayProperties.add(propName);
+							CLASS_ARRAY_PROPERTIES_NAMES.add(propName);
 							current.parentNode[OOML_NODE_PROPNAME_ELEMUNPACKINGCONFIG] = { elemConstructor: elemConstructor, propName: propName };
 							current.parentNode.removeChild(current);
 						} else {
-							if (localElemProperties.has(propName)) {
+							if (CLASS_ELEM_PROPERTIES_NAMES.has(propName)) {
 								throw new SyntaxError(propName + ' is already declared');
 							}
-							localElemProperties.add(propName);
+							CLASS_ELEM_PROPERTIES_NAMES.add(propName);
 							if (!current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = [];
 							current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].push({ elemConstructor: elemConstructor, propName: propName });
 						}
@@ -173,9 +184,9 @@ OOML.init = function(settings) {
 					Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
 						var propNameParts = fullPropName.split('.');
 						if (propNameParts[0] == 'this') {
-							localPropertyNames[propNameParts[1]] = true;
-						} else if (!globalPropertiesMap[fullPropName]) {
-							globalPropertiesMap[fullPropName] = new Set();
+							CLASS_PROPERTIES_NAMES.add(propNameParts[1]);
+						} else if (!GLOBAL_PROPERTIES_MAP[fullPropName]) {
+							GLOBAL_PROPERTIES_MAP[fullPropName] = new Set();
 							var objectToWatch = globals[propNameParts.shift()],
 								_,
 								endPropertyName = propNameParts.pop();
@@ -199,19 +210,19 @@ OOML.init = function(settings) {
 										return globalPropertyValueHolder;
 									},
 									set: function setter(newVal) {
-										setter.__oomlListeners.forEach(function(listener) {
+										setter[OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS].forEach(function(listener) {
 											listener.call(objectToWatch, fullPropName, newVal);
 										});
 										globalPropertyValueHolder = newVal;
 									},
 								});
 								d = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName); // Refresh to get newly set setter
-								d.set.__oomlListeners = [];
+								d.set[OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS] = [];
 							}
 
-							d.set.__oomlListeners.push(function(fullPropName, newVal) {
+							d.set[OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS].push(function(fullPropName, newVal) {
 
-								globalPropertiesMap[fullPropName].forEach(function(node) {
+								GLOBAL_PROPERTIES_MAP[fullPropName].forEach(function(node) {
 
 									var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
 									node[OOML_NODE_PROPNAME_FORMATPARAMMAP][fullPropName].forEach(function(offset) {
@@ -234,19 +245,16 @@ OOML.init = function(settings) {
 			}
 		}
 
-		// Don't Object.freeze this as it's unnecessary
-		localPropertyNames = Object.keys(localPropertyNames);
-
 		classes[className] = function(initState) {
 			var instance = this,
 				instanceIsDestructed = false,
 				instanceIsAttached = false;
 
 			var localPropertiesMap = Object.create(null),
-				localGlobalPropertiesMap = Object.create(null); // For destructuring; to remember what to remove from globalPropertiesMap
+				localGlobalPropertiesMap = Object.create(null); // For destructuring; to remember what to remove from GLOBAL_PROPERTIES_MAP
 
 			var instancePropertyValues = Object.create(null),
-				instanceAttributes = new Proxy(Object.create(null), { // OOML instance attributes, not HTML/DOM attributes; use Proxy to keep types
+				instanceAttributes = new Proxy(Object.create(null), { // Use Proxy to keep types
 						set: function(target, key, newValue) {
 							instanceDom.dataset[key] = target[key] = newValue;
 							return true;
@@ -259,7 +267,7 @@ OOML.init = function(settings) {
 					}),
 				instanceExposedDOMElems = Object.create(null); // { "key": HTMLElement }
 
-			var instanceDom = Utils.cloneElemForInstantiation(rootElemOfClass),
+			var instanceDom = Utils.cloneElemForInstantiation(CLASS_ROOT_ELEM),
 				toProcess = [instanceDom],
 				current,
 
@@ -317,7 +325,7 @@ OOML.init = function(settings) {
 								}
 								localPropertiesMap[propName].push(current);
 							} else {
-								globalPropertiesMap[propName].add(current);
+								GLOBAL_PROPERTIES_MAP[propName].add(current);
 								if (!localGlobalPropertiesMap[propName]) {
 									localGlobalPropertiesMap[propName] = [];
 								}
@@ -330,124 +338,125 @@ OOML.init = function(settings) {
 
 			var currentlyAttachedTo; // For public method .detach only; is not used to actually detach, it is used to call the parent object's method of detachment
 
-			var propertiesGetterSetterFuncs = {
-				attributes: {
-					set: function(newObj) {
-						Object.keys(instanceAttributes).forEach(function(key) {
-							delete instanceAttributes[key];
-						});
-						Object.assign(instanceAttributes, newObj);
-					},
-					get: function() { return instanceAttributes; },
-				},
-				detach: {
-					value: function() {
-						if (instanceIsDestructed) {
-							OOMLInstanceDestructedError();
-						}
+			var propertiesGetterSetterFuncs = {};
+            propertiesGetterSetterFuncs.attributes = {
+                set: function(newObj) {
+                    Object.keys(instanceAttributes).forEach(function(key) {
+                        delete instanceAttributes[key];
+                    });
+                    Object.assign(instanceAttributes, newObj);
+                },
+                get: function() { return instanceAttributes; },
+            };
+            propertiesGetterSetterFuncs.detach = {
+                value: function() {
+                    if (instanceIsDestructed) {
+                        OOMLInstanceDestructedError();
+                    }
 
-						if (!instanceIsAttached) {
-							throw new Error('This instance is not in use');
-						}
+                    if (!instanceIsAttached) {
+                        throw new Error('This instance is not in use');
+                    }
 
-						var parent = currentlyAttachedTo.parent;
-						if (parent instanceof OOML.Array) {
-							var indexOfThis = parent.indexOf(this);
-							if (indexOfThis < 0) throw new Error('This instance could not be found on its parent array');
-							parent.splice(indexOfThis, 1); // This will call __oomlDetach
-						} else if (parent instanceof OOML.Element) {
-							parent[currentlyAttachedTo.property] = null; // This will call __oomlDetach
-						} else {
-							throw new Error('Unrecognised parent');
-						}
-					},
-				},
-				dispatch: {
-					value: dispatchEventToParent,
-				},
-				__oomlDomElem: {
-					value: instanceDom,
-				},
-				__oomlAttach: {
-					value: function(settings) {
-						if (instanceIsDestructed) {
-							OOMLInstanceDestructedError();
-						}
+                    var parent = currentlyAttachedTo.parent;
+                    if (parent instanceof OOML.Array) {
+                        var indexOfThis = parent.indexOf(this);
+                        if (indexOfThis < 0) throw new Error('This instance could not be found on its parent array');
+                        parent.splice(indexOfThis, 1); // This will call __oomlDetach
+                    } else if (parent instanceof OOML.Element) {
+                        parent[currentlyAttachedTo.property] = null; // This will call __oomlDetach
+                    } else {
+                        throw new Error('Unrecognised parent');
+                    }
+                },
+            };
+            propertiesGetterSetterFuncs.dispatch = {
+                value: dispatchEventToParent,
+            };
+            propertiesGetterSetterFuncs[OOML_ELEMENT_PROPNAME_DOMELEM] = {
+                value: instanceDom,
+            };
+            propertiesGetterSetterFuncs[OOML_ELEMENT_PROPNAME_ATTACH] = {
+                value: function(settings) {
+                    if (instanceIsDestructed) {
+                        OOMLInstanceDestructedError();
+                    }
 
-						if (instanceIsAttached) {
-							throw new Error('This instance is already in use');
-						}
+                    if (instanceIsAttached) {
+                        throw new Error('This instance is already in use');
+                    }
 
-						currentlyAttachedTo = {
-							parent: settings.parent,
-							property: settings.property,
-						};
+                    currentlyAttachedTo = {
+                        parent: settings.parent,
+                        property: settings.property,
+                    };
 
-						if (settings.appendTo) {
-							settings.appendTo.appendChild(instanceDom);
-						} else if (settings.prependTo) {
-							settings.prependTo.insertBefore(instanceDom, settings.prependTo.childNodes[0] || null);
-						} else if (settings.insertAfter) {
-							settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
-						}
+                    if (settings.appendTo) {
+                        settings.appendTo.appendChild(instanceDom);
+                    } else if (settings.prependTo) {
+                        settings.prependTo.insertBefore(instanceDom, settings.prependTo.childNodes[0] || null);
+                    } else if (settings.insertBefore) {
+                        settings.insertBefore.parentNode.insertBefore(instanceDom, settings.insertBefore);
+                    } else if (settings.insertAfter) {
+                        settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
+                    }
 
-						instanceIsAttached = true;
-					},
-				},
-				__oomlDetach: {
-					value: function() {
-						if (instanceIsDestructed) {
-							OOMLInstanceDestructedError();
-						}
+                    instanceIsAttached = true;
+                },
+            };
+            propertiesGetterSetterFuncs[OOML_ELEMENT_PROPNAME_DETACH] = {
+                value: function() {
+                    if (instanceIsDestructed) {
+                        OOMLInstanceDestructedError();
+                    }
 
-						if (!instanceIsAttached) {
-							throw new Error('This instance is not in use');
-						}
+                    if (!instanceIsAttached) {
+                        throw new Error('This instance is not in use');
+                    }
 
-						currentlyAttachedTo = undefined;
+                    currentlyAttachedTo = undefined;
 
-						instanceDom.parentNode.removeChild(instanceDom);
-						instanceIsAttached = false;
-					},
-				},
-				__oomlDestruct: {
-					value: function() {
-						if (instanceIsDestructed) {
-							throw new Error('Attempted to destruct already-destructed instance');
-						}
+                    instanceDom.parentNode.removeChild(instanceDom);
+                    instanceIsAttached = false;
+                },
+            };
+            propertiesGetterSetterFuncs[OOML_ELEMENT_PROPNAME_DESTRUCT] = {
+                value: function() {
+                    if (instanceIsDestructed) {
+                        throw new Error('Attempted to destruct already-destructed instance');
+                    }
 
-						var thisInstance = this;
+                    var thisInstance = this;
 
-						// Detach if not already detached
-						if (instanceIsAttached) {
-							thisInstance.__oomlDetach();
-						}
+                    // Detach if not already detached
+                    if (instanceIsAttached) {
+                        thisInstance[OOML_ELEMENT_PROPNAME_DETACH]();
+                    }
 
-						// Destruct any attached elements
-						localElemProperties.forEach(function(prop) {
-							thisInstance[prop] = undefined;
-						});
-						localArrayProperties.forEach(function(prop) {
-							thisInstance[prop] = [];
-						});
+                    // Destruct any attached elements
+                    CLASS_ELEM_PROPERTIES_NAMES.forEach(function(prop) {
+                        thisInstance[prop] = undefined;
+                    });
+                    CLASS_ARRAY_PROPERTIES_NAMES.forEach(function(prop) {
+                        thisInstance[prop] = [];
+                    });
 
-						// Remove nodes from globalPropertiesMap
-						for (var globalPropName in localGlobalPropertiesMap) {
-							localGlobalPropertiesMap[globalPropName].forEach(function(nodeToRemove) {
-								globalPropertiesMap[globalPropName].delete(nodeToRemove);
-							});
-						}
+                    // Remove nodes from GLOBAL_PROPERTIES_MAP
+                    for (var globalPropName in localGlobalPropertiesMap) {
+                        localGlobalPropertiesMap[globalPropName].forEach(function(nodeToRemove) {
+                            GLOBAL_PROPERTIES_MAP[globalPropName].delete(nodeToRemove);
+                        });
+                    }
 
-						instanceIsDestructed = true;
-					},
-				},
-			};
+                    instanceIsDestructed = true;
+                },
+            };
 
-			localPropertyNames.forEach(function(prop) {
+			CLASS_PROPERTIES_NAMES.forEach(function(prop) {
 
 				var setter;
 
-				if (localArrayProperties.has(prop)) {
+				if (CLASS_ARRAY_PROPERTIES_NAMES.has(prop)) {
 					setter = function(newVal) {
 						if (instanceIsDestructed) {
 							OOMLInstanceDestructedError();
@@ -455,7 +464,7 @@ OOML.init = function(settings) {
 
 						instancePropertyValues[prop].initialize(newVal);
 					};
-				} else if (localElemProperties.has(prop)) {
+				} else if (CLASS_ELEM_PROPERTIES_NAMES.has(prop)) {
 					setter = function(newVal) {
 						if (instanceIsDestructed) {
 							OOMLInstanceDestructedError();
@@ -466,12 +475,12 @@ OOML.init = function(settings) {
 						// Attach first to ensure that element is attachable
 						if (newVal != undefined) {
 							var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
-							newElem.__oomlAttach({ insertAfter: elemDetails.insertAfter, parent: this, property: prop });
+							newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: elemDetails.insertAfter, parent: this, property: prop });
 						}
 
 						// Current element may not be OOML.Element and therefore may not need destructing
 						if (instancePropertyValues[prop] instanceof OOML.Element) {
-							instancePropertyValues[prop].__oomlDestruct();
+							instancePropertyValues[prop][OOML_ELEMENT_PROPNAME_DESTRUCT]();
 						}
 
 						instancePropertyValues[prop] = newElem;
@@ -531,21 +540,27 @@ OOML.init = function(settings) {
 
 			// Apply predefined properties, starting with most ancient
 			ancestorClasses.reverse().forEach(function(ancestorClass) {
-				for (var propName in ancestorClass.__oomlPredefinedProperties) {
-					instance[propName] = ancestorClass.__oomlPredefinedProperties[propName];
+				for (var propName in ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) {
+					instance[propName] = ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDPROPS][propName];
 				}
 			});
 
-			// Apply given object properties
+			// Apply given object argument to this new instance's properties
 			// NOTE: .assign is available at this point, as instances are constructed AFTER classes are initialised (including prototypes)
 			if (initState) this.assign(initState);
 		};
-		classes[className].__oomlProperties = localPropertyNames;
-		classes[className].__oomlPredefinedProperties = predefinedProperties;
+
+		// Set properties for accessing properties' names and predefined properties' values
+		classes[className][OOML_CLASS_PROPNAME_PROPNAMES] = CLASS_PROPERTIES_NAMES;
+		classes[className][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = CLASS_PREDEFINED_PROPERTIES_VALUES;
+
+		// Make class inherit from parent class
 		classes[className].prototype = Object.create(classExtends.prototype);
 		classes[className].prototype.constructor = classes[className];
-		for (var methodName in predefinedMethods) {
-			classes[className].prototype[methodName] = predefinedMethods[methodName];
+
+		// Set defined methods in class prototype
+		for (var methodName in CLASS_PREDEFINED_METHODS_FUNCTIONS) {
+			classes[className].prototype[methodName] = CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName];
 		}
 	});
 
@@ -561,12 +576,12 @@ OOML.init = function(settings) {
 
 		var instance = new classes[className](initState);
 
-		instance.__oomlAttach({ insertAfter: instanceInstantiationElem });
+		instance[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: instanceInstantiationElem });
 
 		// Copy attributes on instantiation element to new instance's root element
 		Utils.merge(instanceInstantiationElem.attributes).forEach(function(attr) {
 			if (attr.name != 'ooml-instantiate') {
-				instance.__oomlDomElem.setAttribute(attr.name, attr.value);
+				instance[OOML_ELEMENT_PROPNAME_DOMELEM].setAttribute(attr.name, attr.value);
 			}
 		});
 
