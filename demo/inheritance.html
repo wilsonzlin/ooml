@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Ubuntu, Cantarell, Oxygen, Droid Sans, Fira Sans, sans-serif;
+        }
+    </style>
+
+    <script src="../dist/ooml.js"></script>
+</head>
+
+<body>
+    <main>
+        <template ooml-class="Animal">
+            <ooml-method name="getGenus">
+                function() {
+                    return this.genus;
+                }
+            </ooml-method>
+
+            <dl>
+                <dt>Genus</dt>
+                <dd>{{ this.genus }}</dd>
+            </dl>
+        </template>
+
+        <template ooml-class="Canine extends Animal">
+            <ooml-property name="genus">"Canine"</ooml-property>
+            <ooml-method name="getSpecies">
+                function() {
+                    return this.species;
+                }
+            </ooml-method>
+
+            <dl>
+                <dt>Genus</dt>
+                <dd>{{ this.genus }}</dd>
+
+                <dt>Species</dt>
+                <dd>{{ this.species }}</dd>
+            </dl>
+        </template>
+
+        <template ooml-class="Dog extends Canine">
+            <ooml-property name="species">"Dog"</ooml-property>
+            <ooml-method name="getDogType">
+                function() {
+                    return this.dogType;
+                }
+            </ooml-method>
+
+            <dl>
+                <dt>Genus</dt>
+                <dd>{{ this.genus }}</dd>
+
+                <dt>Species</dt>
+                <dd>{{ this.species }}</dd>
+
+                <dt>Dog type</dt>
+                <dd>{{ this.dogType }}</dd>
+            </dl>
+        </template>
+
+        <template ooml-class="HerdingDog extends Dog">
+            <ooml-property name="dogType">"Herding dog"</ooml-property>
+            <ooml-method name="getBreed">
+                function() {
+                    return this.breed;
+                }
+            </ooml-method>
+
+            <dl>
+                <dt>Genus</dt>
+                <dd>{{ this.genus }}</dd>
+
+                <dt>Species</dt>
+                <dd>{{ this.species }}</dd>
+
+                <dt>Dog type</dt>
+                <dd>{{ this.dogType }}</dd>
+
+                <dt>Breed</dt>
+                <dd>{{ this.breed }}</dd>
+            </dl>
+        </template>
+
+        <template ooml-class="BelgianShepherd extends HerdingDog">
+            <ooml-property name="breed">"Belgian Shepherd"</ooml-property>
+            <ooml-method name="getName">
+                function() {
+                    return this.name;
+                }
+            </ooml-method>
+
+            <dl>
+                <dt>Genus</dt>
+                <dd>{{ this.genus }}</dd>
+
+                <dt>Species</dt>
+                <dd>{{ this.species }}</dd>
+
+                <dt>Dog type</dt>
+                <dd>{{ this.dogType }}</dd>
+
+                <dt>Breed</dt>
+                <dd>{{ this.breed }}</dd>
+
+                <dt>Name</dt>
+                <dd>{{ this.name }}</dd>
+            </dl>
+        </template>
+
+        <template ooml-class="App">
+            <div>{ Animal this.animal }</div>
+        </template>
+        <div ooml-instantiate="App app"></div>
+    </main>
+
+    <script>
+        var ooml = OOML.init({
+            rootElem: 'main',
+        });
+
+        var app = ooml.objects.app;
+        for (var className in ooml.classes) {
+            window[className] = ooml.classes[className];
+        }
+    </script>
+</body>
+
+</html>

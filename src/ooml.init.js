@@ -11,8 +11,19 @@ OOML.init = function(settings) {
 
 	Utils.DOM.find(rootElem, 'template[ooml-class]').forEach(function(classTemplateElem) {
 
-		var className = classTemplateElem.getAttribute('ooml-class');
+		var classDeclarationParts = classTemplateElem.getAttribute('ooml-class').split(' ');
+
+		var className = classDeclarationParts[0];
 		if (classes[className]) throw new SyntaxError('The class ' + className + ' has already been initialised');
+
+		var classExtends;
+		if (classDeclarationParts[1] == 'extends') {
+			classExtends = classDeclarationParts[2];
+			if (!classes[classExtends]) throw new SyntaxError('The class ' + classExtends + ' does not exist');
+			classExtends = classes[classExtends];
+		} else {
+			classExtends = OOML.Element;
+		}
 
 		var localPropertyNames = Object.create(null),
 			globalPropertiesMap = Object.create(null),
@@ -477,22 +488,38 @@ OOML.init = function(settings) {
 				};
 			});
 
+			// Expose DOM elements via prefixed property
 			Object.keys(instanceExposedDOMElems).forEach(function(keyName) {
 				propertiesGetterSetterFuncs['$' + keyName] = {
 					value: instanceExposedDOMElems[keyName],
 				};
 			});
 
+			// Apply getters and setters for local properties
 			Object.defineProperties(this, propertiesGetterSetterFuncs);
 
-			for (var propName in predefinedProperties) {
-				instance[propName] = predefinedProperties[propName];
+			// Get all predefined properties (including inherited ones)
+			var ancestorClasses = [],
+				currentProto = this.__proto__;
+			while (currentProto !== OOML.Element.prototype) {
+				ancestorClasses.push(currentProto.constructor);
+				currentProto = currentProto.__proto__;
 			}
-			// This works, as instances are constructed AFTER classes are initialised (including prototypes)
+
+			// Apply predefined properties, starting with most ancient
+			ancestorClasses.reverse().forEach(function(ancestorClass) {
+				for (var propName in ancestorClass.__oomlPredefinedProperties) {
+					instance[propName] = ancestorClass.__oomlPredefinedProperties[propName];
+				}
+			});
+
+			// Apply given object properties
+			// NOTE: .assign is available at this point, as instances are constructed AFTER classes are initialised (including prototypes)
 			if (initState) this.assign(initState);
 		};
 		classes[className].__oomlProperties = localPropertyNames;
-		classes[className].prototype = Object.create(OOML.Element.prototype);
+		classes[className].__oomlPredefinedProperties = predefinedProperties;
+		classes[className].prototype = Object.create(classExtends.prototype);
 		classes[className].prototype.constructor = classes[className];
 		for (var methodName in predefinedMethods) {
 			classes[className].prototype[methodName] = predefinedMethods[methodName];
