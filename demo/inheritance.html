@@ -15,6 +15,7 @@
 <body>
     <main>
         <template ooml-class="Animal">
+            <ooml-attribute name="isAnimal">true</ooml-attribute>
             <ooml-method name="getGenus">
                 function() {
                     return this.genus;
@@ -114,7 +115,7 @@
         </template>
 
         <template ooml-class="App">
-            <div>{ Animal this.animal }</div>
+            <div id="app">{ Animal this.animal }</div>
         </template>
         <div ooml-instantiate="App app"></div>
     </main>

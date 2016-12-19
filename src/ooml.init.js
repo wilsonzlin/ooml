@@ -43,6 +43,9 @@ OOML.init = function(settings) {
         var CLASS_ARRAY_PROPERTIES_NAMES = new Set();
         var CLASS_ELEM_PROPERTIES_NAMES = new Set();
 
+        // An object mapping class attributes' names to their default value
+        var CLASS_PREDEFINED_ATTRIBUTES_VALUES = Object.create(null);
+
         // An object mapping class properties' names to their default value
         var CLASS_PREDEFINED_PROPERTIES_VALUES = Object.create(null);
 
@@ -53,8 +56,22 @@ OOML.init = function(settings) {
         // Get all nodes in template to process
 		var toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
 
-		// Process predefined properties (properties must be defined first)
-        // Note: Don't need to remove ooml-property or ooml-method as parent template is removed after parsing
+		// Process predefined attributes (attributes must be defined first)
+        // Note: Don't need to remove ooml-attribute, ooml-property or ooml-method as parent template is removed after parsing
+        while (toProcess.length && (toProcess[0].nodeName == 'OOML-ATTRIBUTE' || !(toProcess[0] instanceof Element))) {
+            var node = toProcess.shift();
+            if (node instanceof Element) {
+                var attrName = node.getAttribute('name');
+                var evalValue = Utils.getEvalValue(node.textContent);
+                if (evalValue === undefined) {
+                    throw new TypeError('Predefined attribute value for ' + propName + ' cannot be undefined');
+                }
+
+                CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] = evalValue;
+            }
+        }
+
+        // Process predefined properties (properties must be defined after attributes)
 		while (toProcess.length && (toProcess[0].nodeName == 'OOML-PROPERTY' || !(toProcess[0] instanceof Element))) {
 			var node = toProcess.shift();
 			if (node instanceof Element) {
@@ -554,7 +571,7 @@ OOML.init = function(settings) {
 			// Apply getters and setters for local properties
 			Object.defineProperties(this, propertiesGetterSetterFuncs);
 
-			// Get all predefined properties (including inherited ones)
+			// Get all predefined attributes properties (including inherited ones)
 			var ancestorClasses = [],
 				currentProto = this.__proto__;
 			while (currentProto !== OOML.Element.prototype) {
@@ -562,8 +579,12 @@ OOML.init = function(settings) {
 				currentProto = currentProto.__proto__;
 			}
 
-			// Apply predefined properties, starting with most ancient
+			// Apply predefined attributes and properties, starting with most ancient
 			ancestorClasses.reverse().forEach(function(ancestorClass) {
+                for (var attrName in ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDATTRS]) {
+                    instance.attributes[attrName] = ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDATTRS][attrName];
+                }
+
 				for (var propName in ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) {
 					instance[propName] = ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDPROPS][propName];
 				}
@@ -576,6 +597,7 @@ OOML.init = function(settings) {
 
 		// Set properties for accessing properties' names and predefined properties' values
 		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PROPNAMES] = CLASS_PROPERTIES_NAMES;
+		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PREDEFINEDATTRS] = CLASS_PREDEFINED_ATTRIBUTES_VALUES;
 		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = CLASS_PREDEFINED_PROPERTIES_VALUES;
 
 		// Make class inherit from parent class
