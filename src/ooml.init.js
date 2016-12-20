@@ -26,9 +26,7 @@ OOML.init = function(settings) {
                 CLASS_PARENT_CLASS = globals;
                 classExtends.split('.').every(function(part) {
                     CLASS_PARENT_CLASS = CLASS_PARENT_CLASS[part];
-                    if (!CLASS_PARENT_CLASS) {
-                        return false;
-                    }
+                    return !!CLASS_PARENT_CLASS;
                 });
                 if (typeof CLASS_PARENT_CLASS != 'function') {
                     throw new SyntaxError('The class ' + classExtends + ' does not exist');
@@ -62,6 +60,7 @@ OOML.init = function(settings) {
 
         // An object mapping class properties' names to their function
         var CLASS_PREDEFINED_METHODS_FUNCTIONS = Object.create(null);
+        var CLASS_PREDEFINED_CONSTRUCTOR;
 
 
         // Get all nodes in template to process
@@ -106,7 +105,14 @@ OOML.init = function(settings) {
 				    throw new TypeError('Predefined method ' + propName + ' is not a function');
                 }
 
-				CLASS_PREDEFINED_METHODS_FUNCTIONS[propName] = evalValue;
+                if (propName == 'constructor') {
+				    if (CLASS_PREDEFINED_CONSTRUCTOR) {
+				        throw new SyntaxError('A constructor has already been defined for class ' + className);
+                    }
+				    CLASS_PREDEFINED_CONSTRUCTOR = evalValue;
+                } else {
+                    CLASS_PREDEFINED_METHODS_FUNCTIONS[propName] = evalValue;
+                }
 			}
 		}
 		// Trim non-elements from the right
@@ -601,6 +607,12 @@ OOML.init = function(settings) {
 				}
 			});
 
+            if (this.constructor[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR]) {
+			    ancestorClasses.reduce(function(previous, ancestorClass) {
+                    return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] && ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous);
+                }, undefined)();
+            }
+
 			// Apply given object argument to this new instance's properties
 			// NOTE: .assign is available at this point, as instances are constructed AFTER classes are initialised (including prototypes)
 			if (initState) this.assign(initState);
@@ -623,6 +635,7 @@ OOML.init = function(settings) {
 		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PROPNAMES] = CLASS_PROPERTIES_NAMES;
 		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PREDEFINEDATTRS] = CLASS_PREDEFINED_ATTRIBUTES_VALUES;
 		classes[CLASS_NAME][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = CLASS_PREDEFINED_PROPERTIES_VALUES;
+        classes[CLASS_NAME][OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = CLASS_PREDEFINED_CONSTRUCTOR;
 
 		// Make class inherit from parent class
 		classes[CLASS_NAME].prototype = Object.create(CLASS_PARENT_CLASS.prototype);
@@ -646,7 +659,7 @@ OOML.init = function(settings) {
 
 		var instance = new classes[className](initState);
 
-		instance[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: instanceInstantiationElem });
+        instanceInstantiationElem.parentNode.insertBefore(instance[OOML_ELEMENT_PROPNAME_DOMELEM], instanceInstantiationElem.nextSibling);
 
 		// Copy attributes on instantiation element to new instance's root element
 		Utils.merge(instanceInstantiationElem.attributes).forEach(function(attr) {

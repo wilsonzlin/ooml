@@ -16,6 +16,11 @@
     <main>
         <template ooml-class="Animal">
             <ooml-attribute name="isAnimal">true</ooml-attribute>
+            <ooml-method name="constructor">
+                function animalOomlConstructor() {
+                    alert('constructor for Animal');
+                }
+            </ooml-method>
             <ooml-method name="getGenus">
                 function() {
                     return this.genus;
@@ -30,6 +35,12 @@
 
         <template ooml-class="Canine extends Animal">
             <ooml-property name="genus">"Canine"</ooml-property>
+            <ooml-method name="constructor">
+                function canineOomlConstructor(parent) {
+                    parent();
+                    alert('constructor for Canine');
+                }
+            </ooml-method>
             <ooml-method name="getSpecies">
                 function() {
                     return this.species;
@@ -47,6 +58,12 @@
 
         <template ooml-class="Dog extends Canine">
             <ooml-property name="species">"Dog"</ooml-property>
+            <ooml-method name="constructor">
+                function dogOomlConstructor(parent) {
+                    parent();
+                    alert('constructor for Dog');
+                }
+            </ooml-method>
             <ooml-method name="getDogType">
                 function() {
                     return this.dogType;
@@ -67,6 +84,12 @@
 
         <template ooml-class="HerdingDog extends Dog">
             <ooml-property name="dogType">"Herding dog"</ooml-property>
+            <ooml-method name="constructor">
+                function herdingDogOomlConstructor(parent) {
+                    parent();
+                    alert('constructor for HerdingDog');
+                }
+            </ooml-method>
             <ooml-method name="getBreed">
                 function() {
                     return this.breed;
@@ -90,6 +113,12 @@
 
         <template ooml-class="BelgianShepherd extends HerdingDog">
             <ooml-property name="breed">"Belgian Shepherd"</ooml-property>
+            <ooml-method name="constructor">
+                function belgianShepherdOomlConstructor(parent) {
+                    parent();
+                    alert('constructor for BelgianShepherd');
+                }
+            </ooml-method>
             <ooml-method name="getName">
                 function() {
                     return this.name;
