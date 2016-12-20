@@ -20,9 +20,20 @@ OOML.init = function(settings) {
 		// Get parent class
 		var CLASS_PARENT_CLASS;
 		if (classDeclarationParts[1] == 'extends') {
-			CLASS_PARENT_CLASS = classDeclarationParts[2];
-			if (!classes[CLASS_PARENT_CLASS]) throw new SyntaxError('The class ' + CLASS_PARENT_CLASS + ' does not exist');
-			CLASS_PARENT_CLASS = classes[CLASS_PARENT_CLASS];
+			var classExtends = classDeclarationParts[2];
+            CLASS_PARENT_CLASS = classes[classExtends];
+            if (!CLASS_PARENT_CLASS) {
+                CLASS_PARENT_CLASS = globals;
+                classExtends.split('.').every(function(part) {
+                    CLASS_PARENT_CLASS = CLASS_PARENT_CLASS[part];
+                    if (!CLASS_PARENT_CLASS) {
+                        return false;
+                    }
+                });
+                if (typeof CLASS_PARENT_CLASS != 'function') {
+                    throw new SyntaxError('The class ' + classExtends + ' does not exist');
+                }
+            }
 		} else {
 			CLASS_PARENT_CLASS = OOML.Element;
 		}
@@ -593,6 +604,19 @@ OOML.init = function(settings) {
 			// Apply given object argument to this new instance's properties
 			// NOTE: .assign is available at this point, as instances are constructed AFTER classes are initialised (including prototypes)
 			if (initState) this.assign(initState);
+
+			// Remove any remaining parameter handlebars
+            CLASS_PROPERTIES_NAMES.forEach(function(propName) {
+                if (Array.isArray(localPropertiesMap[propName])) { // Some properties are not in DOM (e.g. only predefined) or are not for text subtitution (e.g. Array or Element)
+                    if (instance[propName] === undefined) {
+                        localPropertiesMap[propName].forEach(function(node) {
+                            OOMLNodesWithUnwrittenChanges.add(node);
+                        });
+                    }
+                }
+            });
+            // Update nodes with parameter handlebars (so they can be removed)
+            OOMLWriteChanges();
 		};
 
 		// Set properties for accessing properties' names and predefined properties' values
