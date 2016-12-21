@@ -223,7 +223,7 @@ OOML.init = function(settings) {
 							        objectToWatch[_] = {};
                                 }
 								objectToWatch = objectToWatch[_];
-							    if (!objectToWatch || objectToWatch.constructor != Object) {
+							    if (!(objectToWatch instanceof Object)) {
 							        throw new ReferenceError("The globals property " + fullPropName + " doesn't exist");
                                 }
 							}
