@@ -84,6 +84,7 @@
                 </dl>
 
                 <h2>Account</h2>
+                <div>{{ some.random.global }} Note: on fire</div>
                 <span>Note: not all information may be up to date. Last updated: {{ service.lastUpdated }}</span>
                 <br>
                 <label>
@@ -144,6 +145,7 @@
         var ooml = OOML.init({
             rootElem: 'main',
             globals: globals,
+            autoPopulateGlobalsObject: true,
         });
 
         var wilson = ooml.objects.wilson;

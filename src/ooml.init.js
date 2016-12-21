@@ -2,7 +2,9 @@ OOML.init = function(settings) {
 	settings = settings || {};
 
 	var globals = settings.globals,
-		rootElem = settings.rootElem || document.body;
+		rootElem = settings.rootElem || document.body,
+
+        ALLOW_AUTO_POPULATING_GLOBALS_OBJ = !!settings.globals && settings.autoPopulateGlobalsObject === true;
 
 	var classes = Object.create(null),
 		objects = Object.create(null);
@@ -212,20 +214,34 @@ OOML.init = function(settings) {
 							CLASS_PROPERTIES_NAMES.add(propNameParts[1]);
 						} else if (!GLOBAL_PROPERTIES_MAP[fullPropName]) {
 							GLOBAL_PROPERTIES_MAP[fullPropName] = new Set();
-							var objectToWatch = globals[propNameParts.shift()],
+							var objectToWatch = globals,
 								_,
 								endPropertyName = propNameParts.pop();
 
 							while (_ = propNameParts.shift()) {
+							    if (objectToWatch[_] === undefined && ALLOW_AUTO_POPULATING_GLOBALS_OBJ) {
+							        objectToWatch[_] = {};
+                                }
 								objectToWatch = objectToWatch[_];
+							    if (!objectToWatch || objectToWatch.constructor != Object) {
+							        throw new ReferenceError("The globals property " + fullPropName + " doesn't exist");
+                                }
 							}
 
-							// Set the current node text to the current value of the global
-							var currentValue = objectToWatch[endPropertyName];
-							paramsData.map[fullPropName].forEach(function(offset) {
-								current[OOML_NODE_PROPNAME_TEXTFORMAT][offset] = currentValue;
-							});
-							currentNodeValueNeedsUpdate = true;
+							// Check that the property to watch exists
+							if (!objectToWatch.hasOwnProperty(endPropertyName)) {
+                                if (!ALLOW_AUTO_POPULATING_GLOBALS_OBJ) {
+                                    throw new ReferenceError("The globals property " + fullPropName + " doesn't exist");
+                                }
+                                objectToWatch[endPropertyName] = undefined;
+                            }
+
+                            // Set the current node text to the current value of the global
+                            var currentValue = objectToWatch[endPropertyName];
+                            paramsData.map[fullPropName].forEach(function(offset) {
+                                current[OOML_NODE_PROPNAME_TEXTFORMAT][offset] = currentValue;
+                            });
+                            currentNodeValueNeedsUpdate = true;
 
 							var descriptor = Object.getOwnPropertyDescriptor(objectToWatch, endPropertyName);
 							if (!descriptor.set) {
