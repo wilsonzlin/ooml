@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/lerouche/ooml/issues"
   },
-  "homepage": "https://github.com/lerouche/ooml#readme"
+  "homepage": "https://github.com/lerouche/ooml#readme",
+  "devDependencies": {
+    "zcompile": "^2.6.0"
+  }
 }

@@ -36,11 +36,11 @@ OOMLArrayProto.pop = function() {
 
 OOMLArrayProto.push = function(newVal) {
 	var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
-		insertAfter = this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
+		insertAfter = arr[arr.length - 1] ? arr[arr.length - 1][OOML_ELEMENT_PROPNAME_DOMELEM] : this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
 	var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 	var newElem = Utils.constructElement(elemConstructor, newVal);
-	newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ appendTo: insertAfter.parentNode, parent: this });
+	newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: insertAfter, parent: this });
 
 	arr.push(newElem);
 
