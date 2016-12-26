@@ -1,7 +1,20 @@
 (function(undefined) {
 	"use strict";
 
-	var OOMLNodesWithUnwrittenChanges = new Set(),
+	var OOMLCompatSetExists = !!window.Set;
+	var OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
+	var OOMLCompatProxyExists = !!window.Proxy;
+	var OOMLCompatDatasetExists = !!document.createElement('div').dataset;
+
+	if (!OOMLCompatSetExists) {
+        <ZC-IMPORT[NodeSet]>
+        <ZC-IMPORT[StringSet]>
+    } else {
+	    var NodeSet = Set;
+	    var StringSet = Set;
+    }
+
+	var OOMLNodesWithUnwrittenChanges = new NodeSet(),
 		OOMLWriteChangesSetTimeout,
 		OOMLWriteChanges = function() {
 			if (OOMLWriteChangesSetTimeout) clearTimeout(OOMLWriteChangesSetTimeout);
