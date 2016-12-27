@@ -3,7 +3,18 @@ var Utils = {
 		find: function(rootElem, sel) {
 			return Utils.merge(rootElem.querySelectorAll(sel));
 		},
+		setData: function(domElem, key, value) {
+            domElem.setAttribute('data-' + Utils.toDashCase(key), value);
+        },
+        deleteData: function(domElem, key) {
+            domElem.removeAttribute('data-' + Utils.toDashCase(key));
+        },
 	},
+    toDashCase: function(str) {
+        return str.replace(/^[a-z]+|(?!^)(?:[A-Z][a-z]*)/g, function(match) {
+            return match.toLowerCase() + '-';
+        }).slice(0, -1);
+    },
 	getEvalValue: function(codeStr) {
 		codeStr = codeStr.trim() || undefined;
 		return eval('(' + codeStr + ')');

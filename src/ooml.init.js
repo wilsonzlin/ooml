@@ -40,7 +40,7 @@ OOML.init = function(settings) {
 
 
         // A set containing all the properties' names in this class
-		var CLASS_PROPERTIES_NAMES = new Set();
+		var CLASS_PROPERTIES_NAMES = new StringSet();
 
         // An object mapping global properties' names to a set containing nodes that use them
         var GLOBAL_PROPERTIES_MAP = Object.create(null);
@@ -51,8 +51,8 @@ OOML.init = function(settings) {
                 - conditionally create special setters for instance proerties
                 - conditionally destruct element properties when destructing
         */
-        var CLASS_ARRAY_PROPERTIES_NAMES = new Set();
-        var CLASS_ELEM_PROPERTIES_NAMES = new Set();
+        var CLASS_ARRAY_PROPERTIES_NAMES = new StringSet();
+        var CLASS_ELEM_PROPERTIES_NAMES = new StringSet();
 
         // An object mapping class attributes' names to their default value
         var CLASS_PREDEFINED_ATTRIBUTES_VALUES = Object.create(null);
@@ -66,7 +66,9 @@ OOML.init = function(settings) {
 
 
         // Get all nodes in template to process
-		var toProcess = Utils.merge(document.importNode(classTemplateElem.content, true).childNodes);
+		var toProcess = OOMLCompatTemplateExists ?
+			Utils.merge(document.importNode(classTemplateElem.content, true).childNodes) :
+            Utils.merge(classTemplateElem.cloneNode(true).childNodes);
 
 		// Process predefined attributes (attributes must be defined first)
         // Note: Don't need to remove ooml-attribute, ooml-property or ooml-method as parent template is removed after parsing
@@ -213,7 +215,7 @@ OOML.init = function(settings) {
 						if (propNameParts[0] == 'this') {
 							CLASS_PROPERTIES_NAMES.add(propNameParts[1]);
 						} else if (!GLOBAL_PROPERTIES_MAP[fullPropName]) {
-							GLOBAL_PROPERTIES_MAP[fullPropName] = new Set();
+							GLOBAL_PROPERTIES_MAP[fullPropName] = new NodeSet();
 							var objectToWatch = globals,
 								_,
 								endPropertyName = propNameParts.pop();
@@ -295,18 +297,35 @@ OOML.init = function(settings) {
 				localGlobalPropertiesMap = Object.create(null); // For destructuring; to remember what to remove from GLOBAL_PROPERTIES_MAP
 
 			var instancePropertyValues = Object.create(null),
-				instanceAttributes = new Proxy(Object.create(null), { // Use Proxy to keep types
-						set: function(target, key, newValue) {
-							instanceDom.dataset[key] = target[key] = newValue;
-							return true;
-						},
-						deleteProperty: function(target, key) {
-							delete instanceDom.dataset[key];
-							delete target[key];
-							return true;
-						},
-					}),
-				instanceExposedDOMElems = Object.create(null); // { "key": HTMLElement }
+                instanceExposedDOMElems = Object.create(null); // { "key": HTMLElement }
+
+            var instanceAttributeValuesHolder = Object.create(null);
+            var instanceAttributes = OOMLCompatProxyExists ?
+                new Proxy(instanceAttributeValuesHolder, { // Use Proxy to keep types
+                    set: function(target, key, newValue) {
+                        instanceDom.dataset[key] = target[key] = newValue;
+                        return true;
+                    },
+                    deleteProperty: function(target, key) {
+                        delete instanceDom.dataset[key];
+                        delete target[key];
+                        return true;
+                    },
+                }) : {
+                    get: function(key) {
+                        return instanceAttributeValuesHolder[key];
+                    },
+                    set: function(key, newValue) {
+                        instanceAttributeValuesHolder[key] = newValue;
+                        Utils.DOM.setData(instanceDom, key, newValue);
+                        return true;
+                    },
+                    delete: function(key) {
+                        delete instanceAttributeValuesHolder[key];
+                        Utils.DOM.deleteData(instanceDom, key);
+                        return true;
+                    },
+                };
 
 			var instanceDom = Utils.cloneElemForInstantiation(CLASS_ROOT_ELEM),
 				toProcess = [instanceDom],
@@ -389,15 +408,27 @@ OOML.init = function(settings) {
 			var currentlyAttachedTo; // For public method .detach only; is not used to actually detach, it is used to call the parent object's method of detachment
 
 			var propertiesGetterSetterFuncs = {};
-            propertiesGetterSetterFuncs.attributes = {
-                set: function(newObj) {
-                    Object.keys(instanceAttributes).forEach(function(key) {
-                        delete instanceAttributes[key];
-                    });
-                    Object.assign(instanceAttributes, newObj);
-                },
-                get: function() { return instanceAttributes; },
-            };
+			if (OOMLCompatProxyExists) {
+                propertiesGetterSetterFuncs.attributes = {
+                    set: function (newObj) {
+                        Object.keys(instanceAttributes).forEach(function (key) {
+                            delete instanceAttributes[key];
+                        });
+                        Object.assign(instanceAttributes, newObj);
+                    },
+                    get: function () {
+                        return instanceAttributes;
+                    },
+                };
+            } else if (OOMLCompatDatasetExists) {
+			    propertiesGetterSetterFuncs.attributes = {
+			        value: instanceDom.dataset,
+                };
+            } else {
+                propertiesGetterSetterFuncs.attributes = {
+                    value: instanceAttributes,
+                };
+            }
             propertiesGetterSetterFuncs.detach = {
                 value: function() {
                     if (instanceIsDestructed) {
@@ -606,10 +637,10 @@ OOML.init = function(settings) {
 
 			// Get all predefined attributes properties (including inherited ones)
 			var ancestorClasses = [],
-				currentProto = this.__proto__;
+				currentProto = Object.getPrototypeOf(this);
 			while (currentProto !== OOML.Element.prototype) {
 				ancestorClasses.push(currentProto.constructor);
-				currentProto = currentProto.__proto__;
+				currentProto = Object.getPrototypeOf(currentProto);
 			}
 
 			// Apply predefined attributes and properties, starting with most ancient
