@@ -5,3 +5,5 @@
 /.gitignore
 /.npmignore
 /.idea
+/tmp/
+/npm-debug.log
