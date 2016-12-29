@@ -84,8 +84,7 @@
                 </dl>
 
                 <h2>Account</h2>
-                <div>{{ some.random.global }} Note: on fire</div>
-                <span>Note: not all information may be up to date. Last updated: {{ service.lastUpdated }}</span>
+                <span>Note: not all information may be up to date.</span>
                 <br>
                 <label>
                     Username
@@ -108,8 +107,8 @@
                     { for Friend of this.contactedFriends }
                 </ul>
                 <span>Send a message</span>
-                { TextEditor.class this.postMessage }
-                { TextEditor.class this.postMessage2 }
+                { TextEditor this.postMessage }
+                { TextEditor this.postMessage2 }
 
                 <h2>Performance</h2>
                 <div class="table">
@@ -130,22 +129,14 @@
 
     <script>
         var TextEditor = OOML.init({
-                rootElem: '#texteditor-package'
-            });
-
-        var globals = {
-                TextEditor: {
-                    class: TextEditor.classes.TextEditor,
-                },
-                service: {
-                    lastUpdated: new Date(2015, 9, 23),
-                }
-            };
+            namespace: '#texteditor-package'
+        });
 
         var ooml = OOML.init({
-            rootElem: 'main',
-            globals: globals,
-            autoPopulateGlobalsObject: true,
+            namespace: 'main',
+            imports: {
+                TextEditor: TextEditor.classes.TextEditor,
+            },
         });
 
         var wilson = ooml.objects.wilson;

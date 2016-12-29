@@ -4,10 +4,11 @@ var Utils = {
             return Utils.merge(rootElem.querySelectorAll(sel));
         },
         setData: function(domElem, key, value) {
-            domElem.setAttribute('data-' + Utils.toDashCase(key), value);
-        },
-        deleteData: function(domElem, key) {
-            domElem.removeAttribute('data-' + Utils.toDashCase(key));
+            if (OOMLCompatDatasetExists) {
+                domElem.dataset[key] = value;
+            } else {
+                domElem.setAttribute('data-' + Utils.toDashCase(key), value);
+            }
         },
     },
     toDashCase: function(str) {

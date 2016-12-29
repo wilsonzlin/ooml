@@ -3,7 +3,6 @@
 
     var OOMLCompatSetExists = !!window.Set;
     var OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
-    var OOMLCompatProxyExists = !!window.Proxy;
     var OOMLCompatDatasetExists = !!document.createElement('div').dataset;
 
     if (!OOMLCompatSetExists) {
@@ -26,10 +25,6 @@
                 OOMLNodesWithUnwrittenChanges.clear();
             }, 50);
         };
-
-    var OOMLInstanceDestructedError = function() {
-        throw new Error('This instance is no longer available to use');
-    };
 
     var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
         OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
