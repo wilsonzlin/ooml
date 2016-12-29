@@ -1,46 +1,46 @@
 (function(undefined) {
-	"use strict";
+    "use strict";
 
-	var OOMLCompatSetExists = !!window.Set;
-	var OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
-	var OOMLCompatProxyExists = !!window.Proxy;
-	var OOMLCompatDatasetExists = !!document.createElement('div').dataset;
+    var OOMLCompatSetExists = !!window.Set;
+    var OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
+    var OOMLCompatProxyExists = !!window.Proxy;
+    var OOMLCompatDatasetExists = !!document.createElement('div').dataset;
 
-	if (!OOMLCompatSetExists) {
+    if (!OOMLCompatSetExists) {
         <ZC-IMPORT[NodeSet]>
         <ZC-IMPORT[StringSet]>
     } else {
-	    var NodeSet = Set;
-	    var StringSet = Set;
+        var NodeSet = Set;
+        var StringSet = Set;
     }
 
-	var OOMLNodesWithUnwrittenChanges = new NodeSet(),
-		OOMLWriteChangesSetTimeout,
-		OOMLWriteChanges = function() {
-			if (OOMLWriteChangesSetTimeout) clearTimeout(OOMLWriteChangesSetTimeout);
-			OOMLWriteChangesSetTimeout = setTimeout(function() {
-				OOMLNodesWithUnwrittenChanges.forEach(function(node) {
-					node.nodeValue = node[OOML_NODE_PROPNAME_TEXTFORMAT].join('');
-				});
+    var OOMLNodesWithUnwrittenChanges = new NodeSet(),
+        OOMLWriteChangesSetTimeout,
+        OOMLWriteChanges = function() {
+            if (OOMLWriteChangesSetTimeout) clearTimeout(OOMLWriteChangesSetTimeout);
+            OOMLWriteChangesSetTimeout = setTimeout(function() {
+                OOMLNodesWithUnwrittenChanges.forEach(function(node) {
+                    node.nodeValue = node[OOML_NODE_PROPNAME_TEXTFORMAT].join('');
+                });
 
-				OOMLNodesWithUnwrittenChanges.clear();
-			}, 50);
-		};
+                OOMLNodesWithUnwrittenChanges.clear();
+            }, 50);
+        };
 
-	var OOMLInstanceDestructedError = function() {
-		throw new Error('This instance is no longer available to use');
-	};
+    var OOMLInstanceDestructedError = function() {
+        throw new Error('This instance is no longer available to use');
+    };
 
-	var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
-		OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
-		OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
+    var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
+        OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
+        OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
 
-		OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
-		OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
-		OOML_NODE_PROPNAME_GENERICEVENTHANDLERS = '__oomlGenericEventHandlers',
-		OOML_NODE_PROPNAME_CHILDEVENTHANDLERS = '__oomlChildEventHandlers',
-		OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
-		OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyPlaceholder',
+        OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
+        OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
+        OOML_NODE_PROPNAME_GENERICEVENTHANDLERS = '__oomlGenericEventHandlers',
+        OOML_NODE_PROPNAME_CHILDEVENTHANDLERS = '__oomlChildEventHandlers',
+        OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
+        OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyPlaceholder',
 
         OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
         OOML_ELEMENT_PROPNAME_ATTACH = '__oomlAttach',
@@ -55,20 +55,20 @@
 
         OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS = '__oomlListeners';
 
-	<ZC-IMPORT[utils]>
+    <ZC-IMPORT[utils]>
 
-	var OOML = {};
-	<ZC-IMPORT[array]>
-	<ZC-IMPORT[array-methods-getset]>
-	<ZC-IMPORT[array-methods-mutation]>
-	<ZC-IMPORT[array-methods-access]>
-	<ZC-IMPORT[array-methods-iteration]>
-	<ZC-IMPORT[element]>
-	<ZC-IMPORT[init]>
+    var OOML = {};
+    <ZC-IMPORT[array]>
+    <ZC-IMPORT[array-methods-getset]>
+    <ZC-IMPORT[array-methods-mutation]>
+    <ZC-IMPORT[array-methods-access]>
+    <ZC-IMPORT[array-methods-iteration]>
+    <ZC-IMPORT[element]>
+    <ZC-IMPORT[init]>
 
-	if (typeof exports == "object") {
-		module.exports = OOML;
-	} else {
-		window.OOML = OOML;
-	}
+    if (typeof exports == "object") {
+        module.exports = OOML;
+    } else {
+        window.OOML = OOML;
+    }
 })();

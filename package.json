@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/lerouche/ooml#readme",
   "devDependencies": {
-    "fs-extra": "^1.0.0",
+    "fs-extra": "*",
     "zcompile": "*"
   }
 }

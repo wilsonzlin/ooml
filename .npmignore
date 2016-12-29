@@ -4,6 +4,6 @@
 /update.sh
 /.gitignore
 /.npmignore
-/.idea
+/.idea/
 /tmp/
-/npm-debug.log
+npm-debug.log
