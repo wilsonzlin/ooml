@@ -1,6 +1,7 @@
 (function(undefined) {
     "use strict";
 
+    var OOMLCompatSymbolExists = !!window.Symbol;
     var OOMLCompatSetExists = !!window.Set;
     var OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
     var OOMLCompatDatasetExists = !!document.createElement('div').dataset;
@@ -40,15 +41,12 @@
         OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
         OOML_ELEMENT_PROPNAME_ATTACH = '__oomlAttach',
         OOML_ELEMENT_PROPNAME_DETACH = '__oomlDetach',
-        OOML_ELEMENT_PROPNAME_DESTRUCT = '__oomlDestruct',
         OOML_ELEMENT_PROPNAME_DETACHOWNELEMPROPELEM = '__oomlDetachElemPropElem',
 
         OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes',
         OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
         OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
-        OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor',
-
-        OOML_GLOBALS_PROPNAME_PROPSETTER_LISTENERS = '__oomlListeners';
+        OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
 
     <ZC-IMPORT[utils]>
 

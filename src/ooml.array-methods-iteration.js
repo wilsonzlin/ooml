@@ -6,7 +6,7 @@
         return Array.prototype[method].apply(this[OOML_ARRAY_PROPNAME_INTERNALARRAY], arguments);
     };
 });
-if (typeof Symbol == "function") {
+if (OOMLCompatSymbolExists) {
     OOMLArrayProto[Symbol.iterator] = function() {
         var i = -1,
             arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];

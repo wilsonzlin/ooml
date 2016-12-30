@@ -47,8 +47,7 @@ OOML.init = function(settings) {
         /*
             CLASS_ARRAY_PROPERTIES_NAMES and CLASS_ELEM_PROPERTIES_NAMES are used:
                 - to check for duplicates
-                - conditionally create special setters for instance proerties
-                - conditionally destruct element properties when destructing
+                - conditionally create special setters for instance properties
         */
         var CLASS_ARRAY_PROPERTIES_NAMES = new StringSet();
         var CLASS_ELEM_PROPERTIES_NAMES = new StringSet();
@@ -66,8 +65,8 @@ OOML.init = function(settings) {
 
         // Get all nodes in template to process
         var toProcess = OOMLCompatTemplateExists ?
-            Utils.merge(document.importNode(classTemplateElem.content, true).childNodes) :
-            Utils.merge(classTemplateElem.childNodes);
+            Utils.concat(document.importNode(classTemplateElem.content, true).childNodes) :
+            Utils.concat(classTemplateElem.childNodes);
 
         // Process predefined attributes (attributes must be defined first)
         // Note: Don't need to remove ooml-attribute, ooml-property or ooml-method as parent template is removed after parsing
@@ -147,7 +146,7 @@ OOML.init = function(settings) {
         while (current = toProcess.shift()) {
             if (current instanceof Element) {
 
-                var attrs = Utils.merge(current.attributes); // To prevent indexes from changing when removing inline event handler attributes
+                var attrs = Utils.concat(current.attributes); // To prevent indexes from changing when removing inline event handler attributes
 
                 attrs.forEach(function(attr) {
                     if (attr.name.indexOf('childon') === 0) {
@@ -186,13 +185,13 @@ OOML.init = function(settings) {
                     // Remove first opening and all closing braces:
                     // "{{ this.propName }}"         becomes "{ this.propName "
                     // "{ ClassName this.propName }" becomes " ClassName this.propName "
-                    var code = nodeValue.slice(indexOfOpeningBrace + 1, indexOfClosingBrace);
+                    var code = nodeValue.slice(1, indexOfClosingBrace);
 
                     var regexpMatches;
                     if (code[0] == '{') {
                         regexpMatches = /^\{ this\.([a-zA-Z0-9_]+) $/.exec(code);
                         if (!regexpMatches || !regexpMatches[1]) {
-                            throw new SyntaxError('Invalid text substitution');
+                            throw new SyntaxError('Invalid text substitution at `' + code + '`');
                         }
 
                         var propName = regexpMatches[1];
@@ -208,7 +207,8 @@ OOML.init = function(settings) {
                     } else {
                         regexpMatches = /^ (?:for ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)) of|((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+))) this\.([a-zA-Z0-9_]+) $/.exec(code);
                         if (!regexpMatches || !regexpMatches[3] || (!regexpMatches[1] && !regexpMatches[2])) {
-                            throw new SyntaxError('Invalid element substitution');
+                            console.log(regexpMatches);
+                            throw new SyntaxError('Invalid element substitution at `' + code + '`');
                         }
 
                         var toRemove = currentNode;
@@ -238,14 +238,11 @@ OOML.init = function(settings) {
                             CLASS_ELEM_PROPERTIES_NAMES.add(propName);
                         }
 
-                        if (!current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
-                            current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = [];
-                        }
-                        current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].push({
+                        elemSubstitutionCommentNode[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = {
                             elemConstructor: elemConstructor,
                             propName: propName,
                             isArray: isArraySubstitution
-                        });
+                        };
                     }
                 }
 
@@ -260,8 +257,7 @@ OOML.init = function(settings) {
                     current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
 
                     Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
-                        var propNameParts = fullPropName.split('.');
-                        CLASS_PROPERTIES_NAMES.add(propNameParts[1]);
+                        CLASS_PROPERTIES_NAMES.add(fullPropName);
                     });
                 }
             }
@@ -319,40 +315,29 @@ OOML.init = function(settings) {
 
                 } else if (current instanceof Attr || current instanceof Text) {
 
-                    if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
-
-                        // Only on Text nodes
-                        current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].forEach(function(config) {
-                            var commentNodeMarker = document.createComment('');
-                            current.parentNode.insertBefore(commentNodeMarker, current);
-                            if (config.isArray) {
-                                instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, commentNodeMarker);
-                            } else {
-                                localPropertiesMap[config.propName] = {
-                                    elemConstructor: config.elemConstructor,
-                                    insertAfter: commentNodeMarker
-                                };
-                            }
-                        });
-
-                        current.parentNode.removeChild(current);
-
-                    } else if (current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
+                    if (current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
 
                         for (var propName in current[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
-                            if (propName.indexOf('this.') === 0) {
-                                propName = propName.slice(5);
-                                if (!localPropertiesMap[propName]) {
-                                    localPropertiesMap[propName] = [];
-                                }
-                                localPropertiesMap[propName].push(current);
-                            } else {
-                                GLOBAL_PROPERTIES_MAP[propName].add(current);
-                                if (!localGlobalPropertiesMap[propName]) {
-                                    localGlobalPropertiesMap[propName] = [];
-                                }
-                                localGlobalPropertiesMap[propName].push(current);
+                            if (!localPropertiesMap[propName]) {
+                                localPropertiesMap[propName] = [];
                             }
+                            localPropertiesMap[propName].push(current);
+                        }
+                    }
+
+                } else if (current instanceof Comment) {
+
+                    if (current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
+
+                        var config = current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG];
+                        var commentNodeMarker = current;
+                        if (config.isArray) {
+                            instancePropertyValues[config.propName] = new OOML.Array(config.elemConstructor, commentNodeMarker);
+                        } else {
+                            localPropertiesMap[config.propName] = {
+                                elemConstructor: config.elemConstructor,
+                                insertAfter: commentNodeMarker
+                            };
                         }
                     }
 
@@ -364,15 +349,20 @@ OOML.init = function(settings) {
             var propertiesGetterSetterFuncs = {};
             propertiesGetterSetterFuncs.attributes = {
                 set: function (newObj) {
-                    if (!newObj || newObj.constructor != Object) {
+                    if (!Utils.isObjectLiteral(newObj)) {
                         throw new TypeError('New attributes object provided is not a valid object');
                     }
-                    Object.keys(instanceAttributesInterface).forEach(function (key) {
-                        if (newObj.hasOwnProperty(key)) {
-                            instanceAttributesInterface[key] = newObj[key];
-                        } else {
-                            instanceAttributesInterface[key] = null;
-                        }
+
+                    var newObjKeys = Object.keys(newObj);
+
+                    // Don't combine checking if attribute exists and setting it,
+                    // as that may result in a half-state where some attributes
+                    // are set and some aren't
+                    if (newObjKeys.some(function(propName) { return instanceAttributeValues[propName] === undefined })) {
+                        throw new ReferenceError('New attributes object provided has an unrecognised attribute ' + propName);
+                    }
+                    newObjKeys.forEach(function(key) {
+                        instanceAttributesInterface[key] = newObj[key];
                     });
                 },
                 get: function () {
@@ -394,7 +384,7 @@ OOML.init = function(settings) {
                         // This will call __oomlDetach
                         parent.splice(indexOfThis, 1);
                     } else if (parent instanceof OOML.Element) {
-                        // This will update property to null but not destruct existing element
+                        // This will update property to null
                         parent[OOML_ELEMENT_PROPNAME_DETACHOWNELEMPROPELEM](currentlyAttachedTo.property);
                     } else {
                         throw new Error('Unrecognised parent');
@@ -460,6 +450,9 @@ OOML.init = function(settings) {
 
                 if (CLASS_ARRAY_PROPERTIES_NAMES.has(prop)) {
                     setter = function(newVal) {
+                        if (!Array.isArray(newVal)) {
+                            throw new TypeError('Non-array provided to element array substitution property');
+                        }
                         instancePropertyValues[prop].initialize(newVal);
                     };
                 } else if (CLASS_ELEM_PROPERTIES_NAMES.has(prop)) {
@@ -472,9 +465,9 @@ OOML.init = function(settings) {
                             newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: elemDetails.insertAfter, parent: this, property: prop });
                         }
 
-                        // Current element may not be OOML.Element and therefore may not need destructing
+                        // Current element may not be OOML.Element and therefore may not need detaching
                         if (instancePropertyValues[prop] instanceof OOML.Element) {
-                            instancePropertyValues[prop][OOML_ELEMENT_PROPNAME_DESTRUCT]();
+                            instancePropertyValues[prop][OOML_ELEMENT_PROPNAME_DETACH]();
                         }
 
                         instancePropertyValues[prop] = newElem;
@@ -488,7 +481,7 @@ OOML.init = function(settings) {
                         if (localPropertiesMap[prop]) { // Some properties are unused in the DOM (e.g. predefined properties)
                             localPropertiesMap[prop].forEach(function(node) {
                                 var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
-                                node[OOML_NODE_PROPNAME_FORMATPARAMMAP]['this.' + prop].forEach(function(offset) {
+                                node[OOML_NODE_PROPNAME_FORMATPARAMMAP][prop].forEach(function(offset) {
                                     formatStr[offset] = newVal;
                                 });
                                 OOMLNodesWithUnwrittenChanges.add(node);
@@ -572,15 +565,15 @@ OOML.init = function(settings) {
 
             // Apply given object argument to this new instance's properties
             // NOTE: .assign is available at this point, as instances are constructed AFTER classes are initialised (including prototypes)
-            if (initState) this.assign(initState);
+            if (initState) {
+                this.assign(initState);
+            }
 
-            // Remove any remaining parameter handlebars
+            // Remove any remaining parameter handlebars and set any undefined values to null
             CLASS_PROPERTIES_NAMES.forEach(function(propName) {
-                if (Array.isArray(localPropertiesMap[propName])) { // Some properties are not in DOM (e.g. only predefined) or are not for text subtitution (e.g. Array or Element)
+                if (Array.isArray(localPropertiesMap[propName])) { // Some properties are not in DOM (e.g. only predefined) or are not for text substitution (e.g. Array or Element)
                     if (instance[propName] === undefined) {
-                        localPropertiesMap[propName].forEach(function(node) {
-                            OOMLNodesWithUnwrittenChanges.add(node);
-                        });
+                        instance[propName] = null;
                     }
                 }
             });
@@ -620,7 +613,7 @@ OOML.init = function(settings) {
         instanceInstantiationElem.parentNode.insertBefore(instance[OOML_ELEMENT_PROPNAME_DOMELEM], instanceInstantiationElem.nextSibling);
 
         // Copy attributes on instantiation element to new instance's root element
-        Utils.merge(instanceInstantiationElem.attributes).forEach(function(attr) {
+        Utils.concat(instanceInstantiationElem.attributes).forEach(function(attr) {
             if (attr.name != 'ooml-instantiate') {
                 instance[OOML_ELEMENT_PROPNAME_DOMELEM].setAttribute(attr.name, attr.value);
             }
