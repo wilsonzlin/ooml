@@ -10,8 +10,8 @@ OOMLArrayProto.initialize = function(arr) {
         return Utils.constructElement(elemConstructor, elem);
     });
 
-    this[OOML_ARRAY_PROPNAME_INTERNALARRAY].forEach(function(elemToDestruct) {
-        elemToDestruct[OOML_ELEMENT_PROPNAME_DESTRUCT]();
+    this[OOML_ARRAY_PROPNAME_INTERNALARRAY].forEach(function(elemToDetach) {
+        elemToDetach[OOML_ELEMENT_PROPNAME_DETACH]();
     });
     arr.reduce(function(previousElem, elemToAttach) {
         elemToAttach[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: previousElem, parent: that });

@@ -1,7 +1,7 @@
 var Utils = {
     DOM: {
         find: function(rootElem, sel) {
-            return Utils.merge(rootElem.querySelectorAll(sel));
+            return Utils.concat(rootElem.querySelectorAll(sel));
         },
         setData: function(domElem, key, value) {
             if (OOMLCompatDatasetExists) {
@@ -20,7 +20,7 @@ var Utils = {
         codeStr = codeStr.trim() || undefined;
         return eval('(' + codeStr + ')');
     },
-    merge: function() {
+    concat: function() {
         // WARNING: Don't use .concat as that doesn't work with array-like objects
         // e.g. [].concat(NodeList(div, span)) becomes [NodeList], not [div, span]
         var ret = Array.prototype.slice.call(arguments[0]);
@@ -64,7 +64,7 @@ var Utils = {
         return val instanceof Date || val === null || Array.isArray(val) || ['number', 'boolean', 'string'].indexOf(typeof val) > -1
     },
     isObjectLiteral: function(obj) {
-        return !!obj && (obj.constructor == Object || (obj.__proto__ === undefined && obj instanceof Object));
+        return !!obj && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
     },
     createCleanObject: function() {
         return Object.create(null);
@@ -96,9 +96,9 @@ var Utils = {
 
             var posOfClosingBraces = str.indexOf('}}');
             if (posOfClosingBraces < 0) {
-                throw new SyntaxError("Unexpected end of input; expected closing text parameter braces");
+                throw new SyntaxError('Unexpected end of input; expected closing text parameter braces');
             }
-            var param = str.slice(0, posOfClosingBraces).trim();
+            var param = str.slice(0, posOfClosingBraces).trim().slice(5); // Remove "this."
             // Assume param is a well-formatted JS property name
             if (!paramMap[param]) paramMap[param] = [];
             paramMap[param].push(strParts.length);
@@ -143,7 +143,10 @@ var Utils = {
             }
 
             for (var i = 0; i < rootElem.childNodes.length; i++) {
-                clonedElem.appendChild( cloneElemForInstantiation(rootElem.childNodes[i]) );
+                var clonedChild = cloneElemForInstantiation(rootElem.childNodes[i]);
+                if (clonedChild) {
+                    clonedElem.appendChild(clonedChild);
+                }
             }
 
         } else if (rootElem instanceof Text) {
@@ -158,6 +161,7 @@ var Utils = {
 
         } else if (rootElem instanceof Comment) {
 
+            clonedElem = document.createComment(rootElem.nodeValue);
             if (rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
                 clonedElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]; // Probably don't need to clone as it will never be mutilated
             }

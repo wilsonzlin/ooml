@@ -7,16 +7,12 @@ OOMLElementProto.toObject = function() {
 
     this.constructor[OOML_CLASS_PROPNAME_PROPNAMES].forEach(function(propName) {
         var value = instance[propName];
-        if (value !== undefined) {
-            if (Utils.isPrimitiveValue(value)) {
-                obj[propName] = value;
-            } else if (value == null) {
-                obj[propName] = null;
-            } else if (value instanceof OOML.Array) {
-                obj[propName] = value.toArray();
-            } else {
-                obj[propName] = value.toObject();
-            }
+        if (value instanceof OOML.Array) {
+            obj[propName] = value.toArray();
+        } else if (value instanceof OOML.Element) {
+            obj[propName] = value.toObject();
+        } else {
+            obj[propName] = value;
         }
     });
 
@@ -40,7 +36,7 @@ OOMLElementProto.assign = function() {
 
     return this;
 };
-if (typeof Symbol == "function") {
+if (OOMLCompatSymbolExists) {
     OOMLElementProto[Symbol.iterator] = function() {
         var inst = this,
             propNamesIterator = this.constructor[OOML_CLASS_PROPNAME_PROPNAMES].values();
