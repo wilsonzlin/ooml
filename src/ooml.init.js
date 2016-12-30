@@ -2,10 +2,10 @@ OOML.init = function(settings) {
     settings = settings || {};
 
     var namespace = settings.namespace || document.body;
-    var imports = settings.imports || Object.create(null);
+    var imports = settings.imports || Utils.createCleanObject();
 
-    var classes = Object.create(null),
-        objects = Object.create(null);
+    var classes = Utils.createCleanObject(),
+        objects = Utils.createCleanObject();
 
     if (typeof namespace == 'string') {
         namespace = namespace.trim();
@@ -20,29 +20,22 @@ OOML.init = function(settings) {
 
     Utils.DOM.find(namespace, 'template[ooml-class]').forEach(function(classTemplateElem) {
         // Parse declaration
-        var classDeclarationParts = classTemplateElem.getAttribute('ooml-class').split(' ');
+        var classDeclaration = classTemplateElem.getAttribute('ooml-class');
+        var classDeclarationParts = /^([a-zA-Z]+)(?: extends ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)))?$/.exec(classDeclaration);
+        if (!classDeclarationParts) {
+            throw new SyntaxError('Bad class declaration at `' + classDeclaration + '`');
+        }
 
         // Get new class name
-        var CLASS_NAME = classDeclarationParts[0];
+        var CLASS_NAME = classDeclarationParts[1];
         if (classes[CLASS_NAME]) {
             throw new SyntaxError('The class ' + CLASS_NAME + ' has already been initialised');
         }
 
         // Get parent class
         var CLASS_PARENT_CLASS;
-        if (classDeclarationParts[1] == 'extends') {
-            var classExtends = classDeclarationParts[2];
-            CLASS_PARENT_CLASS = classes[classExtends];
-            if (!CLASS_PARENT_CLASS) {
-                CLASS_PARENT_CLASS = imports;
-                classExtends.split('.').every(function(part) {
-                    CLASS_PARENT_CLASS = CLASS_PARENT_CLASS[part];
-                    return !!CLASS_PARENT_CLASS;
-                });
-                if (typeof CLASS_PARENT_CLASS != 'function') {
-                    throw new SyntaxError('The class ' + classExtends + ' does not exist');
-                }
-            }
+        if (classDeclarationParts[2]) {
+            CLASS_PARENT_CLASS = Utils.getOOMLClass(classDeclarationParts[2], classes, imports);
         } else {
             CLASS_PARENT_CLASS = OOML.Element;
         }
@@ -61,20 +54,20 @@ OOML.init = function(settings) {
         var CLASS_ELEM_PROPERTIES_NAMES = new StringSet();
 
         // An object mapping class attributes' names to their default value
-        var CLASS_PREDEFINED_ATTRIBUTES_VALUES = Object.create(null);
+        var CLASS_PREDEFINED_ATTRIBUTES_VALUES = Utils.createCleanObject();
 
         // An object mapping class properties' names to their default value
-        var CLASS_PREDEFINED_PROPERTIES_VALUES = Object.create(null);
+        var CLASS_PREDEFINED_PROPERTIES_VALUES = Utils.createCleanObject();
 
         // An object mapping class properties' names to their function
-        var CLASS_PREDEFINED_METHODS_FUNCTIONS = Object.create(null);
+        var CLASS_PREDEFINED_METHODS_FUNCTIONS = Utils.createCleanObject();
         var CLASS_PREDEFINED_CONSTRUCTOR;
 
 
         // Get all nodes in template to process
         var toProcess = OOMLCompatTemplateExists ?
             Utils.merge(document.importNode(classTemplateElem.content, true).childNodes) :
-            Utils.merge(classTemplateElem.cloneNode(true).childNodes);
+            Utils.merge(classTemplateElem.childNodes);
 
         // Process predefined attributes (attributes must be defined first)
         // Note: Don't need to remove ooml-attribute, ooml-property or ooml-method as parent template is removed after parsing
@@ -82,9 +75,13 @@ OOML.init = function(settings) {
             var node = toProcess.shift();
             if (node instanceof Element) {
                 var attrName = node.getAttribute('name');
+                if (CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] !== undefined) {
+                    throw new SyntaxError('The attribute ' + attrName + ' is already defined');
+                }
+
                 var evalValue = Utils.getEvalValue(node.textContent);
-                if (evalValue === undefined) {
-                    throw new TypeError('Predefined attribute value for ' + propName + ' cannot be undefined');
+                if (!Utils.isPrimitiveValue(evalValue)) {
+                    throw new TypeError('The value for the attribute ' + attrName + ' is invalid');
                 }
 
                 CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] = evalValue;
@@ -96,9 +93,13 @@ OOML.init = function(settings) {
             var node = toProcess.shift();
             if (node instanceof Element) {
                 var propName = node.getAttribute('name');
+                if (CLASS_PREDEFINED_PROPERTIES_VALUES[propName] !== undefined) {
+                    throw new SyntaxError('The property ' + propName + ' is already defined');
+                }
+
                 var evalValue = Utils.getEvalValue(node.textContent);
-                if (evalValue === undefined) {
-                    throw new TypeError('Predefined property value for ' + propName + ' cannot be undefined');
+                if (!Utils.isPrimitiveValue(evalValue)) {
+                    throw new TypeError('The value for the property ' + propName + ' is invalid');
                 }
 
                 CLASS_PREDEFINED_PROPERTIES_VALUES[propName] = evalValue;
@@ -110,14 +111,18 @@ OOML.init = function(settings) {
             var node = toProcess.shift();
             if (node instanceof Element) {
                 var propName = node.getAttribute('name');
+                if (CLASS_PREDEFINED_METHODS_FUNCTIONS[propName]) {
+                    throw new SyntaxError('The method ' + propName + ' is already defined');
+                }
+
                 var evalValue = Utils.getEvalValue(node.textContent);
                 if (typeof evalValue != 'function') {
-                    throw new TypeError('Predefined method ' + propName + ' is not a function');
+                    throw new TypeError('The method ' + propName + ' is not a function');
                 }
 
                 if (propName == 'constructor') {
                     if (CLASS_PREDEFINED_CONSTRUCTOR) {
-                        throw new SyntaxError('A constructor has already been defined for class ' + className);
+                        throw new SyntaxError('A constructor has already been defined for the class ' + className);
                     }
                     CLASS_PREDEFINED_CONSTRUCTOR = evalValue;
                 } else {
@@ -146,11 +151,11 @@ OOML.init = function(settings) {
 
                 attrs.forEach(function(attr) {
                     if (attr.name.indexOf('childon') === 0) {
-                        if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = Object.create(null);
+                        if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = Utils.createCleanObject();
                         current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'dispatch', 'data', attr.nodeValue);
                         current.removeAttributeNode(attr);
                     } else if (attr.name.indexOf('on') === 0) {
-                        if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = Object.create(null);
+                        if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = Utils.createCleanObject();
                         current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('$self', 'dispatch', 'event', 'event.preventDefault();' + attr.nodeValue);
                         current.removeAttributeNode(attr);
                     } else {
@@ -159,19 +164,61 @@ OOML.init = function(settings) {
                 });
 
                 Utils.pushAll(toProcess, current.childNodes);
-            } else if (current instanceof Attr || current instanceof Text) {
+            } else if (current instanceof Text) {
 
-                var nodeValue = current.nodeValue;
+                var currentNode = current;
+                var indexOfOpeningBrace;
 
-                if (current instanceof Text &&
-                    /^(\s*\{\s*(for [A-Za-z0-9._]+ of|[A-Za-z0-9._]+) this\.([A-Za-z0-9_]+)\s*\}\s*)+$/.test(nodeValue)
-                ) {
+                while ((indexOfOpeningBrace = currentNode.nodeValue.indexOf('{')) > -1) {
+                    // .splitText returns the new Text node that contains the REMAINING TEXT AFTER
+                    currentNode = currentNode.splitText(indexOfOpeningBrace);
+                    var nodeValue = currentNode.nodeValue;
 
-                    Utils.parseElemSubstitutionCode(nodeValue).forEach(function(metadata) {
-                        // Match element substitution
-                        var elemConstructorName = metadata.class;
-                        var propName = metadata.propName;
-                        var isArraySubstitution = metadata.isArray;
+                    // currentNode.nodeValue is now one of:
+                    // "{{ this.propName }}"
+                    // "{ for ClassName of this.propName }"
+                    // "{ ClassName this.propName }"
+                    // Therefore the index of the closing brace can't be less than 3
+                    var indexOfClosingBrace = nodeValue.indexOf('}');
+                    if (indexOfClosingBrace < 3) {
+                        throw new SyntaxError('Matching closing brace not found');
+                    }
+                    // Remove first opening and all closing braces:
+                    // "{{ this.propName }}"         becomes "{ this.propName "
+                    // "{ ClassName this.propName }" becomes " ClassName this.propName "
+                    var code = nodeValue.slice(indexOfOpeningBrace + 1, indexOfClosingBrace);
+
+                    var regexpMatches;
+                    if (code[0] == '{') {
+                        regexpMatches = /^\{ this\.([a-zA-Z0-9_]+) $/.exec(code);
+                        if (!regexpMatches || !regexpMatches[1]) {
+                            throw new SyntaxError('Invalid text substitution');
+                        }
+
+                        var propName = regexpMatches[1];
+                        CLASS_PROPERTIES_NAMES.add(propName);
+
+                        var textSubstitutionNode = currentNode;
+                        currentNode = currentNode.splitText(indexOfClosingBrace + 2);
+
+                        textSubstitutionNode[OOML_NODE_PROPNAME_TEXTFORMAT] = [''];
+                        textSubstitutionNode[OOML_NODE_PROPNAME_FORMATPARAMMAP] = Utils.createCleanObject();
+                        textSubstitutionNode[OOML_NODE_PROPNAME_FORMATPARAMMAP][propName] = [0];
+
+                    } else {
+                        regexpMatches = /^ (?:for ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)) of|((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+))) this\.([a-zA-Z0-9_]+) $/.exec(code);
+                        if (!regexpMatches || !regexpMatches[3] || (!regexpMatches[1] && !regexpMatches[2])) {
+                            throw new SyntaxError('Invalid element substitution');
+                        }
+
+                        var toRemove = currentNode;
+                        var elemSubstitutionCommentNode = document.createComment('');
+                        currentNode = currentNode.splitText(indexOfClosingBrace + 1);
+                        currentNode.parentNode.replaceChild(elemSubstitutionCommentNode, toRemove);
+
+                        var elemConstructorName = regexpMatches[1] || regexpMatches[2];
+                        var propName = regexpMatches[3];
+                        var isArraySubstitution = !!regexpMatches[1];
 
                         // The property can be predefined but not already in use
                         // NOTE: It's not possible for more than one element substitution of the same property
@@ -182,28 +229,8 @@ OOML.init = function(settings) {
 
                         var elemConstructor =
                             elemConstructorName == 'HTMLElement' ? HTMLElement :
-                            elemConstructorName == 'OOML.Element' ? OOML.Element :
-                            (classes[elemConstructorName] ||
-                            (function() {
-                                var parts = elemConstructorName.split('.'),
-                                    elemConstructor = imports,
-                                    part;
-
-                                while (part = parts.shift()) {
-                                    elemConstructor = elemConstructor[part];
-                                }
-
-                                var classProto = elemConstructor.prototype;
-                                while (classProto && classProto != OOML.Element.prototype) {
-                                    classProto = Object.getPrototypeOf(classProto);
-                                }
-
-                                if (classProto != OOML.Element.prototype) {
-                                    throw new TypeError(elemConstructorName + ' is not a valid class');
-                                }
-
-                                return elemConstructor;
-                            })());
+                                elemConstructorName == 'OOML.Element' ? OOML.Element :
+                                    Utils.getOOMLClass(elemConstructorName, classes, imports);
 
                         if (isArraySubstitution) {
                             CLASS_ARRAY_PROPERTIES_NAMES.add(propName);
@@ -211,11 +238,22 @@ OOML.init = function(settings) {
                             CLASS_ELEM_PROPERTIES_NAMES.add(propName);
                         }
 
-                        if (!current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = [];
-                        current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].push({ elemConstructor: elemConstructor, propName: propName, isArray: isArraySubstitution });
-                    });
+                        if (!current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
+                            current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = [];
+                        }
+                        current[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG].push({
+                            elemConstructor: elemConstructor,
+                            propName: propName,
+                            isArray: isArraySubstitution
+                        });
+                    }
+                }
 
-                } else if (nodeValue.indexOf('{{') > -1) {
+            } else if (current instanceof Attr) {
+
+                var nodeValue = current.nodeValue;
+
+                if (nodeValue.indexOf('{{') > -1) {
 
                     var paramsData = Utils.splitStringByParamholders(nodeValue);
                     current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
@@ -233,13 +271,13 @@ OOML.init = function(settings) {
             var instance = this,
                 instanceIsAttached = false;
 
-            var localPropertiesMap = Object.create(null);
+            var localPropertiesMap = Utils.createCleanObject();
 
-            var instancePropertyValues = Object.create(null),
-                instanceExposedDOMElems = Object.create(null); // { "key": HTMLElement }
+            var instancePropertyValues = Utils.createCleanObject(),
+                instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
 
-            var instanceAttributeValues = Object.create(null);
-            var instanceAttributesInterface = Object.create(null);
+            var instanceAttributeValues = Utils.createCleanObject();
+            var instanceAttributesInterface = Utils.createCleanObject();
 
             var instanceDom = Utils.cloneElemForInstantiation(CLASS_ROOT_ELEM),
                 toProcess = [instanceDom],
@@ -263,7 +301,7 @@ OOML.init = function(settings) {
                     if (current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
                         Object.keys(current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]).forEach(function(eventName) {
                             // Event data will be provided when called by child OOML element
-                            if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] = Object.create(null);
+                            if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] = Utils.createCleanObject();
                             current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName] = current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName].bind(instance, current, dispatchEventToParent);
                         });
                     }
@@ -326,8 +364,11 @@ OOML.init = function(settings) {
             var propertiesGetterSetterFuncs = {};
             propertiesGetterSetterFuncs.attributes = {
                 set: function (newObj) {
+                    if (!newObj || newObj.constructor != Object) {
+                        throw new TypeError('New attributes object provided is not a valid object');
+                    }
                     Object.keys(instanceAttributesInterface).forEach(function (key) {
-                        if (newObj[key] !== undefined) {
+                        if (newObj.hasOwnProperty(key)) {
                             instanceAttributesInterface[key] = newObj[key];
                         } else {
                             instanceAttributesInterface[key] = null;
@@ -347,7 +388,9 @@ OOML.init = function(settings) {
                     var parent = currentlyAttachedTo.parent;
                     if (parent instanceof OOML.Array) {
                         var indexOfThis = parent.indexOf(this);
-                        if (indexOfThis < 0) throw new Error('This instance could not be found on its parent array');
+                        if (indexOfThis < 0) {
+                            throw new Error('This instance could not be found on its parent array');
+                        }
                         // This will call __oomlDetach
                         parent.splice(indexOfThis, 1);
                     } else if (parent instanceof OOML.Element) {
@@ -480,7 +523,7 @@ OOML.init = function(settings) {
             // Get all predefined attributes properties (including inherited ones)
             var ancestorClasses = [],
                 currentProto = Object.getPrototypeOf(this);
-            while (currentProto !== OOML.Element.prototype) {
+            while (currentProto != OOML.Element.prototype) {
                 ancestorClasses.push(currentProto.constructor);
                 currentProto = Object.getPrototypeOf(currentProto);
             }
@@ -488,7 +531,9 @@ OOML.init = function(settings) {
             // Apply predefined attributes and properties, starting with most ancient
             ancestorClasses.reverse().forEach(function(ancestorClass) {
                 for (var attrName in ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDATTRS]) {
-                    instanceAttributeValues[attrName] = ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDATTRS][attrName];
+                    var attrValue = ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDATTRS][attrName];
+                    Utils.DOM.setData(instanceDom, attrName, attrValue);
+                    instanceAttributeValues[attrName] = attrValue;
                 }
 
                 for (var propName in ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) {
@@ -502,15 +547,16 @@ OOML.init = function(settings) {
                         return instanceAttributeValues[key];
                     },
                     set: function(newVal) {
-                        if (newVal === undefined) {
-                            throw new TypeError("Attemped to set the value for the attribute " + key + " to undefined");
+                        if (!Utils.isPrimitiveValue(evalValue)) {
+                            throw new TypeError('The value for the attribute ' + key + ' is invalid');
                         }
                         instanceAttributeValues[key] = newVal;
                         Utils.DOM.setData(instanceDom, key, newVal);
                     },
+                    enumerable: true,
                 });
             });
-            Object.preventExtensions(instanceAttributeValues);
+            Object.preventExtensions(instanceAttributesInterface);
 
             if (this.constructor[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR]) {
                 ancestorClasses.reduce(function(previous, ancestorClass) {

@@ -2,7 +2,7 @@ var STRINGSET_PROPNAME_INTERNALARRAY = '__stringSetInternalArray';
 var STRINGSET_PROPNAME_INTERNALOBJECT = '__stringSetInternalObject';
 var StringSet = function() {
     this[STRINGSET_PROPNAME_INTERNALARRAY] = [];
-    this[STRINGSET_PROPNAME_INTERNALOBJECT] = Object.create(null);
+    this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils.createCleanObject();
 };
 var StringSetProto = StringSet.prototype;
 StringSetProto.add = function(str) {
@@ -14,7 +14,7 @@ StringSetProto.add = function(str) {
 };
 StringSetProto.clear = function() {
     this[STRINGSET_PROPNAME_INTERNALARRAY] = [];
-    this[STRINGSET_PROPNAME_INTERNALOBJECT] = Object.create(null);
+    this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils.createCleanObject();
 };
 StringSetProto.delete = function(str) {
     if (this[STRINGSET_PROPNAME_INTERNALOBJECT][str] != undefined) {

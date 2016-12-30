@@ -35,11 +35,39 @@ var Utils = {
             Array.prototype.push.apply(arr, arguments[i]);
         }
     },
+    isOOMLClass: function(klass) {
+        var classProto = klass.prototype;
+        while (classProto && classProto != OOML.Element.prototype) {
+            classProto = Object.getPrototypeOf(classProto);
+        }
+
+        return classProto == OOML.Element.prototype;
+    },
+    getOOMLClass: function(className, localClasses, imports) {
+        if (localClasses[className]) {
+            return localClasses[className];
+        }
+
+        var ret = imports;
+        className.split('.').every(function(part) {
+            ret = ret[part];
+            return !!ret;
+        });
+
+        if (!Utils.isOOMLClass(ret)) {
+            throw new TypeError('The class ' + className + ' does not exist');
+        }
+
+        return ret;
+    },
     isPrimitiveValue: function(val) {
-        return val instanceof Date || val == undefined || ['number', 'boolean', 'string'].indexOf(typeof val) > -1
+        return val instanceof Date || val === null || Array.isArray(val) || ['number', 'boolean', 'string'].indexOf(typeof val) > -1
     },
     isObjectLiteral: function(obj) {
         return !!obj && (obj.constructor == Object || (obj.__proto__ === undefined && obj instanceof Object));
+    },
+    createCleanObject: function() {
+        return Object.create(null);
     },
     constructElement: function(elemConstructor, obj) {
         if (obj instanceof elemConstructor) {
@@ -52,40 +80,9 @@ var Utils = {
 
         return new elemConstructor(obj);
     },
-    parseElemSubstitutionCode: function(str) {
-        var props = [];
-
-        while (true) {
-            var posOfOpeningBraces = str.indexOf('{');
-            if (posOfOpeningBraces < 0) {
-                break;
-            }
-            str = str.slice(posOfOpeningBraces + 1);
-
-            var posOfClosingBraces = str.indexOf('}');
-            if (posOfClosingBraces < 0) {
-                throw new SyntaxError("Unexpected end of input; expected closing element substitution brace");
-            }
-            var param = str.slice(0, posOfClosingBraces).trim().split(' ');
-
-            var isArray = param[0] == 'for';
-            var className = isArray ? param[1] : param[0];
-            var propName = (isArray ? param[3] : param[1]).slice(5); // Remove "this."
-
-            props.push({
-                class: className,
-                propName: propName,
-                isArray: isArray,
-            });
-
-            str = str.slice(posOfClosingBraces + 1);
-        }
-
-        return props;
-    },
     splitStringByParamholders: function(str) {
         var strParts = [],
-            paramMap = Object.create(null);
+            paramMap = Utils.createCleanObject();
 
         while (true) {
             var posOfOpeningBraces = str.indexOf('{{');
@@ -158,6 +155,9 @@ var Utils = {
             if (rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
                 clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]; // Probably don't need to clone as it will never be mutilated
             }
+
+        } else if (rootElem instanceof Comment) {
+
             if (rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
                 clonedElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]; // Probably don't need to clone as it will never be mutilated
             }
