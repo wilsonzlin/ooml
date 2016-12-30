@@ -457,20 +457,24 @@ OOML.init = function(settings) {
                     };
                 } else if (CLASS_ELEM_PROPERTIES_NAMES.has(prop)) {
                     setter = function(newVal) {
+                        if (newVal !== null && !Utils.isObjectLiteral(newVal) && !(newVal instanceof OOML.Element)) {
+                            throw new TypeError('Invalid value provided to element property');
+                        }
+
                         var elemDetails = localPropertiesMap[prop];
 
                         // Attach first to ensure that element is attachable
-                        if (newVal != undefined) {
-                            var newElem = Utils.constructElement(elemDetails.elemConstructor, newVal);
-                            newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: elemDetails.insertAfter, parent: this, property: prop });
+                        if (newVal != null) {
+                            newVal = Utils.constructElement(elemDetails.elemConstructor, newVal);
+                            newVal[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: elemDetails.insertAfter, parent: this, property: prop });
                         }
 
-                        // Current element may not be OOML.Element and therefore may not need detaching
+                        // Current element may not be OOML.Element (or may be null) and therefore may not need detaching
                         if (instancePropertyValues[prop] instanceof OOML.Element) {
                             instancePropertyValues[prop][OOML_ELEMENT_PROPNAME_DETACH]();
                         }
 
-                        instancePropertyValues[prop] = newElem;
+                        instancePropertyValues[prop] = newVal;
                     };
                 } else {
                     setter = function(newVal) {
@@ -571,10 +575,8 @@ OOML.init = function(settings) {
 
             // Remove any remaining parameter handlebars and set any undefined values to null
             CLASS_PROPERTIES_NAMES.forEach(function(propName) {
-                if (Array.isArray(localPropertiesMap[propName])) { // Some properties are not in DOM (e.g. only predefined) or are not for text substitution (e.g. Array or Element)
-                    if (instance[propName] === undefined) {
-                        instance[propName] = null;
-                    }
+                if (instance[propName] === undefined) {
+                    instance[propName] = null;
                 }
             });
             // Update nodes with parameter handlebars (so they can be removed)
