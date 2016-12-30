@@ -524,12 +524,12 @@ OOML.init = function(settings) {
             var ancestorClasses = [],
                 currentProto = Object.getPrototypeOf(this);
             while (currentProto != OOML.Element.prototype) {
-                ancestorClasses.push(currentProto.constructor);
+                ancestorClasses.unshift(currentProto.constructor);
                 currentProto = Object.getPrototypeOf(currentProto);
             }
 
             // Apply predefined attributes and properties, starting with most ancient
-            ancestorClasses.reverse().forEach(function(ancestorClass) {
+            ancestorClasses.forEach(function(ancestorClass) {
                 for (var attrName in ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDATTRS]) {
                     var attrValue = ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDATTRS][attrName];
                     Utils.DOM.setData(instanceDom, attrName, attrValue);
@@ -541,6 +541,7 @@ OOML.init = function(settings) {
                 }
             });
 
+            // Set up attributes object
             Object.keys(instanceAttributeValues).forEach(function (key) {
                 Object.defineProperty(instanceAttributesInterface, key, {
                     get: function() {
@@ -558,10 +559,15 @@ OOML.init = function(settings) {
             });
             Object.preventExtensions(instanceAttributesInterface);
 
-            if (this.constructor[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR]) {
-                ancestorClasses.reduce(function(previous, ancestorClass) {
-                    return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] && ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous);
-                }, undefined)();
+            var constructor = ancestorClasses.reduce(function(previous, ancestorClass) {
+                if (ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR]) {
+                    return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous);
+                } else {
+                    return previous;
+                }
+            }, undefined);
+            if (constructor) { // If not a single ancestor class has a constructor, then this wouldn't be a function
+                constructor();
             }
 
             // Apply given object argument to this new instance's properties
