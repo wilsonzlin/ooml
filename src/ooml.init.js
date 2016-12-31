@@ -153,10 +153,17 @@ OOML.init = function(settings) {
                         if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = Utils.createCleanObject();
                         current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'dispatch', 'data', attr.nodeValue);
                         current.removeAttributeNode(attr);
-                    } else if (attr.name.indexOf('on') === 0) {
-                        if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = Utils.createCleanObject();
-                        current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][attr.name] = Function('$self', 'dispatch', 'event', 'event.preventDefault();' + attr.nodeValue);
+                    } else if (attr.name.indexOf('domon') === 0) {
+                        var eventName = attr.name.slice(5);
+                        if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
+                            current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = Utils.createCleanObject();
+                        } else if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName]) {
+                            throw new SyntaxError('Another DOM ' + eventName + ' event handler already exists');
+                        }
+                        current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'event', 'event.preventDefault();' + attr.nodeValue);
                         current.removeAttributeNode(attr);
+                    } else if (attr.name.indexOf('on') === 0) {
+                        throw new SyntaxError('Native DOM event handlers are not allowed');
                     } else {
                         toProcess.push(attr);
                     }
@@ -291,7 +298,7 @@ OOML.init = function(settings) {
                     if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
                         Object.keys(current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]).forEach(function(eventName) {
                             // Event object will be provided when called by browser
-                            current[eventName] = current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName].bind(instance, current, dispatchEventToParent);
+                            current['on' + eventName] = current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName].bind(instance, current, dispatchEventToParent);
                         });
                     }
                     if (current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
