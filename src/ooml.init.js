@@ -201,6 +201,7 @@ OOML.init = function(initConfig) {
                                     throw new TypeError('Argument ' + argIdx + ' must be provided');
                                 }
                                 providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
+                                providedArgumentsUsedCount--;
                             } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
                                 throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
                             }
@@ -240,16 +241,16 @@ OOML.init = function(initConfig) {
                             }
                             providedArgumentsUsedCount++;
                         });
-                        if (providedArgumentsUsedCount !== arguments.length) {
+                        if (providedArgumentsUsedCount !== providedArguments.length) {
                             throw new TypeError('Too many arguments provided');
                         }
 
-                        var parentMethod = CLASS_PARENT_CLASS[methodName];
+                        var parentMethod = CLASS_PARENT_CLASS.prototype[methodName];
                         parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
                         argumentValuesToApply.push(self);
                         argumentValuesToApply.push(parentMethod);
                         argumentValuesToApply.push(undefined);
-                        return __oomlGlobalRun(realFunc, this, argumentValuesToApply);
+                        return realFunc.apply(this, argumentValuesToApply);
                     };
 
                     if (methodName == 'constructor') {
@@ -694,7 +695,7 @@ OOML.init = function(initConfig) {
                         return instanceAttributeValues[key];
                     },
                     set: function(newVal) {
-                        if (!Utils.isPrimitiveValue(evalValue)) {
+                        if (!Utils.isPrimitiveValue(newVal)) {
                             throw new TypeError('The value for the attribute ' + key + ' is invalid');
                         }
                         instanceAttributeValues[key] = newVal;
@@ -713,7 +714,7 @@ OOML.init = function(initConfig) {
                 }
             }, undefined);
             if (constructor) { // If not a single ancestor class has a constructor, then this wouldn't be a function
-                __oomlGlobalRun(constructor);
+                constructor();
             }
 
             // Apply given object argument to this new instance's properties

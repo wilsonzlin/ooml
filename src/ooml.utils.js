@@ -20,7 +20,10 @@ var Utils = {
             throw new SyntaxError('Invalid function declaration for method `' + methodName + '`');
         }
 
-        var funcName = regexpMatches[1] || null;
+        var funcName = regexpMatches[1];
+        if (funcName) {
+            throw new SyntaxError('Function names are not supported for method functions');
+        }
 
         var toProcess = funcdef.slice(regexpMatches[0].length).trim();
         var destructuringMode = false;
@@ -53,15 +56,16 @@ var Utils = {
                 }
             }
 
-            if (/^\??[\{\[]/.test(toProcess)) {
+            var temp;
+            if (temp = /^(\?)?([\{\[])/.exec(toProcess)) {
                 if (destructuringMode) {
                     throw new SyntaxError('Nested destructuring is not allowed');
                 }
                 destructuringMode = true;
-                var isOptional = toProcess[0] == '?';
+                var isOptional = temp[1] == '?';
                 args.push({
                     destructure: true,
-                    type: toProcess[toProcess.length - 1] == '{' ? 'object' : 'array',
+                    type: temp[2] == '{' ? 'object' : 'array',
                     name: undefined,
                     optional: isOptional,
                     properties: [],
@@ -74,7 +78,6 @@ var Utils = {
             if (!argmatches) {
                 throw new SyntaxError('Unrecognised function argument declaration');
             }
-            console.log(argmatches);
             argmatches = argmatches.map(function(val) {
                 var trimmed = val ? val.trim() : null;
                 return trimmed || null; // In case string was originally only whitespace
@@ -115,8 +118,6 @@ var Utils = {
                 if (matchedOperator && matchedOperator != '?') {
                     throw new SyntaxError('Destructuring argument contains invalid operator');
                 }
-
-                console.log(matchedType);
 
                 destructuringMode = true;
                 args.push({
@@ -281,7 +282,7 @@ var Utils = {
             pushTo.push({
                 type: matchedType,
                 name: matchedArgname,
-                optional: matchedOperator == '?',
+                optional: matchedOperator == '?' || defaultValue !== undefined,
                 collect: matchedOperator == '...',
                 defaultValue: defaultValue,
             });
@@ -296,7 +297,6 @@ var Utils = {
         var funcBody = toProcess.slice(1, -1).trim();
 
         return {
-            name: funcName,
             args: args,
             body: funcBody,
         };
@@ -321,7 +321,7 @@ var Utils = {
     },
     getEvalValue: function(codeStr) {
         codeStr = codeStr.trim() || undefined;
-        return __oomlGlobalEval('(' + codeStr + ')');
+        return Function('return ' + codeStr)();
     },
     concat: function() {
         // WARNING: Don't use .concat as that doesn't work with array-like objects

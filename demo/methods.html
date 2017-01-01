@@ -14,22 +14,37 @@
 
 <body>
 <main>
-    <template ooml-class="App">
+    <template ooml-class="Parent">
         <ooml-method name="hello">
-            function({ cold = "turkey", cool = true }) {
-                console.log(cold, cool, parent);
+            function() {
+                alert('parent');
             }
         </ooml-method>
 
-        <div id="app"></div>
+        <div></div>
     </template>
-    <div ooml-instantiate="App app"></div>
+
+    <template ooml-class="Child extends Parent">
+        <ooml-method name="hello">
+            function(boolean repeat = true) {
+                parent();
+                if (repeat) {
+                    self(false);
+                }
+            }
+        </ooml-method>
+
+        <div id="child"></div>
+    </template>
+    <div ooml-instantiate="Child child"></div>
 </main>
 
 <script>
     var ooml = OOML.init();
 
-    var app = ooml.objects.app;
+    for (var objectName in ooml.objects) {
+        window[objectName] = ooml.objects[objectName];
+    }
     for (var className in ooml.classes) {
         window[className] = ooml.classes[className];
     }

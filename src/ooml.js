@@ -1,9 +1,3 @@
-function __oomlGlobalRun(func, thisArg, args) {
-    return func.apply(thisArg, args);
-}
-function __oomlGlobalEval(code) {
-    return eval(code);
-}
 (function(undefined) {
     "use strict";
 
