@@ -251,7 +251,6 @@ var Utils = {
                     if (!Utils.isType(matchedType, defaultValue)) { // Will check for NaN if necessary
                         throw new SyntaxError('A number argument has an invalid default value');
                     }
-                    break;
                 } else if (['number', 'natural', 'integer', 'float'].indexOf(matchedType) > -1) {
                     throw new SyntaxError('A number argument has an invalid default value');
                 } else {
