@@ -147,53 +147,50 @@ var Utils = {
             }
 
             var defaultValue = undefined;
-            while (matchedEqualsSign) { // Use while to break out of this block easily
+            if (matchedEqualsSign) {
+                var booleanMatch;
+                var dateConstructorMatch;
+                var digitsMatch;
+
                 if (toProcess.indexOf('null') == 0) {
                     toProcess = toProcess.slice(4);
                     defaultValue = null;
-                    break;
                 } else if (matchedType == 'null') {
                     throw new SyntaxError('A null argument has an invalid default value');
                 }
 
-                if (matchedOpenBrace == '{' && toProcess[0] == '}') {
+                else if (matchedOpenBrace == '{' && toProcess[0] == '}') {
                     toProcess = toProcess.slice(1);
                     defaultValue = Utils.createCleanObject;
-                    break;
                 } else if (matchedType == 'object') {
                     throw new SyntaxError('An object argument has an invalid default value');
                 }
 
-                if (matchedOpenBrace == '[' && toProcess[0] == ']') {
+                else if (matchedOpenBrace == '[' && toProcess[0] == ']') {
                     toProcess = toProcess.slice(1);
                     // Need to bind as matchedType is not scoped and will mutate
                     defaultValue = function (type) {
                         return type == 'OOML.Array' ? new OOML.Array : []
                     }.bind(matchedType);
-                    break;
                 } else if (['array', 'Array', 'OOML.Array'].indexOf(matchedType) > -1) {
                     throw new SyntaxError('An array argument has an invalid default value');
                 }
 
-                var booleanMatch = /^(true|false)/.exec(toProcess);
-                if (booleanMatch) {
+                else if (booleanMatch = /^(true|false)/.exec(toProcess)) {
                     toProcess = toProcess.slice(booleanMatch[0].length);
                     defaultValue = booleanMatch[0] == 'true';
-                    break;
                 } else if (matchedType == 'boolean') {
                     throw new SyntaxError('A boolean argument has an invalid default value');
                 }
 
-                var dateConstructorMatch = /^new Date\(\s*((?:[0-9]+,\s*)*(?:[0-9]+)?)\s*\)/.exec(toProcess);
-                if (dateConstructorMatch) {
+                else if (dateConstructorMatch = /^new Date\(\s*((?:[0-9]+,\s*)*(?:[0-9]+)?)\s*\)/.exec(toProcess)) {
                     toProcess = toProcess.slice(dateConstructorMatch[0].length);
                     defaultValue = Function('return ' + dateConstructorMatch);
-                    break;
                 } else if (matchedType == 'Date') {
                     throw new SyntaxError('A Date argument has an invalid default value');
                 }
 
-                if (toProcess[0] == '"' || toProcess[0] == "'") {
+                else if (toProcess[0] == '"' || toProcess[0] == "'") {
                     toProcess = toProcess.slice(1);
                     defaultValue = '';
                     var parseFlagStringEscape = false;
@@ -258,13 +255,11 @@ var Utils = {
                         }
                         toProcess = toProcess.slice(1);
                     }
-                    break;
                 } else if (matchedType == 'string') {
                     throw new SyntaxError('A string argument has an invalid default value');
                 }
 
-                var digitsMatch = /^(?:0b[01]+|0o[0-7]+|0x[0-9a-f]+|[0-9]*\.?[0-9]+(?:e[0-9]+)?)/i.exec(toProcess);
-                if (digitsMatch && digitsMatch[0]) {
+                if (digitsMatch = /^(?:0b[01]+|0o[0-7]+|0x[0-9a-f]+|[0-9]*\.?[0-9]+(?:e[0-9]+)?)/i.exec(toProcess)) {
                     toProcess = toProcess.slice(digitsMatch[0].length);
                     defaultValue = Number(digitsMatch[0]);
                     if (!Utils.isType(matchedType, defaultValue)) { // Will check for NaN if necessary
@@ -361,6 +356,7 @@ var Utils = {
             case 'number':
             case 'boolean':
             case 'string':
+            case 'function':
                 return typeof value == type;
 
             case 'natural':
@@ -380,9 +376,6 @@ var Utils = {
 
             case 'array':
                 return Array.isArray(value) || value instanceof OOML.Array;
-
-            case 'function':
-                return !!value && value.constructor == Function;
 
             case 'OOML.Array':
                 return value instanceof OOML.Array;
