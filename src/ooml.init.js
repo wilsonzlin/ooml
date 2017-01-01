@@ -191,20 +191,39 @@ OOML.init = function(initConfig) {
                     console.log(funcmeta);
 
                     var func = function self() {
+                        // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+                        var providedArguments = Array.apply(undefined, arguments);
+
                         var providedArgumentsUsedCount = 0;
-                        var providedArguments = arguments;
                         var argumentValuesToApply = [];
+
                         funcmeta.args.forEach(function (arg, argIdx) {
                             var providedArgument = providedArguments[argIdx];
+                            var providedArgumentIsOmittedDestructure = false;
+
                             if (providedArgument === undefined) {
                                 if (!arg.optional) {
                                     throw new TypeError('Argument ' + argIdx + ' must be provided');
                                 }
+
+                                // This will be undefined if there is no default value
                                 providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
-                                providedArgumentsUsedCount--;
+
+                                if (!providedArguments.hasOwnProperty(argIdx)) {
+                                    // The only way an element in providedArguments isn't defined
+                                    // is if not all expected arguments are provided; therefore,
+                                    // these not defined (NOT set to undefined) elements will be
+                                    // at the end of the array.
+                                    providedArgumentsUsedCount--;
+                                }
+
+                                if (arg.destructure) {
+                                    providedArgumentIsOmittedDestructure = true;
+                                }
                             } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
                                 throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
                             }
+
                             if (arg.destructure) {
                                 if (arg.name) {
                                     argumentValuesToApply.push(providedArgument);
@@ -213,7 +232,11 @@ OOML.init = function(initConfig) {
                                     var propKey;
                                     var providedProperty;
 
-                                    if (arg.type == 'object') {
+                                    if (providedArgumentIsOmittedDestructure) {
+                                        // If destructuring argument is optional and was not provided,
+                                        // then all containing properties are also optional
+                                        providedProperty = undefined;
+                                    } else if (arg.type == 'object') {
                                         providedProperty = providedArgument[prop.name];
                                         propKey = prop.name;
                                     } else {
@@ -226,9 +249,13 @@ OOML.init = function(initConfig) {
                                     }
 
                                     if (providedProperty === undefined) {
-                                        if (!prop.optional) {
+                                        // All containing properties are optional
+                                        // if the destructuring argument is optional
+                                        // regardless of invididual property settings
+                                        if (!providedArgumentIsOmittedDestructure && !prop.optional) {
                                             throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' must be provided');
                                         }
+                                        // This will be undefined if there is no default value
                                         providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
                                     } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
                                         throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);

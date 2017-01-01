@@ -11,11 +11,8 @@ var Utils = {
             }
         },
     },
-    isValidFunctionArgumentName: function(name) {
-        return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name);
-    },
     parseMethodFunction: function(funcdef, methodName) {
-        var regexpMatches = /^function *([a-zA-Z][a-zA-Z0-9_]+)?\s*\(/.exec(funcdef);
+        var regexpMatches = /^function *([a-zA-Z_][a-zA-Z0-9_]+)?\s*\(/.exec(funcdef);
         if (!regexpMatches) {
             throw new SyntaxError('Invalid function declaration for method `' + methodName + '`');
         }
