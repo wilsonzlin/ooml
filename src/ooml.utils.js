@@ -191,14 +191,17 @@ var Utils = {
                 }
 
                 else if (toProcess[0] == '"' || toProcess[0] == "'") {
+                    var parseFlagStringEscape = false;
+                    var parseFlagStringEndChar = toProcess[0];
+                    var ended = false;
                     toProcess = toProcess.slice(1);
                     defaultValue = '';
-                    var parseFlagStringEscape = false;
-                    var ended = false;
                     while (!ended) {
+                        if (!toProcess.length) {
+                            throw new SyntaxError('Unexpected end of input');
+                        }
                         switch (toProcess[0]) {
-                            case '"':
-                            case "'":
+                            case parseFlagStringEndChar:
                                 if (parseFlagStringEscape) {
                                     defaultValue += toProcess[0];
                                     parseFlagStringEscape = false;
@@ -224,27 +227,10 @@ var Utils = {
 
                             default:
                                 if (parseFlagStringEscape) {
-                                    if (toProcess[0] == 'u') {
-                                        defaultValue += (function () {
-                                            toProcess = toProcess.slice(1);
-                                            var ret;
-
-                                            if (toProcess[0] == '{') {
-                                                toProcess = toProcess.slice(1);
-                                                var indexOfClosingBrace = Math.min(toProcess.indexOf('}'), 6);
-                                                ret = eval('"\\u{' + toProcess.slice(0, indexOfClosingBrace) + '}"');
-                                                toProcess = toProcess.slice(indexOfClosingBrace); // Leave brace to be sliced by outer .slice call
-                                            } else {
-                                                var regexpMatches = /^([0-9a-f]{2}){1,2}/i.exec(toProcess);
-                                                ret = eval('"\\u' + regexpMatches[0] + '"');
-                                                toProcess = toProcess.slice(regexpMatches[0].length); // Leave last character to be sliced by outer .slice call
-                                            }
-
-                                            return ret;
-                                        })();
-                                    } else if (toProcess[0] == 'x') {
-                                        defaultValue += eval('"\\x' + toProcess.slice(0, 2) + '"');
-                                        toProcess = toProcess.slice(1); // Leave last character to be sliced by outer .slice call
+                                    var escapeMatches = /^(u([a-fA-F0-9]{4}|\{[a-fA-F0-9]+\})|x[a-fA-F0-9]{2})/.exec(toProcess);
+                                    if (escapeMatches) {
+                                        defaultValue += eval('"\\' + escapeMatches[0] + '"');
+                                        toProcess = toProcess.slice(escapeMatches[0].length - 1); // Leave last character to be sliced by outer .slice call
                                     } else {
                                         defaultValue += eval('"\\' + toProcess[0] + '"');
                                     }
@@ -259,7 +245,7 @@ var Utils = {
                     throw new SyntaxError('A string argument has an invalid default value');
                 }
 
-                if (digitsMatch = /^(?:0b[01]+|0o[0-7]+|0x[0-9a-f]+|[0-9]*\.?[0-9]+(?:e[0-9]+)?)/i.exec(toProcess)) {
+                else if (digitsMatch = /^(?:0b[01]+|0o[0-7]+|0x[0-9a-f]+|[0-9]*\.?[0-9]+(?:e[0-9]+)?)/i.exec(toProcess)) {
                     toProcess = toProcess.slice(digitsMatch[0].length);
                     defaultValue = Number(digitsMatch[0]);
                     if (!Utils.isType(matchedType, defaultValue)) { // Will check for NaN if necessary
@@ -268,9 +254,9 @@ var Utils = {
                     break;
                 } else if (['number', 'natural', 'integer', 'float'].indexOf(matchedType) > -1) {
                     throw new SyntaxError('A number argument has an invalid default value');
+                } else {
+                    throw new SyntaxError('Unrecognised default value');
                 }
-
-                throw new SyntaxError('Unrecognised default value');
             }
 
             var pushTo = destructuringMode ? args[args.length - 1].properties : args;
