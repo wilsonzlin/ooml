@@ -1,5 +1,13 @@
+function __oomlGlobalRun(func, thisArg, args) {
+    return func.apply(thisArg, args);
+}
+function __oomlGlobalEval(code) {
+    return eval(code);
+}
 (function(undefined) {
     "use strict";
+
+    <ZC-IMPORT[utils]>
 
     var OOMLCompatSymbolExists = !!window.Symbol;
     var OOMLCompatSetExists = !!window.Set;
@@ -28,6 +36,7 @@
         };
 
     var OOML_PROPERTY_TYPE_DECLARATIONS = ['Date', 'null', 'Array', 'number', 'natural', 'integer', 'float', 'boolean', 'string'];
+    var OOML_FUNCTION_ARGUMENT_TYPE_DECLARATIONS = Utils.concat(OOML_PROPERTY_TYPE_DECLARATIONS, ['object', 'function', 'array', 'OOML.Array', 'OOML.Element']);
 
     var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
         OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
@@ -49,8 +58,6 @@
         OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
         OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
         OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
-
-    <ZC-IMPORT[utils]>
 
     var OOML = {};
     <ZC-IMPORT[array]>

@@ -8,7 +8,25 @@ OOML.init = function(initConfig) {
     var classes = Utils.createCleanObject(),
         objects = Utils.createCleanObject();
 
-    var OOML_SETTING_STRICT_PROPERTY_NAMES = settings.strictPropertyNames !== false;
+    var SETTING_STRICT_PROPERTY_NAMES = settings.strictPropertyNames !== false;
+
+    var GET_OOML_CLASS = function(className) {
+        if (classes[className]) {
+            return classes[className];
+        }
+
+        var ret = imports;
+        className.split('.').every(function(part) {
+            ret = ret[part];
+            return !!ret;
+        });
+
+        if (!Utils.isOOMLClass(ret)) {
+            throw new TypeError('The class ' + className + ' does not exist');
+        }
+
+        return ret;
+    };
 
     if (typeof namespace == 'string') {
         namespace = namespace.trim();
@@ -38,7 +56,7 @@ OOML.init = function(initConfig) {
         // Get parent class
         var CLASS_PARENT_CLASS;
         if (classDeclarationParts[2]) {
-            CLASS_PARENT_CLASS = Utils.getOOMLClass(classDeclarationParts[2], classes, imports);
+            CLASS_PARENT_CLASS = GET_OOML_CLASS(classDeclarationParts[2]);
         } else {
             CLASS_PARENT_CLASS = OOML.Element;
         }
@@ -49,6 +67,29 @@ OOML.init = function(initConfig) {
 
         // A map from property names to an array containing their accepted value types
         var CLASS_PROPERTIES_TYPES = Utils.createCleanObject();
+
+        var PROCESS_PROPERTY_DECLARATION = function(types, name) {
+            if (!Utils.isValidPropertyName(name, SETTING_STRICT_PROPERTY_NAMES)) {
+                throw new SyntaxError('Invalid property declaration; name `' + name + '` is invalid');
+            }
+            if (types !== null) {
+                if (CLASS_PROPERTIES_TYPES[name]) {
+                    if (CLASS_PROPERTIES_TYPES[name].join('|') !== types) {
+                        throw new SyntaxError('Types for the property ' + name + ' have already been declared');
+                    }
+                } else {
+                    CLASS_PROPERTIES_TYPES[name] = types.split('|').filter(function (type, idx, types) {
+                        if (OOML_PROPERTY_TYPE_DECLARATIONS.indexOf(type) == -1) {
+                            throw new SyntaxError('Invalid type declaration `' + type + '` for property ' + name);
+                        }
+                        if (types.indexOf(type) !== idx) {
+                            throw new SyntaxError('Duplicate type `' + type + '` in type declaration for property ' + name);
+                        }
+                        return true;
+                    });
+                }
+            }
+        };
 
         /*
             CLASS_ARRAY_PROPERTIES_NAMES and CLASS_ELEM_PROPERTIES_NAMES are used:
@@ -102,7 +143,7 @@ OOML.init = function(initConfig) {
             if (node instanceof Element) {
                 var propName = node.getAttribute('name');
                 var types = node.getAttribute('type') || null;
-                Utils.processPropertyDeclaration(types, propName, CLASS_PROPERTIES_TYPES, OOML_SETTING_STRICT_PROPERTY_NAMES);
+                PROCESS_PROPERTY_DECLARATION(types, propName);
 
                 if (CLASS_PREDEFINED_PROPERTIES_VALUES[propName] !== undefined) {
                     throw new SyntaxError('The property ' + propName + ' is already defined');
@@ -121,24 +162,105 @@ OOML.init = function(initConfig) {
         while (toProcess.length && (toProcess[0].nodeName == 'OOML-METHOD' || !(toProcess[0] instanceof Element))) {
             var node = toProcess.shift();
             if (node instanceof Element) {
-                var propName = node.getAttribute('name');
-                if (CLASS_PREDEFINED_METHODS_FUNCTIONS[propName]) {
-                    throw new SyntaxError('The method ' + propName + ' is already defined');
-                }
-
-                var evalValue = Utils.getEvalValue(node.textContent);
-                if (typeof evalValue != 'function') {
-                    throw new TypeError('The method ' + propName + ' is not a function');
-                }
-
-                if (propName == 'constructor') {
-                    if (CLASS_PREDEFINED_CONSTRUCTOR) {
-                        throw new SyntaxError('A constructor has already been defined for the class ' + className);
+                (function() {
+                    var methodName = node.getAttribute('name');
+                    if (!/^[a-z_][a-zA-Z0-9_]*$/.test(methodName)) {
+                        throw new SyntaxError('The method name `' + methodName + '` is invalid');
                     }
-                    CLASS_PREDEFINED_CONSTRUCTOR = evalValue;
-                } else {
-                    CLASS_PREDEFINED_METHODS_FUNCTIONS[propName] = evalValue;
-                }
+                    if (CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName]) {
+                        throw new SyntaxError('The method ' + methodName + ' is already defined');
+                    }
+
+                    var funcmeta = Utils.parseMethodFunction(node.textContent.trim(), methodName);
+
+                    var argNames = [];
+                    funcmeta.args.forEach(function(arg) {
+                        if (arg.destructure) {
+                            if (arg.name) {
+                                argNames.push(arg.name);
+                            }
+                            arg.properties.forEach(function(prop) {
+                                argNames.push(prop.name);
+                            });
+                        } else {
+                            argNames.push(arg.name);
+                        }
+                    });
+
+                    var realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', funcmeta.body]));
+                    console.log(funcmeta);
+
+                    var func = function self() {
+                        var providedArgumentsUsedCount = 0;
+                        var providedArguments = arguments;
+                        var argumentValuesToApply = [];
+                        funcmeta.args.forEach(function (arg, argIdx) {
+                            var providedArgument = providedArguments[argIdx];
+                            if (providedArgument === undefined) {
+                                if (!arg.optional) {
+                                    throw new TypeError('Argument ' + argIdx + ' must be provided');
+                                }
+                                providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
+                            } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
+                                throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
+                            }
+                            if (arg.destructure) {
+                                if (arg.name) {
+                                    argumentValuesToApply.push(providedArgument);
+                                }
+                                arg.properties.forEach(function (prop, propIdx) {
+                                    var propKey;
+                                    var providedProperty;
+
+                                    if (arg.type == 'object') {
+                                        providedProperty = providedArgument[prop.name];
+                                        propKey = prop.name;
+                                    } else {
+                                        propKey = propIdx;
+                                        if (providedArgument instanceof OOML.Array) {
+                                            providedProperty = providedArgument.get(propIdx);
+                                        } else {
+                                            providedProperty = providedArgument[propIdx];
+                                        }
+                                    }
+
+                                    if (providedProperty === undefined) {
+                                        if (!prop.optional) {
+                                            throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' must be provided');
+                                        }
+                                        providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
+                                    } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
+                                        throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);
+                                    }
+
+                                    argumentValuesToApply.push(providedProperty);
+                                });
+                            } else {
+                                argumentValuesToApply.push(providedArgument);
+                            }
+                            providedArgumentsUsedCount++;
+                        });
+                        if (providedArgumentsUsedCount !== arguments.length) {
+                            throw new TypeError('Too many arguments provided');
+                        }
+
+                        var parentMethod = CLASS_PARENT_CLASS[methodName];
+                        parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
+                        argumentValuesToApply.push(self);
+                        argumentValuesToApply.push(parentMethod);
+                        argumentValuesToApply.push(undefined);
+                        return __oomlGlobalRun(realFunc, this, argumentValuesToApply);
+                    };
+
+                    if (methodName == 'constructor') {
+                        if (CLASS_PREDEFINED_CONSTRUCTOR) {
+                            throw new SyntaxError('A constructor has already been defined for the class ' + className);
+                        }
+                        CLASS_PREDEFINED_CONSTRUCTOR = func;
+                    } else {
+                        CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = func;
+                    }
+                })();
             }
         }
         // Trim non-elements from the right
@@ -209,14 +331,14 @@ OOML.init = function(initConfig) {
                     var regexpMatches;
                     if (code[0] == '{') {
                         // NOTE: There is some repetition of the following logic
-                        //       and logic in Utils.processPropertyDeclaration
+                        //       and logic in PROCESS_PROPERTY_DECLARATION
                         regexpMatches = /^\{(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(.+?) $/.exec(code);
                         if (!regexpMatches || !regexpMatches[2]) {
                             throw new SyntaxError('Invalid property declaration at `' + code + '`');
                         }
 
                         var propName = regexpMatches[2];
-                        Utils.processPropertyDeclaration(regexpMatches[1] || null, propName, CLASS_PROPERTIES_TYPES, OOML_SETTING_STRICT_PROPERTY_NAMES);
+                        PROCESS_PROPERTY_DECLARATION(regexpMatches[1] || null, propName);
                         CLASS_PROPERTIES_NAMES.add(propName);
 
                         var textSubstitutionNode = currentNode;
@@ -251,7 +373,7 @@ OOML.init = function(initConfig) {
                         var elemConstructor =
                             elemConstructorName == 'HTMLElement' ? HTMLElement :
                                 elemConstructorName == 'OOML.Element' ? OOML.Element :
-                                    Utils.getOOMLClass(elemConstructorName, classes, imports);
+                                    GET_OOML_CLASS(elemConstructorName);
 
                         if (isArraySubstitution) {
                             CLASS_ARRAY_PROPERTIES_NAMES.add(propName);
@@ -504,10 +626,7 @@ OOML.init = function(initConfig) {
                         }
 
                         if (CLASS_PROPERTIES_TYPES[prop]) {
-                            if (!CLASS_PROPERTIES_TYPES[prop].some(function(type) {
-                                    return Utils.isType(type, newVal);
-                                })
-                            ) {
+                            if (!CLASS_PROPERTIES_TYPES[prop].some(function(type) { return Utils.isType(type, newVal) })) {
                                 throw new TypeError('Cannot set new property value; expected type to be one of: ' + CLASS_PROPERTIES_TYPES[prop].join(', '));
                             }
                         }
@@ -594,7 +713,7 @@ OOML.init = function(initConfig) {
                 }
             }, undefined);
             if (constructor) { // If not a single ancestor class has a constructor, then this wouldn't be a function
-                constructor();
+                __oomlGlobalRun(constructor);
             }
 
             // Apply given object argument to this new instance's properties
