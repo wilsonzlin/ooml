@@ -42,7 +42,7 @@
     </div>
     <main>
         <template ooml-class="Friend">
-            <li><a href="{{ this.userId }}" onclick="dispatch('click', { friendName: this.name })">{{ this.name }}</a></li>
+            <li><a href="{{ this.userId }}" domonclick="dispatch('click', { friendName: this.name })">{{ this.name }}</a></li>
         </template>
 
         <template ooml-class="PerformanceEntry">
@@ -72,12 +72,12 @@
             </ooml-method>
 
             <article class="user">
-                <h1 class="title">Welcome {{ this.name }} (@{{ this.username }})</h1>
+                <h1 class="title">Welcome {{ this.name }} (@{{ string|null this.username }})</h1>
                 <span class="subtitle">Here's what we know about you as of {{ this.lastUpdated }}</span>
                 <h2>Personal</h2>
                 <dl>
                     <dt>Age</dt>
-                    <dd>{{ this.age }} (born {{ this.birthday }})</dd>
+                    <dd>{{ natural this.age }} (born {{ this.birthday }})</dd>
                     <dt>Gender</dt>
                     <dd>{{ this.gender }}</dd>
                     <dt>Ethnicity</dt>
@@ -89,14 +89,14 @@
                 <br>
                 <label>
                     Username
-                    <input ooml-expose="newUsername" oninput="this.username = this.$newUsername.value.trim();" value="{{ this.username }}">
+                    <input ooml-expose="newUsername" domoninput="this.username = this.$newUsername.value.trim();" value="{{ this.username }}">
                 </label>
                 <br>
                 <label>
                     Password
                     <input ooml-expose="newPassword" type="password" value="{{ this.password }}">
                 </label>
-                <button onclick="alert('Password: ' + this.$newPassword.value);">Submit</button>
+                <button domonclick="alert('Password: ' + this.$newPassword.value);">Submit</button>
                 <br>
                 <a href="/profiles/{{ this.userId }}">Go to my profile</a>
                 <br>

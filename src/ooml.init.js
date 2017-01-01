@@ -1,11 +1,14 @@
-OOML.init = function(settings) {
-    settings = settings || {};
+OOML.init = function(initConfig) {
+    initConfig = initConfig || {};
 
-    var namespace = settings.namespace || document.body;
-    var imports = settings.imports || Utils.createCleanObject();
+    var namespace = initConfig.namespace || document.body;
+    var imports = initConfig.imports || Utils.createCleanObject();
+    var settings = initConfig.settings || {};
 
     var classes = Utils.createCleanObject(),
         objects = Utils.createCleanObject();
+
+    var OOML_SETTING_STRICT_PROPERTY_NAMES = settings.strictPropertyNames !== false;
 
     if (typeof namespace == 'string') {
         namespace = namespace.trim();
@@ -44,6 +47,9 @@ OOML.init = function(settings) {
         // A set containing all the properties' names in this class
         var CLASS_PROPERTIES_NAMES = new StringSet();
 
+        // A map from property names to an array containing their accepted value types
+        var CLASS_PROPERTIES_TYPES = Utils.createCleanObject();
+
         /*
             CLASS_ARRAY_PROPERTIES_NAMES and CLASS_ELEM_PROPERTIES_NAMES are used:
                 - to check for duplicates
@@ -77,6 +83,9 @@ OOML.init = function(settings) {
                 if (CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] !== undefined) {
                     throw new SyntaxError('The attribute ' + attrName + ' is already defined');
                 }
+                if (!/^[a-z]+([A-Z][a-z]*)*$/.test(attrName)) {
+                    throw new SyntaxError('The attribute name ' + attrName + ' is invalid');
+                }
 
                 var evalValue = Utils.getEvalValue(node.textContent);
                 if (!Utils.isPrimitiveValue(evalValue)) {
@@ -92,6 +101,9 @@ OOML.init = function(settings) {
             var node = toProcess.shift();
             if (node instanceof Element) {
                 var propName = node.getAttribute('name');
+                var types = node.getAttribute('type') || null;
+                Utils.processPropertyDeclaration(types, propName, CLASS_PROPERTIES_TYPES, OOML_SETTING_STRICT_PROPERTY_NAMES);
+
                 if (CLASS_PREDEFINED_PROPERTIES_VALUES[propName] !== undefined) {
                     throw new SyntaxError('The property ' + propName + ' is already defined');
                 }
@@ -196,12 +208,15 @@ OOML.init = function(settings) {
 
                     var regexpMatches;
                     if (code[0] == '{') {
-                        regexpMatches = /^\{ this\.([a-zA-Z0-9_]+) $/.exec(code);
-                        if (!regexpMatches || !regexpMatches[1]) {
-                            throw new SyntaxError('Invalid text substitution at `' + code + '`');
+                        // NOTE: There is some repetition of the following logic
+                        //       and logic in Utils.processPropertyDeclaration
+                        regexpMatches = /^\{(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(.+?) $/.exec(code);
+                        if (!regexpMatches || !regexpMatches[2]) {
+                            throw new SyntaxError('Invalid property declaration at `' + code + '`');
                         }
 
-                        var propName = regexpMatches[1];
+                        var propName = regexpMatches[2];
+                        Utils.processPropertyDeclaration(regexpMatches[1] || null, propName, CLASS_PROPERTIES_TYPES, OOML_SETTING_STRICT_PROPERTY_NAMES);
                         CLASS_PROPERTIES_NAMES.add(propName);
 
                         var textSubstitutionNode = currentNode;
@@ -214,7 +229,6 @@ OOML.init = function(settings) {
                     } else {
                         regexpMatches = /^ (?:for ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)) of|((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+))) this\.([a-zA-Z0-9_]+) $/.exec(code);
                         if (!regexpMatches || !regexpMatches[3] || (!regexpMatches[1] && !regexpMatches[2])) {
-                            console.log(regexpMatches);
                             throw new SyntaxError('Invalid element substitution at `' + code + '`');
                         }
 
@@ -489,6 +503,15 @@ OOML.init = function(settings) {
                             throw new TypeError('Cannot set new property value; unrecognised type');
                         }
 
+                        if (CLASS_PROPERTIES_TYPES[prop]) {
+                            if (!CLASS_PROPERTIES_TYPES[prop].some(function(type) {
+                                    return Utils.isType(type, newVal);
+                                })
+                            ) {
+                                throw new TypeError('Cannot set new property value; expected type to be one of: ' + CLASS_PROPERTIES_TYPES[prop].join(', '));
+                            }
+                        }
+
                         if (localPropertiesMap[prop]) { // Some properties are unused in the DOM (e.g. predefined properties)
                             localPropertiesMap[prop].forEach(function(node) {
                                 var formatStr = node[OOML_NODE_PROPNAME_TEXTFORMAT];
@@ -580,10 +603,24 @@ OOML.init = function(settings) {
                 this.assign(initState);
             }
 
-            // Remove any remaining parameter handlebars and set any undefined values to null
+            // Remove any remaining parameter handlebars and set any undefined values
+            // to the default type values
             CLASS_PROPERTIES_NAMES.forEach(function(propName) {
                 if (instance[propName] === undefined) {
-                    instance[propName] = null;
+                    var types = CLASS_PROPERTIES_TYPES[propName] || ['null'];
+                    if (~types.indexOf('null') || ~types.indexOf('Date')) {
+                        instance[propName] = null;
+                    } else if (~types.indexOf('Array')) {
+                        instance[propName] = [];
+                    } else if (~types.indexOf('natural') || ~types.indexOf('integer') || ~types.indexOf('float') || ~types.indexOf('number')) {
+                        instance[propName] = 0;
+                    } else if (~types.indexOf('boolean')) {
+                        instance[propName] = false;
+                    } else if (~types.indexOf('string')) {
+                        instance[propName] = '';
+                    } else {
+                        throw new Error('Unknown type for property');
+                    }
                 }
             });
             // Update nodes with parameter handlebars (so they can be removed)

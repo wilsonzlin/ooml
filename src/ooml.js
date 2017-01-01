@@ -27,6 +27,8 @@
             }, 50);
         };
 
+    var OOML_PROPERTY_TYPE_DECLARATIONS = ['Date', 'null', 'Array', 'number', 'natural', 'integer', 'float', 'boolean', 'string'];
+
     var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
         OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
         OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',

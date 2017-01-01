@@ -11,6 +11,44 @@ var Utils = {
             }
         },
     },
+    isValidPropertyName: function(name, strictMode) {
+        if (!strictMode) {
+            return !(
+                // Double underscore prefix
+                (name[0] == '_' && name[1] == '_') ||
+                // Trailing whitespace
+                /\s$/.test(name) ||
+                // Object.prototype
+                ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf'].indexOf(name) > -1 ||
+                // OOML.Element.prototype
+                ['toObject', 'toJSON', 'assign'].indexOf(name) > -1
+            );
+        } else {
+            return /^[a-z][a-zA-Z0-9_]*$/.test(name);
+        }
+    },
+    processPropertyDeclaration: function(types, name, classPropertyTypes, strictPropertyNames) {
+        if (!Utils.isValidPropertyName(name, strictPropertyNames)) {
+            throw new SyntaxError('Invalid property declaration; name `' + name + '` is invalid');
+        }
+        if (types !== null) {
+            if (classPropertyTypes[name]) {
+                if (classPropertyTypes[name].join('|') !== types) {
+                    throw new SyntaxError('Types for the property ' + name + ' have already been declared');
+                }
+            } else {
+                classPropertyTypes[name] = types.split('|').filter(function (type, idx, types) {
+                    if (OOML_PROPERTY_TYPE_DECLARATIONS.indexOf(type) == -1) {
+                        throw new SyntaxError('Invalid type declaration `' + type + '` for property ' + name);
+                    }
+                    if (types.indexOf(type) !== idx) {
+                        throw new SyntaxError('Duplicate type `' + type + '` in type declaration for property ' + name);
+                    }
+                    return true;
+                });
+            }
+        }
+    },
     toDashCase: function(str) {
         return str.replace(/^[a-z]+|(?!^)(?:[A-Z][a-z]*)/g, function(match) {
             return match.toLowerCase() + '-';
@@ -66,6 +104,56 @@ var Utils = {
     isObjectLiteral: function(obj) {
         return !!obj && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
     },
+    isType: function(type, value) {
+        switch (type) {
+            case 'Date':
+                return value instanceof Date;
+
+            case 'null':
+                return value === null;
+
+            case 'Array':
+                return Array.isArray(value);
+
+            case 'number':
+            case 'boolean':
+            case 'string':
+                return typeof value == type;
+
+            case 'natural':
+            case 'integer':
+                return typeof value == 'number' &&
+                    isFinite(value) &&
+                    Math.floor(value) === value &&
+                    (type != 'natural' || value >= 0);
+
+            case 'float':
+                return typeof value == 'number' &&
+                    isFinite(value) &&
+                    value % 1 !== 0;
+
+            default:
+                throw new Error('Unrecognised type for checking against');
+        }
+    },
+    /* OVERRIDE: NOT IN USE but keep notes
+    arraysHaveSameElems: function(arr1, arr2) {
+        /*
+            Returns true if both arrays contain:
+                - the same elements
+                - the same amount of times
+                - not necessarily in the same order
+
+            Cases to consider before judging and chaning this code:
+                - arr1 = ['foo', 'foo', 'bar']; arr2 = ['foo', 'bar'];
+                - arr1 = [1, 1, 2, 3]; arr2 = [1, 2, 3, 3]; arr1.length == arr2.length
+                - arr1 = [2, 3, 1, Node]; arr2 = [1, 3, Node, 2]; These should be "the same"
+         *
+        return arr1.every(function(matchingCount, elem) {
+            return arr2.indexOf(elem) > -1;
+        }) && arr1.length === arr2.length;
+    },
+    */
     createCleanObject: function() {
         return Object.create(null);
     },
