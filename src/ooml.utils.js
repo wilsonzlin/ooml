@@ -353,7 +353,7 @@ var Utils = {
         return klass.prototype instanceof OOML.Element.prototype;
     },
     isPrimitiveValue: function(val) {
-        return val instanceof Date || val === null || Array.isArray(val) || ['number', 'boolean', 'string'].indexOf(typeof val) > -1
+        return OOML_PRIMITIVE_TYPES.some(function(type) { return Utils.isType(type, val) });
     },
     isObjectLiteral: function(obj) {
         // Use typeof as .getPrototypeOf can't be used with non-objects
@@ -386,7 +386,7 @@ var Utils = {
             case 'float':
                 // Floats can have zero remainder, as there is no real difference between int and float in JS
                 return typeof value == 'number' &&
-                    isFinite(value);
+                    isFinite(value); // Returns false on NaN and +/-Infinity
 
             case 'object':
                 return Utils.isObjectLiteral(value);
