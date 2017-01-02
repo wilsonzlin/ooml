@@ -274,12 +274,16 @@ OOML.init = function(initConfig) {
                                     } else if (arg.type == 'object') {
                                         providedProperty = providedArgument[prop.name];
                                         propKey = prop.name;
-                                    } else {
+                                    } else { // arg.type is 'array' or 'Array' or 'OOML.Array'
                                         propKey = propIdx;
+                                        // NOTE: Don't need to check if type matches defined array type,
+                                        // as previous Utils.isType call already did
                                         if (providedArgument instanceof OOML.Array) {
                                             providedProperty = providedArgument.get(propIdx);
-                                        } else {
+                                        } else if (Utils.isArrayLike(providedArgument)) {
                                             providedProperty = providedArgument[propIdx];
+                                        } else {
+                                            throw new TypeError('Unrecognised array argument provided')
                                         }
                                     }
 

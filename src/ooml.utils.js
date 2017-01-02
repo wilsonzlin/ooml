@@ -318,6 +318,38 @@ var Utils = {
             Array.prototype.push.apply(arr, arguments[i]);
         }
     },
+    // Function that matches host array-like objects as well as primitive Array instances
+    // Should not match external library array-like objects (e.g. jQuery or OOML.Array)
+    isArrayLike: function(obj) {
+        if (!obj) {
+            return false;
+        }
+
+        // A "real" array fails most of the other tests, so short-circuit here
+        if (Array.isArray(obj)) {
+            return true;
+        }
+
+        if (typeof obj != 'object' || !(obj instanceof Object)) {
+            return false;
+        }
+
+        var length = obj.length;
+        if (!Utils.isType('natural', length)) {
+            return false;
+        }
+
+        if (obj.hasOwnProperty('length')) {
+            return false;
+        }
+
+        var descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), 'length');
+        if (!descriptor || !descriptor.get || descriptor.set) {
+            return false;
+        }
+
+        return true;
+    },
     isOOMLClass: function(klass) {
         return klass.prototype instanceof OOML.Element.prototype;
     },
@@ -360,7 +392,7 @@ var Utils = {
                 return Utils.isObjectLiteral(value);
 
             case 'array':
-                return Array.isArray(value) || value instanceof OOML.Array;
+                return Utils.isArrayLike(value) || value instanceof OOML.Array;
 
             case 'OOML.Array':
                 return value instanceof OOML.Array;

@@ -34,6 +34,15 @@
             }
         </ooml-method>
 
+        <ooml-method name="pushAll">
+            function(Array origArray, Array ...otherArrays) {
+                otherArrays.forEach(function(arrToPushAll) {
+                    Array.prototype.push.apply(origArray, arrToPushAll);
+                });
+                return origArray;
+            }
+        </ooml-method>
+
         <div id="child"></div>
     </template>
     <div ooml-instantiate="Child child"></div>
