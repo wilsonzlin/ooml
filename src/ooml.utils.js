@@ -19,7 +19,7 @@ var Utils = {
 
         var funcName = regexpMatches[1];
         if (funcName) {
-            throw new SyntaxError('Function names are not supported for method functions');
+            throw new SyntaxError('Function names are not supported for method functions; call the `self` function in the body to do recursion');
         }
 
         var toProcess = funcdef.slice(regexpMatches[0].length).trim();
@@ -71,7 +71,7 @@ var Utils = {
                 continue;
             }
 
-            var argmatches = /^([a-zA-Z.]+ )?(\?|\.\.\.)?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
+            var argmatches = /^([a-zA-Z.]+ )?(\?)?(\.\.\.)?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
             if (!argmatches) {
                 throw new SyntaxError('Unrecognised function argument declaration');
             }
@@ -82,10 +82,11 @@ var Utils = {
             toProcess = toProcess.slice(argmatches[0].length).trim();
 
             var matchedType = argmatches[1] || undefined;
-            var matchedOperator = argmatches[2];
-            var matchedArgname = argmatches[3];
-            var matchedEqualsSign = argmatches[4];
-            var matchedOpenBrace = argmatches[5];
+            var matchedOptionalOperator = argmatches[2];
+            var matchedCollectOperator = argmatches[3];
+            var matchedArgname = argmatches[4];
+            var matchedEqualsSign = argmatches[5];
+            var matchedOpenBrace = argmatches[6];
 
             if (effectiveArgNames.has(matchedArgname)) {
                 throw new SyntaxError('Argument name `' + matchedArgname + '` has already been used');
@@ -112,7 +113,7 @@ var Utils = {
                 } else {
                     matchedType = matchedOpenBrace == '{' ? 'object' : 'array';
                 }
-                if (matchedOperator && matchedOperator != '?') {
+                if (matchedCollectOperator) {
                     throw new SyntaxError('Destructuring argument contains invalid operator');
                 }
 
@@ -121,25 +122,25 @@ var Utils = {
                     destructure: true,
                     type: matchedType,
                     name: matchedArgname,
-                    optional: !!matchedOperator,
+                    optional: !!matchedOptionalOperator,
                     properties: [],
                 });
                 continue;
             }
 
-            if (matchedEqualsSign && matchedOperator) {
+            if (matchedEqualsSign && (matchedCollectOperator || matchedOptionalOperator)) {
                 throw new SyntaxError('Argument with a default value has an operator');
             }
             if (matchedEqualsSign && ['function', 'OOML.Element'].indexOf(matchedType) > -1) {
                 throw new SyntaxError('An argument with type ' + matchedType + ' cannot have a default argument');
             }
-            if (destructuringMode && matchedOperator == '...') {
+            if (destructuringMode && matchedCollectOperator) {
                 throw new SyntaxError('The collect operator cannot be used inside a destructuring argument');
             }
-            if (matchedOperator == '...' && !matchedType) {
+            if (matchedCollectOperator) {
                 collectArgsCount++;
                 if (collectArgsCount > 1) {
-                    throw new SyntaxError('A method cannot have more than one non-typed collect argument');
+                    throw new SyntaxError('A method cannot have more than one collecting argument');
                 }
             }
 
@@ -259,8 +260,8 @@ var Utils = {
             pushTo.push({
                 type: matchedType,
                 name: matchedArgname,
-                optional: matchedOperator == '?' || defaultValue !== undefined,
-                collect: matchedOperator == '...',
+                optional: !!matchedOptionalOperator || defaultValue !== undefined,
+                collect: !!matchedCollectOperator,
                 defaultValue: defaultValue,
             });
 
@@ -305,7 +306,9 @@ var Utils = {
         // e.g. [].concat(NodeList(div, span)) becomes [NodeList], not [div, span]
         var ret = Array.prototype.slice.call(arguments[0]);
         for (var i = 1; i < arguments.length; i++) {
-            Array.prototype.push.apply(ret, arguments[i]);
+            if (arguments[i] && arguments[i].length) {
+                Array.prototype.push.apply(ret, arguments[i]);
+            }
         }
         return ret;
     },

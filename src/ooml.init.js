@@ -171,6 +171,17 @@ OOML.init = function(initConfig) {
                         throw new SyntaxError('The method ' + methodName + ' is already defined');
                     }
 
+                    if (methodName == 'constructor') {
+                        if (CLASS_PREDEFINED_CONSTRUCTOR) {
+                            throw new SyntaxError('A constructor has already been defined for the class ' + CLASS_NAME);
+                        }
+                        CLASS_PREDEFINED_CONSTRUCTOR = Utils.getEvalValue(node.textContent.trim());
+                        if (typeof CLASS_PREDEFINED_CONSTRUCTOR != 'function') {
+                            throw new TypeError('The constructor method for the class ' + CLASS_NAME + ' is not a function');
+                        }
+                        return;
+                    }
+
                     var funcmeta = Utils.parseMethodFunction(node.textContent.trim(), methodName);
 
                     var argNames = [];
@@ -188,17 +199,41 @@ OOML.init = function(initConfig) {
                     });
 
                     var realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', funcmeta.body]));
-                    console.log(funcmeta);
 
                     var func = function self() {
                         // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
                         var providedArguments = Array.apply(undefined, arguments);
+                        var providedArgument;
+
+                        // WARNING: Won't clone nested objects and arrays, so don't clone those
+                        var definedArguments = funcmeta.args.slice();
+                        var arg;
+                        var argIdx = -1;
 
                         var providedArgumentsUsedCount = 0;
-                        var argumentValuesToApply = [];
+                        var lftArgVals = [];
+                        var rgtArgVals = [];
 
-                        funcmeta.args.forEach(function (arg, argIdx) {
-                            var providedArgument = providedArguments[argIdx];
+                        var processingDirectionLtr = true;
+                        var collectArg;
+                        var collectArgIdx;
+
+                        while (arg = definedArguments[processingDirectionLtr ? 'shift' : 'pop']()) {
+
+                            argIdx += processingDirectionLtr ? 1 : -1;
+
+                            if (arg.collect) {
+                                collectArg = arg;
+                                collectArgIdx = argIdx;
+                                argIdx = 0;
+                                processingDirectionLtr = false;
+                                continue;
+                            }
+
+                            var argumentProvided = providedArguments.hasOwnProperty(processingDirectionLtr ? 0 : (providedArguments.length - 1));
+                            providedArgument = providedArguments[processingDirectionLtr ? 'shift' : 'pop']();
+                            var pushTo = processingDirectionLtr ? lftArgVals : rgtArgVals;
+
                             var providedArgumentIsOmittedDestructure = false;
 
                             if (providedArgument === undefined) {
@@ -209,7 +244,7 @@ OOML.init = function(initConfig) {
                                 // This will be undefined if there is no default value
                                 providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
 
-                                if (!providedArguments.hasOwnProperty(argIdx)) {
+                                if (!argumentProvided) {
                                     // The only way an element in providedArguments isn't defined
                                     // is if not all expected arguments are provided; therefore,
                                     // these not defined (NOT set to undefined) elements will be
@@ -226,7 +261,7 @@ OOML.init = function(initConfig) {
 
                             if (arg.destructure) {
                                 if (arg.name) {
-                                    argumentValuesToApply.push(providedArgument);
+                                    pushTo.push(providedArgument);
                                 }
                                 arg.properties.forEach(function (prop, propIdx) {
                                     var propKey;
@@ -261,33 +296,47 @@ OOML.init = function(initConfig) {
                                         throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);
                                     }
 
-                                    argumentValuesToApply.push(providedProperty);
+                                    pushTo.push(providedProperty);
                                 });
                             } else {
-                                argumentValuesToApply.push(providedArgument);
+                                pushTo.push(providedArgument);
                             }
                             providedArgumentsUsedCount++;
-                        });
-                        if (providedArgumentsUsedCount !== providedArguments.length) {
+                        }
+
+                        if (collectArg) {
+                            var collectedVals = [];
+                            providedArguments.forEach(function(providedArgument, offset) {
+                                var argIdx = collectArgIdx + offset;
+
+                                if (collectArg.type && !Utils.isType(collectArg.type, providedArgument)) {
+                                    throw new TypeError('Argument ' + argIdx + ' should be of type ' + collectArg.type);
+                                }
+
+                                providedArgumentsUsedCount++;
+
+                                collectedVals.push(providedArgument);
+                            });
+                            if (!collectedVals.length && !collectArg.optional) {
+                                throw new TypeError('No arguments were provided to a collecting argument');
+                            }
+                            lftArgVals.push(collectedVals);
+                        }
+
+                        if (providedArgumentsUsedCount !== arguments.length) { // Don't use providedArguments as that has been mutated
                             throw new TypeError('Too many arguments provided');
                         }
 
                         var parentMethod = CLASS_PARENT_CLASS.prototype[methodName];
                         parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
-                        argumentValuesToApply.push(self);
-                        argumentValuesToApply.push(parentMethod);
-                        argumentValuesToApply.push(undefined);
-                        return realFunc.apply(this, argumentValuesToApply);
+
+                        var argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [
+                            self, parentMethod, undefined
+                        ]);
+                        return realFunc.apply(this, argVals);
                     };
 
-                    if (methodName == 'constructor') {
-                        if (CLASS_PREDEFINED_CONSTRUCTOR) {
-                            throw new SyntaxError('A constructor has already been defined for the class ' + className);
-                        }
-                        CLASS_PREDEFINED_CONSTRUCTOR = func;
-                    } else {
-                        CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = func;
-                    }
+                    CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = func;
                 })();
             }
         }

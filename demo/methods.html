@@ -26,7 +26,7 @@
 
     <template ooml-class="Child extends Parent">
         <ooml-method name="hello">
-            function(boolean repeat = true) {
+            function(?repeat) {
                 parent();
                 if (repeat) {
                     self(false);
