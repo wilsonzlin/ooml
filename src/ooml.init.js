@@ -164,12 +164,6 @@ OOML.init = function(initConfig) {
             if (node instanceof Element) {
                 (function() {
                     var methodName = node.getAttribute('name');
-                    if (!/^[a-z_][a-zA-Z0-9_]*$/.test(methodName)) {
-                        throw new SyntaxError('The method name `' + methodName + '` is invalid');
-                    }
-                    if (CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName]) {
-                        throw new SyntaxError('The method ' + methodName + ' is already defined');
-                    }
 
                     if (methodName == 'constructor') {
                         if (CLASS_PREDEFINED_CONSTRUCTOR) {
@@ -180,6 +174,13 @@ OOML.init = function(initConfig) {
                             throw new TypeError('The constructor method for the class ' + CLASS_NAME + ' is not a function');
                         }
                         return;
+                    }
+
+                    if (!Utils.isValidPropertyName(methodName, false)) {
+                        throw new SyntaxError('The method name `' + methodName + '` is invalid');
+                    }
+                    if (CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName]) {
+                        throw new SyntaxError('The method ' + methodName + ' is already defined');
                     }
 
                     var funcmeta = Utils.parseMethodFunction(node.textContent.trim(), methodName);

@@ -29,6 +29,9 @@
             }, 50);
         };
 
+    // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods or properties may use these
+    var OOML_ELEMENT_RESERVED_PROPERTY_NAMES = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'attributes'];
+
     var OOML_PROPERTY_TYPE_DECLARATIONS = ['Date', 'null', 'Array', 'number', 'natural', 'integer', 'float', 'boolean', 'string'];
     var OOML_FUNCTION_ARGUMENT_TYPE_DECLARATIONS = Utils.concat(OOML_PROPERTY_TYPE_DECLARATIONS, ['object', 'function', 'array', 'OOML.Array', 'OOML.Element']);
 

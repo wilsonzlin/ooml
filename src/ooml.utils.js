@@ -280,17 +280,16 @@ var Utils = {
         };
     },
     isValidPropertyName: function(name, strictMode) {
-        return !(
+        return typeof name == 'string' &&
+            !!name.length &&
+            name[0] != '$' &&
             // Double underscore prefix
-            (name[0] == '_' && name[1] == '_') ||
-            // Trailing whitespace
-            /\s$/.test(name) ||
-            // Object.prototype
-            ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf'].indexOf(name) > -1 ||
-            // OOML.Element.prototype
-            ['toObject', 'toJSON', 'assign'].indexOf(name) > -1 &&
+            name[0] != '_' && name[1] != '_' &&
+            // Starting or trailing whitespace
+            !/^\s|\s$/.test(name) &&
+            OOML_ELEMENT_RESERVED_PROPERTY_NAMES.indexOf(name) == -1 &&
             (!strictMode || /^[a-z][a-zA-Z0-9_]*$/.test(name))
-        );
+        ;
     },
     toDashCase: function(str) {
         return str.replace(/^[a-z]+|(?!^)(?:[A-Z][a-z]*)/g, function(match) {
