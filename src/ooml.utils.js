@@ -357,7 +357,8 @@ var Utils = {
         return val instanceof Date || val === null || Array.isArray(val) || ['number', 'boolean', 'string'].indexOf(typeof val) > -1
     },
     isObjectLiteral: function(obj) {
-        return !!obj && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
+        // Use typeof as .getPrototypeOf can't be used with non-objects
+        return typeof obj == 'object' && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
     },
     isType: function(type, value) {
         switch (type) {
