@@ -200,12 +200,13 @@ OOML.init = function(initConfig) {
 
                     var realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', funcmeta.body]));
 
-                    var func = function self() {
+                    CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = function self() {
                         // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-                        var providedArguments = Array.apply(undefined, arguments);
+                        // If arguments is length 1, manually construct, as Array constructor will interpret as length, not value
+                        var providedArguments = arguments.length == 1 ? [arguments[0]] : Array.apply(undefined, arguments);
                         var providedArgument;
 
-                        // WARNING: Won't clone nested objects and arrays, so don't clone those
+                        // WARNING: Won't clone nested objects and arrays, so don't mutate those
                         var definedArguments = funcmeta.args.slice();
                         var arg;
                         var argIdx = -1;
@@ -339,8 +340,6 @@ OOML.init = function(initConfig) {
                         ]);
                         return realFunc.apply(this, argVals);
                     };
-
-                    CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = func;
                 })();
             }
         }
