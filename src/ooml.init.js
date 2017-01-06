@@ -39,9 +39,14 @@ OOML.init = function(initConfig) {
         }
     }
 
-    Utils.DOM.find(namespace, 'template[ooml-class]').forEach(function(classTemplateElem) {
+    Utils.DOM.find(namespace, 'template[ooml-class], template[ooml-abstract-class]').forEach(function(classTemplateElem) {
         // Parse declaration
         var classDeclaration = classTemplateElem.getAttribute('ooml-class');
+        var CLASS_IS_ABSTRACT = false;
+        if (!classDeclaration) {
+            classDeclaration = classTemplateElem.getAttribute('ooml-abstract-class');
+            CLASS_IS_ABSTRACT = true;
+        }
         var classDeclarationParts = /^([a-zA-Z]+)(?: extends ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)))?$/.exec(classDeclaration);
         if (!classDeclarationParts) {
             throw new SyntaxError('Bad class declaration at `' + classDeclaration + '`');
@@ -60,13 +65,6 @@ OOML.init = function(initConfig) {
         } else {
             CLASS_PARENT_CLASS = OOML.Element;
         }
-
-
-        // A set containing all the properties' names in this class
-        var CLASS_PROPERTIES_NAMES = new StringSet();
-
-        // A map from property names to an array containing their accepted value types
-        var CLASS_PROPERTIES_TYPES = Utils.createCleanObject();
 
         var PROCESS_PROPERTY_DECLARATION = function(types, name) {
             if (!Utils.isValidPropertyName(name, SETTING_STRICT_PROPERTY_NAMES)) {
@@ -90,6 +88,12 @@ OOML.init = function(initConfig) {
                 }
             }
         };
+
+        // A set containing all the properties' names in this class
+        var CLASS_PROPERTIES_NAMES = new StringSet();
+
+        // A map from property names to an array containing their accepted value types
+        var CLASS_PROPERTIES_TYPES = Utils.createCleanObject();
 
         /*
             CLASS_ARRAY_PROPERTIES_NAMES and CLASS_ELEM_PROPERTIES_NAMES are used:
@@ -117,238 +121,256 @@ OOML.init = function(initConfig) {
 
         // Process predefined attributes (attributes must be defined first)
         // Note: Don't need to remove ooml-attribute, ooml-property or ooml-method as parent template is removed after parsing
-        while (toProcess.length && (toProcess[0].nodeName == 'OOML-ATTRIBUTE' || !(toProcess[0] instanceof Element))) {
+        var breakOuter = false;
+        while (toProcess.length && !breakOuter) {
             var node = toProcess.shift();
-            if (node instanceof Element) {
-                var attrName = node.getAttribute('name');
-                if (CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] !== undefined) {
-                    throw new SyntaxError('The attribute ' + attrName + ' is already defined');
-                }
-                if (!/^[a-z]+([A-Z][a-z]*)*$/.test(attrName)) {
-                    throw new SyntaxError('The attribute name ' + attrName + ' is invalid');
-                }
-
-                var evalValue = Utils.getEvalValue(node.textContent);
-                if (!Utils.isPrimitiveValue(evalValue)) {
-                    throw new TypeError('The value for the attribute ' + attrName + ' is invalid');
-                }
-
-                CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] = evalValue;
+            if (!(node instanceof Element)) {
+                continue;
             }
-        }
 
-        // Process predefined properties (properties must be defined after attributes)
-        while (toProcess.length && (toProcess[0].nodeName == 'OOML-PROPERTY' || !(toProcess[0] instanceof Element))) {
-            var node = toProcess.shift();
-            if (node instanceof Element) {
-                var propName = node.getAttribute('name');
-                var types = node.getAttribute('type') || null;
-                PROCESS_PROPERTY_DECLARATION(types, propName);
+            switch (node.nodeName) {
+                case 'OOML-ATTRIBUTE':
 
-                if (CLASS_PREDEFINED_PROPERTIES_VALUES[propName] !== undefined) {
-                    throw new SyntaxError('The property ' + propName + ' is already defined');
-                }
+                    var attrName = node.getAttribute('name');
+                    if (CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] !== undefined) {
+                        throw new SyntaxError('The attribute ' + attrName + ' is already defined');
+                    }
+                    if (!/^[a-z]+([A-Z][a-z]*)*$/.test(attrName)) {
+                        throw new SyntaxError('The attribute name ' + attrName + ' is invalid');
+                    }
 
-                var evalValue = Utils.getEvalValue(node.textContent);
-                if (!Utils.isPrimitiveValue(evalValue)) {
-                    throw new TypeError('The value for the property ' + propName + ' is invalid');
-                }
+                    var evalValue = Utils.getEvalValue(node.textContent);
+                    if (!Utils.isPrimitiveValue(evalValue)) {
+                        throw new TypeError('The value for the attribute ' + attrName + ' is invalid');
+                    }
 
-                CLASS_PREDEFINED_PROPERTIES_VALUES[propName] = evalValue;
-                CLASS_PROPERTIES_NAMES.add(propName);
-            }
-        }
-        // Process predefined properties (methods must be defined after properties)
-        while (toProcess.length && (toProcess[0].nodeName == 'OOML-METHOD' || !(toProcess[0] instanceof Element))) {
-            var node = toProcess.shift();
-            if (node instanceof Element) {
-                (function() {
-                    var methodName = node.getAttribute('name');
+                    CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] = evalValue;
 
-                    if (methodName == 'constructor') {
-                        if (CLASS_PREDEFINED_CONSTRUCTOR) {
-                            throw new SyntaxError('A constructor has already been defined for the class ' + CLASS_NAME);
+                    break;
+
+                case 'OOML-PROPERTY':
+
+                    var propName = node.getAttribute('name');
+                    var types = node.getAttribute('type') || null;
+                    PROCESS_PROPERTY_DECLARATION(types, propName);
+
+                    if (CLASS_PREDEFINED_PROPERTIES_VALUES[propName] !== undefined) {
+                        throw new SyntaxError('The property ' + propName + ' is already defined');
+                    }
+
+                    var evalValue = Utils.getEvalValue(node.textContent);
+                    if (!Utils.isPrimitiveValue(evalValue)) {
+                        throw new TypeError('The value for the property ' + propName + ' is invalid');
+                    }
+
+                    CLASS_PREDEFINED_PROPERTIES_VALUES[propName] = evalValue;
+                    CLASS_PROPERTIES_NAMES.add(propName);
+
+                    break;
+
+                case 'OOML-METHOD':
+
+                    (function() {
+                        var methodName = node.getAttribute('name');
+
+                        if (methodName == 'constructor') {
+                            if (CLASS_PREDEFINED_CONSTRUCTOR) {
+                                throw new SyntaxError('A constructor has already been defined for the class ' + CLASS_NAME);
+                            }
+                            CLASS_PREDEFINED_CONSTRUCTOR = Utils.getEvalValue(node.textContent.trim());
+                            if (typeof CLASS_PREDEFINED_CONSTRUCTOR != 'function') {
+                                throw new TypeError('The constructor method for the class ' + CLASS_NAME + ' is not a function');
+                            }
+                            return;
                         }
-                        CLASS_PREDEFINED_CONSTRUCTOR = Utils.getEvalValue(node.textContent.trim());
-                        if (typeof CLASS_PREDEFINED_CONSTRUCTOR != 'function') {
-                            throw new TypeError('The constructor method for the class ' + CLASS_NAME + ' is not a function');
+
+                        if (!Utils.isValidPropertyName(methodName, false)) {
+                            throw new SyntaxError('The method name `' + methodName + '` is invalid');
                         }
-                        return;
-                    }
+                        if (CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName]) {
+                            throw new SyntaxError('The method ' + methodName + ' is already defined');
+                        }
 
-                    if (!Utils.isValidPropertyName(methodName, false)) {
-                        throw new SyntaxError('The method name `' + methodName + '` is invalid');
-                    }
-                    if (CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName]) {
-                        throw new SyntaxError('The method ' + methodName + ' is already defined');
-                    }
+                        var funcmeta = Utils.parseMethodFunction(node.textContent.trim(), methodName);
 
-                    var funcmeta = Utils.parseMethodFunction(node.textContent.trim(), methodName);
-
-                    var argNames = [];
-                    funcmeta.args.forEach(function(arg) {
-                        if (arg.destructure) {
-                            if (arg.name) {
+                        var argNames = [];
+                        funcmeta.args.forEach(function(arg) {
+                            if (arg.destructure) {
+                                if (arg.name) {
+                                    argNames.push(arg.name);
+                                }
+                                arg.properties.forEach(function(prop) {
+                                    argNames.push(prop.name);
+                                });
+                            } else {
                                 argNames.push(arg.name);
                             }
-                            arg.properties.forEach(function(prop) {
-                                argNames.push(prop.name);
-                            });
-                        } else {
-                            argNames.push(arg.name);
-                        }
-                    });
+                        });
 
-                    var realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', funcmeta.body]));
+                        var realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', funcmeta.body]));
 
-                    CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = function self() {
-                        // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-                        // If arguments is length 1, manually construct, as Array constructor will interpret as length, not value
-                        var providedArguments = arguments.length == 1 ? [arguments[0]] : Array.apply(undefined, arguments);
-                        var providedArgument;
+                        CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = function self() {
+                            // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+                            // If arguments is length 1, manually construct, as Array constructor will interpret as length, not value
+                            var providedArguments = arguments.length == 1 ? [arguments[0]] : Array.apply(undefined, arguments);
+                            var providedArgument;
 
-                        // WARNING: Won't clone nested objects and arrays, so don't mutate those
-                        var definedArguments = funcmeta.args.slice();
-                        var arg;
-                        var argIdx = -1;
+                            // WARNING: Won't clone nested objects and arrays, so don't mutate those
+                            var definedArguments = funcmeta.args.slice();
+                            var arg;
+                            var argIdx = -1;
 
-                        var providedArgumentsUsedCount = 0;
-                        var lftArgVals = [];
-                        var rgtArgVals = [];
+                            var providedArgumentsUsedCount = 0;
+                            var lftArgVals = [];
+                            var rgtArgVals = [];
 
-                        var processingDirectionLtr = true;
-                        var collectArg;
-                        var collectArgIdx;
+                            var processingDirectionLtr = true;
+                            var collectArg;
+                            var collectArgIdx;
 
-                        while (arg = definedArguments[processingDirectionLtr ? 'shift' : 'pop']()) {
+                            while (arg = definedArguments[processingDirectionLtr ? 'shift' : 'pop']()) {
 
-                            argIdx += processingDirectionLtr ? 1 : -1;
+                                argIdx += processingDirectionLtr ? 1 : -1;
 
-                            if (arg.collect) {
-                                collectArg = arg;
-                                collectArgIdx = argIdx;
-                                argIdx = 0;
-                                processingDirectionLtr = false;
-                                continue;
-                            }
-
-                            var argumentProvided = providedArguments.hasOwnProperty(processingDirectionLtr ? 0 : (providedArguments.length - 1));
-                            providedArgument = providedArguments[processingDirectionLtr ? 'shift' : 'pop']();
-                            var pushTo = processingDirectionLtr ? lftArgVals : rgtArgVals;
-
-                            var providedArgumentIsOmittedDestructure = false;
-
-                            if (providedArgument === undefined) {
-                                if (!arg.optional) {
-                                    throw new TypeError('Argument ' + argIdx + ' must be provided');
+                                if (arg.collect) {
+                                    collectArg = arg;
+                                    collectArgIdx = argIdx;
+                                    argIdx = 0;
+                                    processingDirectionLtr = false;
+                                    continue;
                                 }
 
-                                // This will be undefined if there is no default value
-                                providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
+                                var argumentProvided = providedArguments.hasOwnProperty(processingDirectionLtr ? 0 : (providedArguments.length - 1));
+                                providedArgument = providedArguments[processingDirectionLtr ? 'shift' : 'pop']();
+                                var pushTo = processingDirectionLtr ? lftArgVals : rgtArgVals;
 
-                                if (!argumentProvided) {
-                                    // The only way an element in providedArguments isn't defined
-                                    // is if not all expected arguments are provided; therefore,
-                                    // these not defined (NOT set to undefined) elements will be
-                                    // at the end of the array.
-                                    providedArgumentsUsedCount--;
+                                var providedArgumentIsOmittedDestructure = false;
+
+                                if (providedArgument === undefined) {
+                                    if (!arg.optional) {
+                                        throw new TypeError('Argument ' + argIdx + ' must be provided');
+                                    }
+
+                                    // This will be undefined if there is no default value
+                                    providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
+
+                                    if (!argumentProvided) {
+                                        // The only way an element in providedArguments isn't defined
+                                        // is if not all expected arguments are provided; therefore,
+                                        // these not defined (NOT set to undefined) elements will be
+                                        // at the end of the array.
+                                        providedArgumentsUsedCount--;
+                                    }
+
+                                    if (arg.destructure) {
+                                        providedArgumentIsOmittedDestructure = true;
+                                    }
+                                } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
+                                    throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
                                 }
 
                                 if (arg.destructure) {
-                                    providedArgumentIsOmittedDestructure = true;
-                                }
-                            } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
-                                throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
-                            }
+                                    if (arg.name) {
+                                        pushTo.push(providedArgument);
+                                    }
+                                    arg.properties.forEach(function (prop, propIdx) {
+                                        var propKey;
+                                        var providedProperty;
 
-                            if (arg.destructure) {
-                                if (arg.name) {
+                                        if (providedArgumentIsOmittedDestructure) {
+                                            // If destructuring argument is optional and was not provided,
+                                            // then all containing properties are also optional
+                                            providedProperty = undefined;
+                                        } else if (arg.type == 'object') {
+                                            providedProperty = providedArgument[prop.name];
+                                            propKey = prop.name;
+                                        } else { // arg.type is 'array' or 'Array' or 'OOML.Array'
+                                            propKey = propIdx;
+                                            // NOTE: Don't need to check if type matches defined array type,
+                                            // as previous Utils.isType call already did
+                                            if (providedArgument instanceof OOML.Array) {
+                                                providedProperty = providedArgument.get(propIdx);
+                                            } else if (Utils.isArrayLike(providedArgument)) {
+                                                providedProperty = providedArgument[propIdx];
+                                            } else {
+                                                throw new TypeError('Unrecognised array argument provided')
+                                            }
+                                        }
+
+                                        if (providedProperty === undefined) {
+                                            // All containing properties are optional
+                                            // if the destructuring argument is optional
+                                            // regardless of invididual property settings
+                                            if (!providedArgumentIsOmittedDestructure && !prop.optional) {
+                                                throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' must be provided');
+                                            }
+                                            // This will be undefined if there is no default value
+                                            providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
+                                        } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
+                                            throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);
+                                        }
+
+                                        pushTo.push(providedProperty);
+                                    });
+                                } else {
                                     pushTo.push(providedArgument);
                                 }
-                                arg.properties.forEach(function (prop, propIdx) {
-                                    var propKey;
-                                    var providedProperty;
-
-                                    if (providedArgumentIsOmittedDestructure) {
-                                        // If destructuring argument is optional and was not provided,
-                                        // then all containing properties are also optional
-                                        providedProperty = undefined;
-                                    } else if (arg.type == 'object') {
-                                        providedProperty = providedArgument[prop.name];
-                                        propKey = prop.name;
-                                    } else { // arg.type is 'array' or 'Array' or 'OOML.Array'
-                                        propKey = propIdx;
-                                        // NOTE: Don't need to check if type matches defined array type,
-                                        // as previous Utils.isType call already did
-                                        if (providedArgument instanceof OOML.Array) {
-                                            providedProperty = providedArgument.get(propIdx);
-                                        } else if (Utils.isArrayLike(providedArgument)) {
-                                            providedProperty = providedArgument[propIdx];
-                                        } else {
-                                            throw new TypeError('Unrecognised array argument provided')
-                                        }
-                                    }
-
-                                    if (providedProperty === undefined) {
-                                        // All containing properties are optional
-                                        // if the destructuring argument is optional
-                                        // regardless of invididual property settings
-                                        if (!providedArgumentIsOmittedDestructure && !prop.optional) {
-                                            throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' must be provided');
-                                        }
-                                        // This will be undefined if there is no default value
-                                        providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
-                                    } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
-                                        throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);
-                                    }
-
-                                    pushTo.push(providedProperty);
-                                });
-                            } else {
-                                pushTo.push(providedArgument);
-                            }
-                            providedArgumentsUsedCount++;
-                        }
-
-                        if (collectArg) {
-                            var collectedVals = [];
-                            providedArguments.forEach(function(providedArgument, offset) {
-                                var argIdx = collectArgIdx + offset;
-
-                                if (collectArg.type && !Utils.isType(collectArg.type, providedArgument)) {
-                                    throw new TypeError('Argument ' + argIdx + ' should be of type ' + collectArg.type);
-                                }
-
                                 providedArgumentsUsedCount++;
-
-                                collectedVals.push(providedArgument);
-                            });
-                            if (!collectedVals.length && !collectArg.optional) {
-                                throw new TypeError('No arguments were provided to a collecting argument');
                             }
-                            lftArgVals.push(collectedVals);
-                        }
 
-                        if (providedArgumentsUsedCount !== arguments.length) { // Don't use providedArguments as that has been mutated
-                            throw new TypeError('Too many arguments provided');
-                        }
+                            if (collectArg) {
+                                var collectedVals = [];
+                                providedArguments.forEach(function(providedArgument, offset) {
+                                    var argIdx = collectArgIdx + offset;
 
-                        var parentMethod = CLASS_PARENT_CLASS.prototype[methodName];
-                        parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
+                                    if (collectArg.type && !Utils.isType(collectArg.type, providedArgument)) {
+                                        throw new TypeError('Argument ' + argIdx + ' should be of type ' + collectArg.type);
+                                    }
 
-                        var argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [
-                            self, parentMethod, undefined
-                        ]);
-                        return realFunc.apply(this, argVals);
-                    };
-                })();
+                                    providedArgumentsUsedCount++;
+
+                                    collectedVals.push(providedArgument);
+                                });
+                                if (!collectedVals.length && !collectArg.optional) {
+                                    throw new TypeError('No arguments were provided to a collecting argument');
+                                }
+                                lftArgVals.push(collectedVals);
+                            }
+
+                            if (providedArgumentsUsedCount !== arguments.length) { // Don't use providedArguments as that has been mutated
+                                throw new TypeError('Too many arguments provided');
+                            }
+
+                            var parentMethod = CLASS_PARENT_CLASS.prototype[methodName];
+                            parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
+
+                            var argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [
+                                self, parentMethod, undefined
+                            ]);
+                            return realFunc.apply(this, argVals);
+                        };
+                    })();
+
+                    break;
+
+                default:
+                    breakOuter = true;
             }
         }
-        // Trim non-elements from the right
-        while (toProcess[1] && !(toProcess[1] instanceof Element)) toProcess.pop();
 
-        if (toProcess.length !== 1) {
-            throw new SyntaxError('The class ' + CLASS_NAME + ' is empty or contains more than one root element');
+        // Trim non-elements from the right
+        while (toProcess[1] && !(toProcess[1] instanceof Element)) {
+            toProcess.pop();
+        }
+
+        if (CLASS_IS_ABSTRACT) {
+            if (toProcess.length) {
+                throw new SyntaxError('The abstract class ' + CLASS_NAME + ' has root elements');
+            }
+        } else {
+            if (toProcess.length != 1) {
+                throw new SyntaxError('The class ' + CLASS_NAME + ' is empty or contains more than one root element');
+            }
         }
         toProcess = [toProcess[0]];
 
@@ -359,11 +381,11 @@ OOML.init = function(initConfig) {
         classTemplateElem.parentNode.removeChild(classTemplateElem);
 
         while (current = toProcess.shift()) {
+
             if (current instanceof Element) {
 
-                var attrs = Utils.concat(current.attributes); // To prevent indexes from changing when removing inline event handler attributes
-
-                attrs.forEach(function(attr) {
+                // Concat to prevent indexes from changing when removing inline event handler attributes
+                Utils.concat(current.attributes).forEach(function(attr) {
                     if (attr.name.indexOf('childon') === 0) {
                         if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = Utils.createCleanObject();
                         current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'dispatch', 'data', attr.nodeValue);
@@ -385,6 +407,7 @@ OOML.init = function(initConfig) {
                 });
 
                 Utils.pushAll(toProcess, current.childNodes);
+
             } else if (current instanceof Text) {
 
                 var currentNode = current;
@@ -475,7 +498,6 @@ OOML.init = function(initConfig) {
                 var nodeValue = current.nodeValue;
 
                 if (nodeValue.indexOf('{{') > -1) {
-
                     var paramsData = Utils.splitStringByParamholders(nodeValue);
                     current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
                     current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
@@ -488,6 +510,10 @@ OOML.init = function(initConfig) {
         }
 
         classes[CLASS_NAME] = function(initState) {
+            if (CLASS_IS_ABSTRACT) {
+                throw new SyntaxError('Unable to construct new instance; ' + CLASS_NAME + ' is an abstract class');
+            }
+
             var instance = this,
                 instanceIsAttached = false;
 

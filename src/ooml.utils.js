@@ -284,7 +284,7 @@ var Utils = {
             !!name.length &&
             name[0] != '$' &&
             // Double underscore prefix
-            name[0] != '_' && name[1] != '_' &&
+            !(name[0] == '_' && name[1] == '_') &&
             // Starting or trailing whitespace
             !/^\s|\s$/.test(name) &&
             OOML_ELEMENT_RESERVED_PROPERTY_NAMES.indexOf(name) == -1 &&
