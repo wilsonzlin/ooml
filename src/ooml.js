@@ -47,6 +47,8 @@
         OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
         OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyPlaceholder',
 
+        OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace',
+
         OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
         OOML_ELEMENT_PROPNAME_ATTACH = '__oomlAttach',
         OOML_ELEMENT_PROPNAME_DETACH = '__oomlDetach',
@@ -58,6 +60,36 @@
         OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
 
     var OOML = {};
+
+    var OOMLGlobalImports = Utils.createCleanObject();
+    OOML.import = function() {
+        if (arguments.length == 2) {
+            var importName = arguments[0];
+            var importClass = arguments[1];
+            if (typeof importName != 'string') {
+                throw new SyntaxError('Invalid import name');
+            }
+            if (!Utils.isOOMLClass(importClass)) {
+                throw new SyntaxError('Invalid import class');
+            }
+            if (OOMLGlobalImports[importName]) {
+                throw new SyntaxError('The class `' + importName + '` has already been imported');
+            }
+            OOMLGlobalImports[importName] = importClass;
+        } else {
+            for (var i = 0; i < arguments.length; i++) {
+                var argobj = arguments[i];
+                if (!Utils.isObjectLiteral(argobj)) {
+                    throw new SyntaxError('Invalid import definition');
+                }
+                Object.keys(argobj).forEach(function(importName) {
+                    var importClass = argobj[importName];
+                    OOML.import(importName, importClass);
+                });
+            }
+        }
+    };
+
     <ZC-IMPORT[array]>
     <ZC-IMPORT[array-methods-getset]>
     <ZC-IMPORT[array-methods-mutation]>

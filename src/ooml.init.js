@@ -1,9 +1,14 @@
-OOML.init = function(initConfig) {
-    initConfig = initConfig || {};
+OOML.Namespace = function(namespace, settings) {
 
-    var namespace = initConfig.namespace || document.body;
-    var imports = initConfig.imports || Utils.createCleanObject();
-    var settings = initConfig.settings || {};
+    if (!(this instanceof OOML.Namespace)) {
+        throw new SyntaxError('OOML.Namespace must be constructed');
+    }
+
+    namespace = namespace || document.body;
+    Utils.DOM.noAncestorNamespace(namespace);
+
+    settings = settings || {};
+    var imports = Utils.concat(OOMLGlobalImports, settings.imports || Utils.createCleanObject());
 
     var classes = Utils.createCleanObject(),
         objects = Utils.createCleanObject();

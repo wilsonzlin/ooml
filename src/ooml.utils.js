@@ -10,6 +10,15 @@ var Utils = {
                 domElem.setAttribute('data-' + Utils.toDashCase(key), value);
             }
         },
+        noAncestorNamespace: function(rootElem) {
+            var toCheck = rootElem;
+            while (toCheck) {
+                if (toCheck[OOML_DOM_PROPNAME_ISNAMESPACE]) {
+                    throw new ReferenceError('That namespace already exists');
+                }
+                toCheck = toCheck.parentNode;
+            }
+        },
     },
     parseMethodFunction: function(funcdef, methodName) {
         var regexpMatches = /^function *([a-zA-Z_][a-zA-Z0-9_]+)?\s*\(/.exec(funcdef);
@@ -301,12 +310,26 @@ var Utils = {
         return Function('return ' + codeStr)();
     },
     concat: function() {
-        // WARNING: Don't use .concat as that doesn't work with array-like objects
-        // e.g. [].concat(NodeList(div, span)) becomes [NodeList], not [div, span]
-        var ret = Array.prototype.slice.call(arguments[0]);
-        for (var i = 1; i < arguments.length; i++) {
-            if (arguments[i] && arguments[i].length) {
-                Array.prototype.push.apply(ret, arguments[i]);
+        var ret;
+
+        if (Utils.isObjectLiteral(arguments[0])) {
+            ret = Utils.createCleanObject();
+            for (var i = 0; i < arguments.length; i++) {
+                var obj = arguments[i];
+                if (obj) {
+                    Object.keys(obj).forEach(function(prop) {
+                        ret[prop] = obj[prop];
+                    });
+                }
+            }
+        } else {
+            // WARNING: Don't use .concat as that doesn't work with array-like objects
+            // e.g. [].concat(NodeList(div, span)) becomes [NodeList], not [div, span]
+            ret = Array.prototype.slice.call(arguments[0]);
+            for (var i = 1; i < arguments.length; i++) {
+                if (arguments[i] && arguments[i].length) {
+                    Array.prototype.push.apply(ret, arguments[i]);
+                }
             }
         }
         return ret;
