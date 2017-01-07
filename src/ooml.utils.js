@@ -10,14 +10,15 @@ var Utils = {
                 domElem.setAttribute('data-' + Utils.toDashCase(key), value);
             }
         },
-        noAncestorNamespace: function(rootElem) {
+        hasAncestorNamespace: function(rootElem) {
             var toCheck = rootElem;
             while (toCheck) {
                 if (toCheck[OOML_DOM_PROPNAME_ISNAMESPACE]) {
-                    throw new ReferenceError('That namespace already exists');
+                    return true;
                 }
                 toCheck = toCheck.parentNode;
             }
+            return false;
         },
     },
     parseMethodFunction: function(funcdef, methodName) {

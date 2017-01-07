@@ -5,7 +5,10 @@ OOML.Namespace = function(namespace, settings) {
     }
 
     namespace = namespace || document.body;
-    Utils.DOM.noAncestorNamespace(namespace);
+    if (Utils.DOM.noAncestorNamespace(namespace)) {
+        throw new ReferenceError('That namespace already exists');
+    }
+    namespace[OOML_DOM_PROPNAME_ISNAMESPACE] = true;
 
     settings = settings || {};
     var imports = Utils.concat(OOMLGlobalImports, settings.imports || Utils.createCleanObject());
