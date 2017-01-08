@@ -5,41 +5,11 @@ OOML.Namespace = function(namespace, settings) {
     }
 
     namespace = namespace || document.body;
-    if (Utils.DOM.noAncestorNamespace(namespace)) {
-        throw new ReferenceError('That namespace already exists');
-    }
-    namespace[OOML_DOM_PROPNAME_ISNAMESPACE] = true;
-
-    settings = settings || {};
-    var imports = Utils.concat(OOMLGlobalImports, settings.imports || Utils.createCleanObject());
-
-    var classes = Utils.createCleanObject(),
-        objects = Utils.createCleanObject();
-
-    var SETTING_STRICT_PROPERTY_NAMES = settings.strictPropertyNames !== false;
-
-    var GET_OOML_CLASS = function(className) {
-        if (classes[className]) {
-            return classes[className];
-        }
-
-        var ret = imports;
-        className.split('.').every(function(part) {
-            ret = ret[part];
-            return !!ret;
-        });
-
-        if (!Utils.isOOMLClass(ret)) {
-            throw new TypeError('The class ' + className + ' does not exist');
-        }
-
-        return ret;
-    };
 
     if (typeof namespace == 'string') {
         namespace = namespace.trim();
         if (namespace[0] == '<') {
-            var domParser = document.createElement('div');
+            let domParser = document.createElement('div');
             domParser.innerHTML = namespace;
             namespace = domParser;
         } else {
@@ -47,346 +17,83 @@ OOML.Namespace = function(namespace, settings) {
         }
     }
 
+    if (Utils.DOM.hasAncestorNamespace(namespace)) {
+        throw new ReferenceError('That namespace already exists');
+    }
+
+    namespace[OOML_DOM_PROPNAME_ISNAMESPACE] = true;
+
+    settings = Utils.concat({
+        imports: Utils.createCleanObject(),
+        strictPropertyNames: true,
+    }, settings);
+
+    let imports = Utils.concat(OOMLGlobalImports);
+    Object.keys(settings.imports).forEach(importName => {
+        let importClass = settings.imports[importName];
+        if (!Utils.isOOMLClass(importClass)) {
+            throw new TypeError(`The value for the import "${ importName }" is not an OOML class`);
+        }
+        imports[importName] = importClass;
+    });
+
+    let classes = Utils.createCleanObject();
+    let objects = Utils.createCleanObject();
+
+    function getClassFromString(className) {
+        if (classes[className]) {
+            return classes[className];
+        }
+
+        let ret = imports[className];
+
+        if (!Utils.isOOMLClass(ret)) {
+            throw new TypeError(`The class "${ className }" does not exist`);
+        }
+
+        return ret;
+    }
+
     Utils.DOM.find(namespace, 'template[ooml-class], template[ooml-abstract-class]').forEach(function(classTemplateElem) {
-        // Parse declaration
-        var classDeclaration = classTemplateElem.getAttribute('ooml-class');
-        var CLASS_IS_ABSTRACT = false;
-        if (!classDeclaration) {
-            classDeclaration = classTemplateElem.getAttribute('ooml-abstract-class');
-            CLASS_IS_ABSTRACT = true;
-        }
-        var classDeclarationParts = /^([a-zA-Z]+)(?: extends ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)))?$/.exec(classDeclaration);
-        if (!classDeclarationParts) {
-            throw new SyntaxError('Bad class declaration at `' + classDeclaration + '`');
+
+        let classMetadata = Utils.preprocessClassDeclaration(classTemplateElem, settings.strictPropertyNames);
+        let className = classMetadata.name;
+        if (classes[className]) {
+            throw new SyntaxError(`The class "${ className }" already exists`);
         }
 
-        // Get new class name
-        var CLASS_NAME = classDeclarationParts[1];
-        if (classes[CLASS_NAME]) {
-            throw new SyntaxError('The class ' + CLASS_NAME + ' has already been initialised');
-        }
-
-        // Get parent class
-        var CLASS_PARENT_CLASS;
-        if (classDeclarationParts[2]) {
-            CLASS_PARENT_CLASS = GET_OOML_CLASS(classDeclarationParts[2]);
+        let classExtends = classMetadata.extends;
+        if (classExtends) {
+            classExtends = getClassFromString(classExtends);
         } else {
-            CLASS_PARENT_CLASS = OOML.Element;
+            classExtends = OOML.Element;
         }
 
-        var PROCESS_PROPERTY_DECLARATION = function(types, name) {
-            if (!Utils.isValidPropertyName(name, SETTING_STRICT_PROPERTY_NAMES)) {
-                throw new SyntaxError('Invalid property declaration; name `' + name + '` is invalid');
-            }
-            if (types !== null) {
-                if (CLASS_PROPERTIES_TYPES[name]) {
-                    if (CLASS_PROPERTIES_TYPES[name].join('|') !== types) {
-                        throw new SyntaxError('Types for the property ' + name + ' have already been declared');
-                    }
-                } else {
-                    CLASS_PROPERTIES_TYPES[name] = types.split('|').filter(function (type, idx, types) {
-                        if (OOML_PROPERTY_TYPE_DECLARATIONS.indexOf(type) == -1) {
-                            throw new SyntaxError('Invalid type declaration `' + type + '` for property ' + name);
-                        }
-                        if (types.indexOf(type) !== idx) {
-                            throw new SyntaxError('Duplicate type `' + type + '` in type declaration for property ' + name);
-                        }
-                        return true;
-                    });
-                }
-            }
-        };
+        // var PROCESS_PROPERTY_DECLARATION = function(types, name) {
+        //     if (!Utils.isValidPropertyName(name, SETTING_STRICT_PROPERTY_NAMES)) {
+        //         throw new SyntaxError('Invalid property declaration; name `' + name + '` is invalid');
+        //     }
+        //     if (types !== null) {
+        //         if (CLASS_PROPERTIES_TYPES[name]) {
+        //             if (CLASS_PROPERTIES_TYPES[name].join('|') !== types) {
+        //                 throw new SyntaxError('Types for the property ' + name + ' have already been declared');
+        //             }
+        //         } else {
+        //             CLASS_PROPERTIES_TYPES[name] = types.split('|').filter(function (type, idx, types) {
+        //                 if (OOML_PROPERTY_TYPE_DECLARATIONS.indexOf(type) == -1) {
+        //                     throw new SyntaxError('Invalid type declaration `' + type + '` for property ' + name);
+        //                 }
+        //                 if (types.indexOf(type) !== idx) {
+        //                     throw new SyntaxError('Duplicate type `' + type + '` in type declaration for property ' + name);
+        //                 }
+        //                 return true;
+        //             });
+        //         }
+        //     }
+        // };
 
-        // A set containing all the properties' names in this class
-        var CLASS_PROPERTIES_NAMES = new StringSet();
-
-        // A map from property names to an array containing their accepted value types
-        var CLASS_PROPERTIES_TYPES = Utils.createCleanObject();
-
-        /*
-            CLASS_ARRAY_PROPERTIES_NAMES and CLASS_ELEM_PROPERTIES_NAMES are used:
-                - to check for duplicates
-                - conditionally create special setters for instance properties
-        */
-        var CLASS_ARRAY_PROPERTIES_NAMES = new StringSet();
-        var CLASS_ELEM_PROPERTIES_NAMES = new StringSet();
-
-        // An object mapping class attributes' names to their default value
-        var CLASS_PREDEFINED_ATTRIBUTES_VALUES = Utils.createCleanObject();
-
-        // An object mapping class properties' names to their default value
-        var CLASS_PREDEFINED_PROPERTIES_VALUES = Utils.createCleanObject();
-
-        // An object mapping class properties' names to their function
-        var CLASS_PREDEFINED_METHODS_FUNCTIONS = Utils.createCleanObject();
-        var CLASS_PREDEFINED_CONSTRUCTOR;
-
-
-        // Get all nodes in template to process
-        var toProcess = OOMLCompatTemplateExists ?
-            Utils.concat(document.importNode(classTemplateElem.content, true).childNodes) :
-            Utils.concat(classTemplateElem.childNodes);
-
-        // Process predefined attributes (attributes must be defined first)
-        // Note: Don't need to remove ooml-attribute, ooml-property or ooml-method as parent template is removed after parsing
-        var breakOuter = false;
-        while (toProcess.length && !breakOuter) {
-            var node = toProcess.shift();
-            if (!(node instanceof Element)) {
-                continue;
-            }
-
-            switch (node.nodeName) {
-                case 'OOML-ATTRIBUTE':
-
-                    var attrName = node.getAttribute('name');
-                    if (CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] !== undefined) {
-                        throw new SyntaxError('The attribute ' + attrName + ' is already defined');
-                    }
-                    if (!/^[a-z]+([A-Z][a-z]*)*$/.test(attrName)) {
-                        throw new SyntaxError('The attribute name ' + attrName + ' is invalid');
-                    }
-
-                    var evalValue = Utils.getEvalValue(node.textContent);
-                    if (!Utils.isPrimitiveValue(evalValue)) {
-                        throw new TypeError('The value for the attribute ' + attrName + ' is invalid');
-                    }
-
-                    CLASS_PREDEFINED_ATTRIBUTES_VALUES[attrName] = evalValue;
-
-                    break;
-
-                case 'OOML-PROPERTY':
-
-                    var propName = node.getAttribute('name');
-                    var types = node.getAttribute('type') || null;
-                    PROCESS_PROPERTY_DECLARATION(types, propName);
-
-                    if (CLASS_PREDEFINED_PROPERTIES_VALUES[propName] !== undefined) {
-                        throw new SyntaxError('The property ' + propName + ' is already defined');
-                    }
-
-                    var evalValue = Utils.getEvalValue(node.textContent);
-                    if (!Utils.isPrimitiveValue(evalValue)) {
-                        throw new TypeError('The value for the property ' + propName + ' is invalid');
-                    }
-
-                    CLASS_PREDEFINED_PROPERTIES_VALUES[propName] = evalValue;
-                    CLASS_PROPERTIES_NAMES.add(propName);
-
-                    break;
-
-                case 'OOML-METHOD':
-
-                    (function() {
-                        var methodName = node.getAttribute('name');
-
-                        if (methodName == 'constructor') {
-                            if (CLASS_PREDEFINED_CONSTRUCTOR) {
-                                throw new SyntaxError('A constructor has already been defined for the class ' + CLASS_NAME);
-                            }
-                            CLASS_PREDEFINED_CONSTRUCTOR = Utils.getEvalValue(node.textContent.trim());
-                            if (typeof CLASS_PREDEFINED_CONSTRUCTOR != 'function') {
-                                throw new TypeError('The constructor method for the class ' + CLASS_NAME + ' is not a function');
-                            }
-                            return;
-                        }
-
-                        if (!Utils.isValidPropertyName(methodName, false)) {
-                            throw new SyntaxError('The method name `' + methodName + '` is invalid');
-                        }
-                        if (CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName]) {
-                            throw new SyntaxError('The method ' + methodName + ' is already defined');
-                        }
-
-                        var funcmeta = Utils.parseMethodFunction(node.textContent.trim(), methodName);
-
-                        var argNames = [];
-                        funcmeta.args.forEach(function(arg) {
-                            if (arg.destructure) {
-                                if (arg.name) {
-                                    argNames.push(arg.name);
-                                }
-                                arg.properties.forEach(function(prop) {
-                                    argNames.push(prop.name);
-                                });
-                            } else {
-                                argNames.push(arg.name);
-                            }
-                        });
-
-                        var realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', funcmeta.body]));
-
-                        CLASS_PREDEFINED_METHODS_FUNCTIONS[methodName] = function self() {
-                            // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-                            // If arguments is length 1, manually construct, as Array constructor will interpret as length, not value
-                            var providedArguments = arguments.length == 1 ? [arguments[0]] : Array.apply(undefined, arguments);
-                            var providedArgument;
-
-                            // WARNING: Won't clone nested objects and arrays, so don't mutate those
-                            var definedArguments = funcmeta.args.slice();
-                            var arg;
-                            var argIdx = -1;
-
-                            var providedArgumentsUsedCount = 0;
-                            var lftArgVals = [];
-                            var rgtArgVals = [];
-
-                            var processingDirectionLtr = true;
-                            var collectArg;
-                            var collectArgIdx;
-
-                            while (arg = definedArguments[processingDirectionLtr ? 'shift' : 'pop']()) {
-
-                                argIdx += processingDirectionLtr ? 1 : -1;
-
-                                if (arg.collect) {
-                                    collectArg = arg;
-                                    collectArgIdx = argIdx;
-                                    argIdx = 0;
-                                    processingDirectionLtr = false;
-                                    continue;
-                                }
-
-                                var argumentProvided = providedArguments.hasOwnProperty(processingDirectionLtr ? 0 : (providedArguments.length - 1));
-                                providedArgument = providedArguments[processingDirectionLtr ? 'shift' : 'pop']();
-                                var pushTo = processingDirectionLtr ? lftArgVals : rgtArgVals;
-
-                                var providedArgumentIsOmittedDestructure = false;
-
-                                if (providedArgument === undefined) {
-                                    if (!arg.optional) {
-                                        throw new TypeError('Argument ' + argIdx + ' must be provided');
-                                    }
-
-                                    // This will be undefined if there is no default value
-                                    providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
-
-                                    if (!argumentProvided) {
-                                        // The only way an element in providedArguments isn't defined
-                                        // is if not all expected arguments are provided; therefore,
-                                        // these not defined (NOT set to undefined) elements will be
-                                        // at the end of the array.
-                                        providedArgumentsUsedCount--;
-                                    }
-
-                                    if (arg.destructure) {
-                                        providedArgumentIsOmittedDestructure = true;
-                                    }
-                                } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
-                                    throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
-                                }
-
-                                if (arg.destructure) {
-                                    if (arg.name) {
-                                        pushTo.push(providedArgument);
-                                    }
-                                    arg.properties.forEach(function (prop, propIdx) {
-                                        var propKey;
-                                        var providedProperty;
-
-                                        if (providedArgumentIsOmittedDestructure) {
-                                            // If destructuring argument is optional and was not provided,
-                                            // then all containing properties are also optional
-                                            providedProperty = undefined;
-                                        } else if (arg.type == 'object') {
-                                            providedProperty = providedArgument[prop.name];
-                                            propKey = prop.name;
-                                        } else { // arg.type is 'array' or 'Array' or 'OOML.Array'
-                                            propKey = propIdx;
-                                            // NOTE: Don't need to check if type matches defined array type,
-                                            // as previous Utils.isType call already did
-                                            if (providedArgument instanceof OOML.Array) {
-                                                providedProperty = providedArgument.get(propIdx);
-                                            } else if (Utils.isArrayLike(providedArgument)) {
-                                                providedProperty = providedArgument[propIdx];
-                                            } else {
-                                                throw new TypeError('Unrecognised array argument provided')
-                                            }
-                                        }
-
-                                        if (providedProperty === undefined) {
-                                            // All containing properties are optional
-                                            // if the destructuring argument is optional
-                                            // regardless of invididual property settings
-                                            if (!providedArgumentIsOmittedDestructure && !prop.optional) {
-                                                throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' must be provided');
-                                            }
-                                            // This will be undefined if there is no default value
-                                            providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
-                                        } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
-                                            throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);
-                                        }
-
-                                        pushTo.push(providedProperty);
-                                    });
-                                } else {
-                                    pushTo.push(providedArgument);
-                                }
-                                providedArgumentsUsedCount++;
-                            }
-
-                            if (collectArg) {
-                                var collectedVals = [];
-                                providedArguments.forEach(function(providedArgument, offset) {
-                                    var argIdx = collectArgIdx + offset;
-
-                                    if (collectArg.type && !Utils.isType(collectArg.type, providedArgument)) {
-                                        throw new TypeError('Argument ' + argIdx + ' should be of type ' + collectArg.type);
-                                    }
-
-                                    providedArgumentsUsedCount++;
-
-                                    collectedVals.push(providedArgument);
-                                });
-                                if (!collectedVals.length && !collectArg.optional) {
-                                    throw new TypeError('No arguments were provided to a collecting argument');
-                                }
-                                lftArgVals.push(collectedVals);
-                            }
-
-                            if (providedArgumentsUsedCount !== arguments.length) { // Don't use providedArguments as that has been mutated
-                                throw new TypeError('Too many arguments provided');
-                            }
-
-                            var parentMethod = CLASS_PARENT_CLASS.prototype[methodName];
-                            parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
-
-                            var argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [
-                                self, parentMethod, undefined
-                            ]);
-                            return realFunc.apply(this, argVals);
-                        };
-                    })();
-
-                    break;
-
-                default:
-                    breakOuter = true;
-            }
-        }
-
-        // Trim non-elements from the right
-        while (toProcess[1] && !(toProcess[1] instanceof Element)) {
-            toProcess.pop();
-        }
-
-        if (CLASS_IS_ABSTRACT) {
-            if (toProcess.length) {
-                throw new SyntaxError('The abstract class ' + CLASS_NAME + ' has root elements');
-            }
-        } else {
-            if (toProcess.length != 1) {
-                throw new SyntaxError('The class ' + CLASS_NAME + ' is empty or contains more than one root element');
-            }
-        }
-        toProcess = [toProcess[0]];
-
-        var CLASS_ROOT_ELEM = toProcess[0];
-        var current;
-
-        // Remove template (class declaration) element
-        classTemplateElem.parentNode.removeChild(classTemplateElem);
+        let toProcess = [classMetadata.rootElem];
+        let current;
 
         while (current = toProcess.shift()) {
 
@@ -394,23 +101,41 @@ OOML.Namespace = function(namespace, settings) {
 
                 // Concat to prevent indexes from changing when removing inline event handler attributes
                 Utils.concat(current.attributes).forEach(function(attr) {
+
                     if (attr.name.indexOf('childon') === 0) {
-                        if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = Utils.createCleanObject();
-                        current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][attr.name.slice(7)] = Function('$self', 'dispatch', 'data', attr.nodeValue);
+
+                        let eventName = attr.name.slice(7);
+
+                        if (!current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
+                            current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = Utils.createCleanObject();
+                        } else if (current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName]) {
+                            throw new SyntaxError(`Another child "${ eventName }" event handler already exists`);
+                        }
+
+                        current[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'data', attr.value.trim());
                         current.removeAttributeNode(attr);
+
                     } else if (attr.name.indexOf('domon') === 0) {
-                        var eventName = attr.name.slice(5);
+
+                        let eventName = attr.name.slice(5);
+
                         if (!current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
                             current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = Utils.createCleanObject();
                         } else if (current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName]) {
-                            throw new SyntaxError('Another DOM ' + eventName + ' event handler already exists');
+                            throw new SyntaxError(`Another DOM "${ eventName }" event handler already exists`);
                         }
-                        current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'event', 'event.preventDefault();' + attr.nodeValue);
+
+                        current[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'event', 'event.preventDefault();' + attr.value.trim());
                         current.removeAttributeNode(attr);
+
                     } else if (attr.name.indexOf('on') === 0) {
+
                         throw new SyntaxError('Native DOM event handlers are not allowed');
+
                     } else {
+
                         toProcess.push(attr);
+
                     }
                 });
 
@@ -418,42 +143,69 @@ OOML.Namespace = function(namespace, settings) {
 
             } else if (current instanceof Text) {
 
-                var currentNode = current;
-                var indexOfOpeningBrace;
+                let currentNode = current;
+                let indexOfOpeningBrace;
 
                 while ((indexOfOpeningBrace = currentNode.nodeValue.indexOf('{')) > -1) {
                     // .splitText returns the new Text node that contains the REMAINING TEXT AFTER
                     currentNode = currentNode.splitText(indexOfOpeningBrace);
-                    var nodeValue = currentNode.nodeValue;
+                    let nodeValue = currentNode.nodeValue;
 
                     // currentNode.nodeValue is now one of:
                     // "{{ this.propName }}"
                     // "{ for ClassName of this.propName }"
                     // "{ ClassName this.propName }"
                     // Therefore the index of the closing brace can't be less than 3
-                    var indexOfClosingBrace = nodeValue.indexOf('}');
+                    let indexOfClosingBrace = nodeValue.indexOf('}');
                     if (indexOfClosingBrace < 3) {
                         throw new SyntaxError('Matching closing brace not found');
                     }
                     // Remove first opening and all closing braces:
                     // "{{ this.propName }}"         becomes "{ this.propName "
                     // "{ ClassName this.propName }" becomes " ClassName this.propName "
-                    var code = nodeValue.slice(1, indexOfClosingBrace);
+                    let code = nodeValue.slice(1, indexOfClosingBrace);
 
-                    var regexpMatches;
+                    let regexpMatches;
                     if (code[0] == '{') {
                         // NOTE: There is some repetition of the following logic
                         //       and logic in PROCESS_PROPERTY_DECLARATION
                         regexpMatches = /^\{(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(.+?) $/.exec(code);
                         if (!regexpMatches || !regexpMatches[2]) {
-                            throw new SyntaxError('Invalid property declaration at `' + code + '`');
+                            throw new SyntaxError(`Invalid property declaration at "${ code }"`);
                         }
 
-                        var propName = regexpMatches[2];
-                        PROCESS_PROPERTY_DECLARATION(regexpMatches[1] || null, propName);
-                        CLASS_PROPERTIES_NAMES.add(propName);
+                        let propName = regexpMatches[2];
 
-                        var textSubstitutionNode = currentNode;
+                        if (!Utils.isValidPropertyName(propName, settings.strictPropertyNames)) {
+                            throw new SyntaxError(`"${ propName }" is not a valid property name`);
+                        }
+
+                        let types = regexpMatches[1] || undefined;
+                        if (types) {
+                            if (classMetadata.properties[propName].types) {
+                                if (classMetadata.properties[propName].types.join('|') !== types) {
+                                    throw new SyntaxError(`The types for the property "${ propName }" have already been declared`);
+                                }
+                            }
+                            types = types.split('|').filter((type, idx, types) => {
+                                if (OOML_PROPERTY_TYPE_DECLARATIONS.indexOf(type) == -1) {
+                                    throw new SyntaxError(`Invalid type declaration "${ type }" for property "${ propName }"`);
+                                }
+                                if (types.indexOf(type) !== idx) {
+                                    throw new SyntaxError(`Duplicate type "${ type }" in type declaration for property "${ propName }"`);
+                                }
+                                return true;
+                            });
+                        }
+
+                        if (!classMetadata.properties[propName]) {
+                            classMetadata.properties[propName] = {
+                                types: types,
+                                value: undefined,
+                            };
+                        }
+
+                        let textSubstitutionNode = currentNode;
                         currentNode = currentNode.splitText(indexOfClosingBrace + 2);
 
                         textSubstitutionNode[OOML_NODE_PROPNAME_TEXTFORMAT] = [''];
@@ -463,63 +215,65 @@ OOML.Namespace = function(namespace, settings) {
                     } else {
                         regexpMatches = /^ (?:for ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)) of|((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+))) this\.([a-zA-Z0-9_]+) $/.exec(code);
                         if (!regexpMatches || !regexpMatches[3] || (!regexpMatches[1] && !regexpMatches[2])) {
-                            throw new SyntaxError('Invalid element substitution at `' + code + '`');
+                            throw new SyntaxError(`Invalid element substitution at "${ code }"`);
                         }
 
-                        var toRemove = currentNode;
-                        var elemSubstitutionCommentNode = document.createComment('');
+                        let toRemove = currentNode;
+                        let elemSubstitutionCommentNode = document.createComment('');
                         currentNode = currentNode.splitText(indexOfClosingBrace + 1);
                         currentNode.parentNode.replaceChild(elemSubstitutionCommentNode, toRemove);
 
-                        var elemConstructorName = regexpMatches[1] || regexpMatches[2];
-                        var propName = regexpMatches[3];
-                        var isArraySubstitution = !!regexpMatches[1];
+                        let elemConstructorName = regexpMatches[1] || regexpMatches[2];
+                        let propName = regexpMatches[3];
+                        let isArraySubstitution = !!regexpMatches[1];
 
                         // The property can be predefined but not already in use
                         // NOTE: It's not possible for more than one element substitution of the same property
-                        if (CLASS_PROPERTIES_NAMES.has(propName) && CLASS_PREDEFINED_PROPERTIES_VALUES[propName] === undefined) {
-                            throw new SyntaxError('The property ' + propName + ' is already defined');
+                        // NOTE: Predefined properties always have a non-undefined value,
+                        //       and other properties always have their value to be undefined
+                        if (classMetadata.properties[propName] && classMetadata.properties[propName].value === undefined) {
+                            throw new SyntaxError(`The property "${ propName }" is already defined`);
                         }
-                        CLASS_PROPERTIES_NAMES.add(propName);
 
-                        var elemConstructor =
+                        let elemConstructor =
                             elemConstructorName == 'HTMLElement' ? HTMLElement :
                                 elemConstructorName == 'OOML.Element' ? OOML.Element :
-                                    GET_OOML_CLASS(elemConstructorName);
+                                    getClassFromString(elemConstructorName);
 
-                        if (isArraySubstitution) {
-                            CLASS_ARRAY_PROPERTIES_NAMES.add(propName);
-                        } else {
-                            CLASS_ELEM_PROPERTIES_NAMES.add(propName);
-                        }
-
-                        elemSubstitutionCommentNode[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = {
-                            elemConstructor: elemConstructor,
-                            propName: propName,
-                            isArray: isArraySubstitution
+                        classMetadata.properties[propName] = {
+                            types: [elemConstructor],
+                            isArray: isArraySubstitution,
+                            value: undefined,
                         };
+
+                        elemSubstitutionCommentNode[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = propName;
                     }
                 }
 
             } else if (current instanceof Attr) {
 
-                var nodeValue = current.nodeValue;
+                let nodeValue = current.nodeValue;
 
                 if (nodeValue.indexOf('{{') > -1) {
-                    var paramsData = Utils.splitStringByParamholders(nodeValue);
+                    let paramsData = Utils.splitStringByParamholders(nodeValue);
                     current[OOML_NODE_PROPNAME_TEXTFORMAT] = paramsData.parts;
                     current[OOML_NODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
 
-                    Object.keys(paramsData.map).forEach(function(fullPropName) { // Use Object.keys to avoid scope issues
-                        CLASS_PROPERTIES_NAMES.add(fullPropName);
+                    Object.keys(paramsData.map).forEach(function(propName) { // Use Object.keys to avoid scope issues
+                        if (!classMetadata.properties[propName]) {
+                            classMetadata.properties[propName] = {
+                                types: undefined,
+                                value: undefined,
+                            };
+                        }
                     });
                 }
             }
         }
 
-        classes[CLASS_NAME] = function(initState) {
-            if (CLASS_IS_ABSTRACT) {
-                throw new SyntaxError('Unable to construct new instance; ' + CLASS_NAME + ' is an abstract class');
+        classes[className] = function(initState) {
+            if (classMetadata.isAbstract) {
+                throw new SyntaxError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
             }
 
             var instance = this,

@@ -11,7 +11,7 @@ var Utils = {
             }
         },
         hasAncestorNamespace: function(rootElem) {
-            var toCheck = rootElem;
+            let toCheck = rootElem;
             while (toCheck) {
                 if (toCheck[OOML_DOM_PROPNAME_ISNAMESPACE]) {
                     return true;
@@ -21,22 +21,373 @@ var Utils = {
             return false;
         },
     },
+    iterate: function(iterable, iteratorFunction) {
+        for (let item of iterable) {
+            if (iteratorFunction(item) === false) {
+                break;
+            }
+        }
+    },
+    parseTypeDeclaration: function(types) {
+        return types.split('|').filter((type, idx, types) => {
+            if (OOMLPropertyTypes.indexOf(type) == -1) {
+                throw new SyntaxError(`Invalid type declaration "${ type }"`);
+            }
+            if (types.indexOf(type) !== idx) {
+                throw new SyntaxError(`Duplicate type "${ type }" in type declaration`);
+            }
+
+            // There can only be one number type
+            // If current type is a number type and there exists another number type...
+            if (OOMLPropertyNumberTypes.indexOf(type) > -1 && types.some((t, i) => i != idx && OOMLPropertyNumberTypes.indexOf(t) > -1)) {
+                throw new SyntaxError(`Illegal type declaration "${ type }"`);
+            }
+            return true;
+        });
+    },
+    preprocessClassDeclaration: function(templateElem, strictPropertyNames) {
+        let className, classIsAbstract, classExtends;
+        for (let attribute of templateElem.attributes) {
+            switch (attribute.name) {
+                case 'ooml-class':
+                case 'ooml-abstract-class':
+                    if (className) {
+                        throw new SyntaxError(`Duplicate class declaration attribute`);
+                    }
+
+                    let classDeclarationParts = /^([a-zA-Z]+)(?: extends ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)))?$/.exec(attribute.value);
+                    if (!classDeclarationParts) {
+                        throw new SyntaxError(`Malformed attribute value for attribute "${ attribute.name }": "${ attribute.value }"`);
+                    }
+
+                    className = classDeclarationParts[1];
+                    classIsAbstract = attribute.name.indexOf('abstract') > -1;
+                    classExtends = classDeclarationParts[2] || undefined;
+                    break;
+
+                default:
+                    throw new SyntaxError(`Unrecognised "${ attribute.name }" attribute on class declaration`);
+            }
+        }
+
+        // Get all nodes in template to process
+        let classRootElem = OOMLCompatTemplateExists ?
+            templateElem.content :
+            templateElem;
+
+        let classMetadata = {
+            name: className,
+            isAbstract: classIsAbstract,
+            extends: classExtends,
+
+            attributes: Utils.createCleanObject(),
+            properties: Utils.createCleanObject(),
+            methods: Utils.createCleanObject(),
+
+            constructor: undefined,
+            rootElem: undefined,
+        };
+
+        Utils.iterate(classRootElem.childNodes, function(node) {
+
+            if (node instanceof Comment) {
+                return;
+            }
+            if (node instanceof Text) {
+                if (node.textContent.trim()) {
+                    throw new SyntaxError(`Illegal text node in class declaration`);
+                }
+                return;
+            }
+            if (!(node instanceof Element)) {
+                throw new SyntaxError(`Illegal node in class declaration`);
+            }
+
+            if (classMetadata.rootElem) {
+                throw new SyntaxError(`The class "${ classMetadata.name }" has more than one root element`);
+            }
+
+            if (classMetadata.isAbstract) {
+                throw new SyntaxError(`The abstract class "${ classMetadata.name }" has a root element`);
+            }
+
+            switch (node.nodeName) {
+                case 'OOML-ATTRIBUTE':
+
+                    let attrName = node.getAttribute('name');
+                    if (!/^[a-z]+([A-Z][a-z]*)*$/.test(attrName)) {
+                        throw new SyntaxError(`The attribute name "${ attrName }" is invalid`);
+                    }
+
+                    if (classMetadata.attributes[attrName]) {
+                        throw new SyntaxError(`The attribute "${ attrName }" is already defined`);
+                    }
+
+                    let attrValue = Utils.getEvalValue(node.textContent);
+                    if (!Utils.isPrimitiveValue(attrValue)) {
+                        throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
+                    }
+
+                    classMetadata.attributes[attrName] = {
+                        value: attrValue,
+                    };
+
+                    break;
+
+                case 'OOML-PROPERTY':
+
+                    let propName = node.getAttribute('name');
+                    let propTypes = node.getAttribute('type') || undefined;
+
+                    if (!Utils.isValidPropertyName(propName, strictPropertyNames)) {
+                        throw new SyntaxError(`The property name "${ propName }" is invalid`);
+                    }
+
+                    if (classMetadata.properties[propName]) {
+                        throw new SyntaxError(`The property "${ propName }" is already defined`);
+                    }
+
+                    if (propTypes) {
+                        propTypes = Utils.parseTypeDeclaration(propTypes);
+                    }
+
+                    let propValue = Utils.getEvalValue(node.textContent);
+                    if (!Utils.isPrimitiveValue(propValue)) {
+                        throw new TypeError(`The value for the property "${ propName }" is invalid`);
+                    }
+
+                    classMetadata.properties[propName] = {
+                        types: propTypes,
+                        value: propValue,
+                    };
+
+                    break;
+
+                case 'OOML-METHOD':
+
+                    let methodName = node.getAttribute('name');
+
+                    if (methodName == 'constructor') {
+                        if (classMetadata.constructor) {
+                            throw new SyntaxError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
+                        }
+
+                        classMetadata.constructor = Utils.getEvalValue(node.textContent.trim());
+                        if (typeof classMetadata.constructor != 'function') {
+                            throw new TypeError(`The constructor method for the class "${ classMetadata.name }" is not a function`);
+                        }
+
+                        if (classMetadata.constructor.length > 1) {
+                            throw new SyntaxError(`The constructor method for the class "${ classMetadata.name }" has more than one argument`);
+                        }
+
+                        break;
+                    }
+
+                    if (!Utils.isValidPropertyName(methodName, strictPropertyNames)) {
+                        throw new SyntaxError(`The method name "${ methodName }" is invalid`);
+                    }
+
+                    if (classMetadata.methods[methodName]) {
+                        throw new SyntaxError(`The method "${ methodName }" is already defined`);
+                    }
+
+                    let methodMetadata = Utils.parseMethodFunction(node.textContent.trim(), methodName);
+
+                    let argNames = [];
+                    methodMetadata.args.forEach(function(arg) {
+                        if (arg.destructure) {
+                            if (arg.name) {
+                                argNames.push(arg.name);
+                            }
+                            arg.properties.forEach(function(prop) {
+                                argNames.push(prop.name);
+                            });
+                        } else {
+                            argNames.push(arg.name);
+                        }
+                    });
+
+                    let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', methodMetadata.body]));
+
+                    let wrapperFunc = function self() {
+                        // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+                        // If arguments is length 1, manually construct, as Array constructor will interpret as length, not value
+                        let providedArguments = arguments.length == 1 ? [arguments[0]] : Array.apply(undefined, arguments);
+                        let providedArgument;
+
+                        // WARNING: Won't clone nested objects and arrays, so don't mutate those
+                        let definedArguments = methodMetadata.args.slice();
+                        let arg;
+                        let argIdx = -1;
+
+                        let providedArgumentsUsedCount = 0;
+                        let lftArgVals = [];
+                        let rgtArgVals = [];
+
+                        let processingDirectionLtr = true;
+                        let collectArg;
+                        let collectArgIdx;
+
+                        while (arg = definedArguments[processingDirectionLtr ? 'shift' : 'pop']()) {
+
+                            argIdx += processingDirectionLtr ? 1 : -1;
+
+                            if (arg.collect) {
+                                collectArg = arg;
+                                collectArgIdx = argIdx;
+                                argIdx = 0;
+                                processingDirectionLtr = false;
+                                continue;
+                            }
+
+                            let argumentProvided = providedArguments.hasOwnProperty(processingDirectionLtr ? 0 : (providedArguments.length - 1));
+                            providedArgument = providedArguments[processingDirectionLtr ? 'shift' : 'pop']();
+                            let pushTo = processingDirectionLtr ? lftArgVals : rgtArgVals;
+
+                            let providedArgumentIsOmittedDestructure = false;
+
+                            if (providedArgument === undefined) {
+                                if (!arg.optional) {
+                                    throw new TypeError('Argument ' + argIdx + ' must be provided');
+                                }
+
+                                // This will be undefined if there is no default value
+                                providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
+
+                                if (!argumentProvided) {
+                                    // The only way an element in providedArguments isn't defined
+                                    // is if not all expected arguments are provided; therefore,
+                                    // these not defined (NOT set to undefined) elements will be
+                                    // at the end of the array.
+                                    providedArgumentsUsedCount--;
+                                }
+
+                                if (arg.destructure) {
+                                    providedArgumentIsOmittedDestructure = true;
+                                }
+                            } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
+                                throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
+                            }
+
+                            if (arg.destructure) {
+                                if (arg.name) {
+                                    pushTo.push(providedArgument);
+                                }
+                                arg.properties.forEach(function (prop, propIdx) {
+                                    let propKey;
+                                    let providedProperty;
+
+                                    if (providedArgumentIsOmittedDestructure) {
+                                        // If destructuring argument is optional and was not provided,
+                                        // then all containing properties are also optional
+                                        providedProperty = undefined;
+                                    } else if (arg.type == 'object') {
+                                        providedProperty = providedArgument[prop.name];
+                                        propKey = prop.name;
+                                    } else { // arg.type is 'array' or 'Array' or 'OOML.Array'
+                                        propKey = propIdx;
+                                        // NOTE: Don't need to check if type matches defined array type,
+                                        // as previous Utils.isType call already did
+                                        if (providedArgument instanceof OOML.Array) {
+                                            providedProperty = providedArgument.get(propIdx);
+                                        } else if (Utils.isArrayLike(providedArgument)) {
+                                            providedProperty = providedArgument[propIdx];
+                                        } else {
+                                            throw new TypeError('Unrecognised array argument provided')
+                                        }
+                                    }
+
+                                    if (providedProperty === undefined) {
+                                        // All containing properties are optional
+                                        // if the destructuring argument is optional
+                                        // regardless of invididual property settings
+                                        if (!providedArgumentIsOmittedDestructure && !prop.optional) {
+                                            throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' must be provided');
+                                        }
+                                        // This will be undefined if there is no default value
+                                        providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
+                                    } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
+                                        throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);
+                                    }
+
+                                    pushTo.push(providedProperty);
+                                });
+                            } else {
+                                pushTo.push(providedArgument);
+                            }
+                            providedArgumentsUsedCount++;
+                        }
+
+                        if (collectArg) {
+                            let collectedVals = [];
+                            providedArguments.forEach(function(providedArgument, offset) {
+                                let argIdx = collectArgIdx + offset;
+
+                                if (collectArg.type && !Utils.isType(collectArg.type, providedArgument)) {
+                                    throw new TypeError('Argument ' + argIdx + ' should be of type ' + collectArg.type);
+                                }
+
+                                providedArgumentsUsedCount++;
+
+                                collectedVals.push(providedArgument);
+                            });
+                            if (!collectedVals.length && !collectArg.optional) {
+                                throw new TypeError('No arguments were provided to a collecting argument');
+                            }
+                            lftArgVals.push(collectedVals);
+                        }
+
+                        if (providedArgumentsUsedCount !== arguments.length) { // Don't use providedArguments as that has been mutated
+                            throw new TypeError('Too many arguments provided');
+                        }
+
+                        let parentMethod = CLASS_PARENT_CLASS.prototype[methodName];
+                        parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
+
+                        let argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [
+                            self, parentMethod, undefined
+                        ]);
+                        return realFunc.apply(this, argVals);
+                    };
+
+                    classMetadata.methods[methodName] = {
+                        fn: wrapperFunc,
+                    };
+
+                    break;
+
+                default:
+                    classMetadata.rootElem = node;
+            }
+        });
+
+        if (!classMetadata.rootElem && !classMetadata.isAbstract) {
+            throw new SyntaxError(`The class "${ classMetadata.name }" does not have a root element`);
+        }
+
+        if (templateElem.parentNode) {
+            templateElem.parentNode.removeChild(templateElem);
+        }
+
+        return classMetadata;
+    },
     parseMethodFunction: function(funcdef, methodName) {
-        var regexpMatches = /^function *([a-zA-Z_][a-zA-Z0-9_]+)?\s*\(/.exec(funcdef);
+        let regexpMatches = /^function *([a-zA-Z_][a-zA-Z0-9_]+)?\s*\(/.exec(funcdef);
         if (!regexpMatches) {
             throw new SyntaxError('Invalid function declaration for method `' + methodName + '`');
         }
 
-        var funcName = regexpMatches[1];
+        let funcName = regexpMatches[1];
         if (funcName) {
             throw new SyntaxError('Function names are not supported for method functions; call the `self` function in the body to do recursion');
         }
 
-        var toProcess = funcdef.slice(regexpMatches[0].length).trim();
-        var destructuringMode = false;
-        var effectiveArgNames = new StringSet();
-        var args = [];
-        var collectArgsCount = 0;
+        let toProcess = funcdef.slice(regexpMatches[0].length).trim();
+        let destructuringMode = false;
+        let effectiveArgNames = new StringSet();
+        let args = [];
+        let collectArgsCount = 0;
 
         while (true) {
             if (toProcess[0] == ',') {
@@ -63,13 +414,13 @@ var Utils = {
                 }
             }
 
-            var temp;
+            let temp;
             if (temp = /^(\?)?([\{\[])/.exec(toProcess)) {
                 if (destructuringMode) {
                     throw new SyntaxError('Nested destructuring is not allowed');
                 }
                 destructuringMode = true;
-                var isOptional = temp[1] == '?';
+                let isOptional = temp[1] == '?';
                 args.push({
                     destructure: true,
                     type: temp[2] == '{' ? 'object' : 'array',
@@ -81,32 +432,32 @@ var Utils = {
                 continue;
             }
 
-            var argmatches = /^([a-zA-Z.]+ )?(\?)?(\.\.\.)?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
+            let argmatches = /^([a-zA-Z.]+ )?(\?)?(\.\.\.)?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
             if (!argmatches) {
                 throw new SyntaxError('Unrecognised function argument declaration');
             }
             argmatches = argmatches.map(function(val) {
-                var trimmed = val ? val.trim() : null;
+                let trimmed = val ? val.trim() : null;
                 return trimmed || null; // In case string was originally only whitespace
             });
             toProcess = toProcess.slice(argmatches[0].length).trim();
 
-            var matchedType = argmatches[1] || undefined;
-            var matchedOptionalOperator = argmatches[2];
-            var matchedCollectOperator = argmatches[3];
-            var matchedArgname = argmatches[4];
-            var matchedEqualsSign = argmatches[5];
-            var matchedOpenBrace = argmatches[6];
+            let matchedType = argmatches[1] || undefined;
+            let matchedOptionalOperator = argmatches[2];
+            let matchedCollectOperator = argmatches[3];
+            let matchedArgname = argmatches[4];
+            let matchedEqualsSign = argmatches[5];
+            let matchedOpenBrace = argmatches[6];
 
             if (effectiveArgNames.has(matchedArgname)) {
                 throw new SyntaxError('Argument name `' + matchedArgname + '` has already been used');
             }
-            // NOTE: Obviously list not complete, but hopefully the rest should be obvious...
-            if (['self', 'parent', 'arguments', 'super', 'this', 'class'].indexOf(matchedArgname) > -1) {
+
+            if (OOMLReservedFnArgNames.indexOf(matchedArgname) > -1) {
                 throw new SyntaxError('Argument name `' + matchedArgname + '` is a reserved keyword');
             }
 
-            if (matchedType && OOML_FUNCTION_ARGUMENT_TYPE_DECLARATIONS.indexOf(matchedType) == -1) {
+            if (matchedType && OOMLFnArgTypes.indexOf(matchedType) == -1) {
                 throw new SyntaxError('Unrecognised argument type `' + matchedType + '`');
             }
 
@@ -154,11 +505,11 @@ var Utils = {
                 }
             }
 
-            var defaultValue = undefined;
+            let defaultValue = undefined;
             if (matchedEqualsSign) {
-                var booleanMatch;
-                var dateConstructorMatch;
-                var digitsMatch;
+                let booleanMatch;
+                let dateConstructorMatch;
+                let digitsMatch;
 
                 if (toProcess.indexOf('null') == 0) {
                     toProcess = toProcess.slice(4);
@@ -199,9 +550,9 @@ var Utils = {
                 }
 
                 else if (toProcess[0] == '"' || toProcess[0] == "'") {
-                    var parseFlagStringEscape = false;
-                    var parseFlagStringEndChar = toProcess[0];
-                    var ended = false;
+                    let parseFlagStringEscape = false;
+                    let parseFlagStringEndChar = toProcess[0];
+                    let ended = false;
                     toProcess = toProcess.slice(1);
                     defaultValue = '';
                     while (!ended) {
@@ -235,7 +586,7 @@ var Utils = {
 
                             default:
                                 if (parseFlagStringEscape) {
-                                    var escapeMatches = /^(u([a-fA-F0-9]{4}|\{[a-fA-F0-9]+\})|x[a-fA-F0-9]{2})/.exec(toProcess);
+                                    let escapeMatches = /^(u([a-fA-F0-9]{4}|\{[a-fA-F0-9]+\})|x[a-fA-F0-9]{2})/.exec(toProcess);
                                     if (escapeMatches) {
                                         defaultValue += eval('"\\' + escapeMatches[0] + '"');
                                         toProcess = toProcess.slice(escapeMatches[0].length - 1); // Leave last character to be sliced by outer .slice call
@@ -266,7 +617,7 @@ var Utils = {
                 }
             }
 
-            var pushTo = destructuringMode ? args[args.length - 1].properties : args;
+            let pushTo = destructuringMode ? args[args.length - 1].properties : args;
             pushTo.push({
                 type: matchedType,
                 name: matchedArgname,
@@ -282,7 +633,7 @@ var Utils = {
             throw new SyntaxError('Function body braces are missing');
         }
 
-        var funcBody = toProcess.slice(1, -1).trim();
+        let funcBody = toProcess.slice(1, -1).trim();
 
         return {
             args: args,
@@ -297,7 +648,7 @@ var Utils = {
             !(name[0] == '_' && name[1] == '_') &&
             // Starting or trailing whitespace
             !/^\s|\s$/.test(name) &&
-            OOML_ELEMENT_RESERVED_PROPERTY_NAMES.indexOf(name) == -1 &&
+            OOMLReservedPropertyNames.indexOf(name) == -1 &&
             (!strictMode || /^[a-z][a-zA-Z0-9_]*$/.test(name))
         ;
     },
@@ -311,13 +662,13 @@ var Utils = {
         return Function('return ' + codeStr)();
     },
     concat: function() {
-        var ret;
+        let ret;
 
         if (Utils.isObjectLiteral(arguments[0])) {
             ret = Utils.createCleanObject();
-            for (var i = 0; i < arguments.length; i++) {
-                var obj = arguments[i];
-                if (obj) {
+            for (let i = 0; i < arguments.length; i++) {
+                let obj = arguments[i];
+                if (Utils.isObjectLiteral(obj)) {
                     Object.keys(obj).forEach(function(prop) {
                         ret[prop] = obj[prop];
                     });
@@ -327,7 +678,7 @@ var Utils = {
             // WARNING: Don't use .concat as that doesn't work with array-like objects
             // e.g. [].concat(NodeList(div, span)) becomes [NodeList], not [div, span]
             ret = Array.prototype.slice.call(arguments[0]);
-            for (var i = 1; i < arguments.length; i++) {
+            for (let i = 1; i < arguments.length; i++) {
                 if (arguments[i] && arguments[i].length) {
                     Array.prototype.push.apply(ret, arguments[i]);
                 }
@@ -336,8 +687,8 @@ var Utils = {
         return ret;
     },
     pushAll: function() {
-        var arr = arguments[0];
-        for (var i = 1; i < arguments.length; i++) {
+        let arr = arguments[0];
+        for (let i = 1; i < arguments.length; i++) {
             Array.prototype.push.apply(arr, arguments[i]);
         }
     },
@@ -357,7 +708,7 @@ var Utils = {
             return false;
         }
 
-        var length = obj.length;
+        let length = obj.length;
         if (!Utils.isType('natural', length)) {
             return false;
         }
@@ -366,18 +717,18 @@ var Utils = {
             return false;
         }
 
-        var descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), 'length');
+        let descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), 'length');
         if (!descriptor || !descriptor.get || descriptor.set) {
             return false;
         }
 
         return true;
     },
-    isOOMLClass: function(klass) {
-        return klass.prototype instanceof OOML.Element.prototype;
+    isOOMLClass: function(c) {
+        return c.prototype instanceof OOML.Element.prototype;
     },
     isPrimitiveValue: function(val) {
-        return OOML_PRIMITIVE_TYPES.some(function(type) { return Utils.isType(type, val) });
+        return OOMLPrimitiveTypes.some(type => Utils.isType(type, val));
     },
     isObjectLiteral: function(obj) {
         // Use typeof as .getPrototypeOf can't be used with non-objects
@@ -428,24 +779,6 @@ var Utils = {
                 throw new Error('Unrecognised type for checking against');
         }
     },
-    /* OVERRIDE: NOT IN USE but keep notes
-    arraysHaveSameElems: function(arr1, arr2) {
-        /*
-            Returns true if both arrays contain:
-                - the same elements
-                - the same amount of times
-                - not necessarily in the same order
-
-            Cases to consider before judging and chaning this code:
-                - arr1 = ['foo', 'foo', 'bar']; arr2 = ['foo', 'bar'];
-                - arr1 = [1, 1, 2, 3]; arr2 = [1, 2, 3, 3]; arr1.length == arr2.length
-                - arr1 = [2, 3, 1, Node]; arr2 = [1, 3, Node, 2]; These should be "the same"
-         *
-        return arr1.every(function(matchingCount, elem) {
-            return arr2.indexOf(elem) > -1;
-        }) && arr1.length === arr2.length;
-    },
-    */
     createCleanObject: function() {
         return Object.create(null);
     },
@@ -461,24 +794,24 @@ var Utils = {
         return new elemConstructor(obj);
     },
     splitStringByParamholders: function(str) {
-        var strParts = [],
+        let strParts = [],
             paramMap = Utils.createCleanObject();
 
         while (true) {
-            var posOfOpeningBraces = str.indexOf('{{');
+            let posOfOpeningBraces = str.indexOf('{{');
             if (posOfOpeningBraces < 0) {
                 if (str) strParts.push(str);
                 break;
             }
-            var strBeforeParam = str.slice(0, posOfOpeningBraces);
+            let strBeforeParam = str.slice(0, posOfOpeningBraces);
             if (strBeforeParam) strParts.push(strBeforeParam);
             str = str.slice(posOfOpeningBraces + 2);
 
-            var posOfClosingBraces = str.indexOf('}}');
+            let posOfClosingBraces = str.indexOf('}}');
             if (posOfClosingBraces < 0) {
                 throw new SyntaxError('Unexpected end of input; expected closing text parameter braces');
             }
-            var param = str.slice(0, posOfClosingBraces).trim().slice(5); // Remove "this."
+            let param = str.slice(0, posOfClosingBraces).trim().slice(5); // Remove "this."
             // Assume param is a well-formatted JS property name
             if (!paramMap[param]) paramMap[param] = [];
             paramMap[param].push(strParts.length);
@@ -494,7 +827,7 @@ var Utils = {
     },
     cloneElemForInstantiation: function cloneElemForInstantiation(rootElem) {
 
-        var clonedElem;
+        let clonedElem;
 
         if (rootElem instanceof Element) {
 
@@ -507,9 +840,9 @@ var Utils = {
                 clonedElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]; // Don't clone; keep reference to original function
             }
 
-            for (var i = 0; i < rootElem.attributes.length; i++) {
-                var rootAttr = rootElem.attributes[i];
-                var clonedAttr = document.createAttribute(rootAttr.name);
+            for (let i = 0; i < rootElem.attributes.length; i++) {
+                let rootAttr = rootElem.attributes[i];
+                let clonedAttr = document.createAttribute(rootAttr.name);
                 clonedAttr.nodeValue = rootAttr.nodeValue;
 
                 if (rootAttr[OOML_NODE_PROPNAME_TEXTFORMAT]) {
@@ -522,8 +855,8 @@ var Utils = {
                 clonedElem.setAttributeNode(clonedAttr);
             }
 
-            for (var i = 0; i < rootElem.childNodes.length; i++) {
-                var clonedChild = cloneElemForInstantiation(rootElem.childNodes[i]);
+            for (let i = 0; i < rootElem.childNodes.length; i++) {
+                let clonedChild = cloneElemForInstantiation(rootElem.childNodes[i]);
                 if (clonedChild) {
                     clonedElem.appendChild(clonedChild);
                 }

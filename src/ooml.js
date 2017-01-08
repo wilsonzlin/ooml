@@ -30,11 +30,14 @@
         };
 
     // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods or properties may use these
-    var OOML_ELEMENT_RESERVED_PROPERTY_NAMES = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'attributes'];
+    var OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'attributes'];
+    // NOTE: Obviously list not complete, but hopefully the rest should be obvious...
+    var OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'class'];
 
-    var OOML_PRIMITIVE_TYPES = ['Date', 'null', 'Array', 'number', 'boolean', 'string'];
-    var OOML_PROPERTY_TYPE_DECLARATIONS = ['Date', 'null', 'Array', 'number', 'natural', 'integer', 'float', 'boolean', 'string'];
-    var OOML_FUNCTION_ARGUMENT_TYPE_DECLARATIONS = Utils.concat(OOML_PROPERTY_TYPE_DECLARATIONS, ['object', 'function', 'array', 'OOML.Array', 'OOML.Element']);
+    var OOMLPrimitiveTypes = ['Date', 'null', 'Array', 'number', 'boolean', 'string'];
+    var OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
+    var OOMLPropertyTypes = Utils.concat(['Date', 'null', 'Array' 'boolean', 'string'], OOMLPropertyNumberTypes);
+    var OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['object', 'function', 'array', 'OOML.Array', 'OOML.Element']);
 
     var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
         OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
@@ -73,7 +76,7 @@
                 throw new SyntaxError('Invalid import class');
             }
             if (OOMLGlobalImports[importName]) {
-                throw new SyntaxError('The class `' + importName + '` has already been imported');
+                throw new SyntaxError(`The class "${ importName }" has already been imported`);
             }
             OOMLGlobalImports[importName] = importClass;
         } else {
