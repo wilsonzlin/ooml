@@ -92,14 +92,14 @@ let Utils = {
             rootElem: undefined,
         };
 
-        for (let _ = 0; _ < templateContent.childNodes.length; _++) {
-            let node = templateContent.childNodes[_];
+        for (let i = 0; i < templateContent.childNodes.length; i++) {
+            let node = templateContent.childNodes[i];
 
             if (node instanceof Comment) {
                 continue;
             }
             if (node instanceof Text) {
-                if (node.textContent.trim()) {
+                if (/\S/.test(node.textContent)) {
                     throw new SyntaxError(`Illegal text node in class declaration`);
                 }
                 continue;
@@ -753,6 +753,7 @@ let Utils = {
     isObjectLiteral: function(obj) {
         // typeof null == 'object'
         // Use typeof as .getPrototypeOf can't be used with non-objects
+        // Object.create(null) is NOT instanceof Object, so don't use instanceof
         return !!obj && typeof obj == 'object' && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
     },
     isType: function(type, value) {
