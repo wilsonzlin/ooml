@@ -1,4 +1,4 @@
-var Utils = {
+let Utils = {
     DOM: {
         find: function(rootElem, sel) {
             return Utils.concat(rootElem.querySelectorAll(sel));
@@ -348,7 +348,7 @@ var Utils = {
                             throw new TypeError('Too many arguments provided');
                         }
 
-                        let parentMethod = CLASS_PARENT_CLASS.prototype[methodName];
+                        let parentMethod = Object.getPrototypeOf(Object.getPrototypeOf(this))[methodName];
                         parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
 
                         let argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [

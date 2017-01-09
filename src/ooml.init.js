@@ -25,27 +25,47 @@ OOML.Namespace = function(namespace, settings) {
 
     namespace[OOML_DOM_PROPNAME_ISNAMESPACE] = true;
 
-    settings = Utils.concat({
-        imports: Utils.createCleanObject(),
-        strictPropertyNames: true,
-    }, settings);
-
-    if (!Utils.isObjectLiteral(settings.imports)) {
-        throw new TypeError(`Invalid namespace imports`);
-    }
-
     let imports = Utils.concat(OOMLGlobalImports);
-    Object.keys(settings.imports).forEach(importName => {
-        let importClass = settings.imports[importName];
-        if (!Utils.isOOMLClass(importClass)) {
-            throw new TypeError(`The value for the import "${ importName }" is not an OOML class`);
-        }
-        imports[importName] = importClass;
-    });
+    let settingStrictPropertyNames = true;
 
-    if (typeof settings.strictPropertyNames != 'boolean') {
-        throw new TypeError(`Invalid setting value for "strictPropertyNames"`);
-    }
+    Object.keys(settings).forEach(settingName => {
+        let settingValue = settings[settingName];
+
+        if (settingValue === undefined) {
+            return;
+        }
+
+        switch (settingName) {
+            case 'imports':
+
+                if (!Utils.isObjectLiteral(settingValue)) {
+                    throw new TypeError(`Invalid namespace imports`);
+                }
+
+                Object.keys(settingValue).forEach(importName => {
+                    let importClass = settings.imports[importName];
+                    if (!Utils.isOOMLClass(importClass)) {
+                        throw new TypeError(`The value for the import "${ importName }" is not an OOML class`);
+                    }
+                    imports[importName] = importClass;
+                });
+
+                break;
+
+            case 'strictPropertyNames':
+
+                if (typeof settingValue != 'boolean') {
+                    throw new TypeError(`Invalid setting value for "strictPropertyNames"`);
+                }
+
+                settingStrictPropertyNames = settingValue;
+
+                break;
+
+            default:
+                throw new ReferenceError(`"${ settingName }" is not a setting`);
+        }
+    });
 
     let classes = Utils.createCleanObject();
     let objects = Utils.createCleanObject();
@@ -98,7 +118,7 @@ OOML.Namespace = function(namespace, settings) {
 
 
         */
-        let classMetadata = Utils.preprocessClassDeclaration(classTemplateElem, settings.strictPropertyNames);
+        let classMetadata = Utils.preprocessClassDeclaration(classTemplateElem, settingStrictPropertyNames);
 
         let className = classMetadata.name;
         if (classes[className]) {
@@ -223,7 +243,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         let propName = regexpMatches[2];
 
-                        if (!Utils.isValidPropertyName(propName, settings.strictPropertyNames)) {
+                        if (!Utils.isValidPropertyName(propName, settingStrictPropertyNames)) {
                             throw new SyntaxError(`"${ propName }" is not a valid property name`);
                         }
 
@@ -504,7 +524,7 @@ OOML.Namespace = function(namespace, settings) {
                     let parent = instanceIsAttachedTo.parent;
 
                     if (parent instanceof OOML.Array) {
-                        var indexOfThis = parent.indexOf(this);
+                        let indexOfThis = parent.indexOf(this);
                         if (indexOfThis < 0) {
                             throw new Error(`This instance could not be found on its parent array`);
                         }
@@ -571,7 +591,7 @@ OOML.Namespace = function(namespace, settings) {
                             throw new TypeError(`Invalid value provided to element property`);
                         }
 
-                        var elemDetails = instanceProperties[prop];
+                        let elemDetails = instanceProperties[prop];
 
                         // Attach first to ensure that element is attachable
                         if (newVal != null) {
