@@ -43,17 +43,17 @@ if (!DEBUG) {
 }
 
 zc({
-	src: SRC_DIR,
-	dst: DST_DIR,
+    src: SRC_DIR,
+    dst: DST_DIR,
 
-	minifyJS: !DEBUG,
-	files: ['ooml.js'],
+    minifyJS: !DEBUG,
+    files: ['ooml.js'],
 
     onloadfile: (code, extension, path) => {
-	    if (DEBUG) {
-	        return code;
+        if (DEBUG) {
+            return code;
         }
-	    return babel.transform(code, { presets: ['latest'] }).code;
+        return babel.transform(code, { presets: ['latest'] }).code;
     },
 });
 
