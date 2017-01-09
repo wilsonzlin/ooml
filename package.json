@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/lerouche/ooml#readme",
   "devDependencies": {
+    "babel-core": "*",
+    "babel-preset-latest": "*",
     "fs-extra": "*",
     "zcompile": "*"
   }

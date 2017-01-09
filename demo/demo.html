@@ -130,12 +130,9 @@
     </main>
 
     <script>
-        var TextEditor = OOML.init({
-            namespace: '#texteditor-package'
-        });
+        var TextEditor = new OOML.Namespace('#texteditor-package');
 
-        var ooml = OOML.init({
-            namespace: 'main',
+        var ooml = new OOML.Namespace('main', {
             imports: {
                 TextEditor: TextEditor.classes.TextEditor,
             },
@@ -143,6 +140,7 @@
 
         var wilson = ooml.objects.wilson;
         wilson.assign({
+            age: 42,
             username: "appropriateUsername",
             lastUpdated: new Date(2016, 9, 3, 7, 1, 1),
             birthday: new Date(1931, 4, 5).toDateString(),

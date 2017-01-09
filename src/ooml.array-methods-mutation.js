@@ -11,11 +11,11 @@ OOMLArrayProto.initialize = function(arr) {
     });
 
     this[OOML_ARRAY_PROPNAME_INTERNALARRAY].forEach(function(elemToDetach) {
-        elemToDetach[OOML_ELEMENT_PROPNAME_DETACH]();
+        elemToDetach[OOML_INSTANCE_PROPNAME_DETACH]();
     });
     arr.reduce(function(previousElem, elemToAttach) {
-        elemToAttach[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: previousElem, parent: that });
-        return elemToAttach[OOML_ELEMENT_PROPNAME_DOMELEM];
+        elemToAttach[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: previousElem, parent: that });
+        return elemToAttach[OOML_INSTANCE_PROPNAME_DOMELEM];
     }, insertAfter);
 
     this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = arr;
@@ -28,7 +28,7 @@ OOMLArrayProto.pop = function() {
 
     var instanceToDetach = arr.pop();
     if (instanceToDetach) {
-        instanceToDetach[OOML_ELEMENT_PROPNAME_DETACH]();
+        instanceToDetach[OOML_INSTANCE_PROPNAME_DETACH]();
     }
 
     return instanceToDetach;
@@ -36,11 +36,11 @@ OOMLArrayProto.pop = function() {
 
 OOMLArrayProto.push = function(newVal) {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
-        insertAfter = arr[arr.length - 1] ? arr[arr.length - 1][OOML_ELEMENT_PROPNAME_DOMELEM] : this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
+        insertAfter = arr[arr.length - 1] ? arr[arr.length - 1][OOML_INSTANCE_PROPNAME_DOMELEM] : this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
     var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
     var newElem = Utils.constructElement(elemConstructor, newVal);
-    newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: insertAfter, parent: this });
+    newElem[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: insertAfter, parent: this });
 
     arr.push(newElem);
 
@@ -49,10 +49,10 @@ OOMLArrayProto.push = function(newVal) {
 
 OOMLArrayProto.reverse = function() {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
-        lastElem = arr[arr.length - 1][OOML_ELEMENT_PROPNAME_DOMELEM];
+        lastElem = arr[arr.length - 1][OOML_INSTANCE_PROPNAME_DOMELEM];
 
     for (var i = 0; i < this.length - 1; i++) {
-        var node = arr[i][OOML_ELEMENT_PROPNAME_DOMELEM];
+        var node = arr[i][OOML_INSTANCE_PROPNAME_DOMELEM];
         node.parentNode.insertBefore(node, lastElem.nextSibling);
     }
 
@@ -66,7 +66,7 @@ OOMLArrayProto.shift = function() {
 
     var instanceToDetach = arr.shift();
     if (instanceToDetach) {
-        instanceToDetach[OOML_ELEMENT_PROPNAME_DETACH]();
+        instanceToDetach[OOML_INSTANCE_PROPNAME_DETACH]();
     }
 
     return instanceToDetach;
@@ -91,8 +91,8 @@ OOMLArrayProto.sort = function(propName, ascending) {
     var insertAfter = this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
     sorted.reduce(function(previousElem, elem) {
-        previousElem.parentNode.insertBefore(elem[OOML_ELEMENT_PROPNAME_DOMELEM], previousElem.nextSibling);
-        return elem[OOML_ELEMENT_PROPNAME_DOMELEM];
+        previousElem.parentNode.insertBefore(elem[OOML_INSTANCE_PROPNAME_DOMELEM], previousElem.nextSibling);
+        return elem[OOML_INSTANCE_PROPNAME_DOMELEM];
     }, insertAfter);
 
     this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = sorted;
@@ -109,7 +109,7 @@ OOMLArrayProto.splice = function(start, deleteCount) {
     var spliced = Array.prototype.splice.apply(arr, arguments);
     spliced.forEach(function(elem) {
         if (elem) {
-            elem[OOML_ELEMENT_PROPNAME_DETACH]();
+            elem[OOML_INSTANCE_PROPNAME_DETACH]();
         }
     });
 
@@ -122,7 +122,7 @@ OOMLArrayProto.unshift = function(newVal) {
 
     var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
     var newElem = Utils.constructElement(elemConstructor, newVal);
-    newElem[OOML_ELEMENT_PROPNAME_ATTACH]({ insertAfter: insertAfter, parent: this });
+    newElem[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: insertAfter, parent: this });
 
     arr.unshift(newElem);
 

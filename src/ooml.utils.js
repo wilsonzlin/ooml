@@ -21,13 +21,6 @@ var Utils = {
             return false;
         },
     },
-    iterate: function(iterable, iteratorFunction) {
-        for (let item of iterable) {
-            if (iteratorFunction(item) === false) {
-                break;
-            }
-        }
-    },
     parseTypeDeclaration: function(types) {
         return types.split('|').filter((type, idx, types) => {
             if (OOMLPropertyTypes.indexOf(type) == -1) {
@@ -45,9 +38,20 @@ var Utils = {
             return true;
         });
     },
+    deepFreeze: function(obj) {
+        Object.freeze(obj);
+        Object.keys(obj).forEach(key => {
+            let val = obj[key];
+            if (Utils.isObjectLiteral(val)) {
+                Utils.deepFreeze(val);
+            }
+        });
+        return obj;
+    },
     preprocessClassDeclaration: function(templateElem, strictPropertyNames) {
         let className, classIsAbstract, classExtends;
-        for (let attribute of templateElem.attributes) {
+        for (let i = 0; i < templateElem.attributes.length; i++) {
+            let attribute = templateElem.attributes[i];
             switch (attribute.name) {
                 case 'ooml-class':
                 case 'ooml-abstract-class':
@@ -71,7 +75,7 @@ var Utils = {
         }
 
         // Get all nodes in template to process
-        let classRootElem = OOMLCompatTemplateExists ?
+        let templateContent = OOMLCompatTemplateExists ?
             templateElem.content :
             templateElem;
 
@@ -88,16 +92,17 @@ var Utils = {
             rootElem: undefined,
         };
 
-        Utils.iterate(classRootElem.childNodes, function(node) {
+        for (let _ = 0; _ < templateContent.childNodes.length; _++) {
+            let node = templateContent.childNodes[_];
 
             if (node instanceof Comment) {
-                return;
+                continue;
             }
             if (node instanceof Text) {
                 if (node.textContent.trim()) {
                     throw new SyntaxError(`Illegal text node in class declaration`);
                 }
-                return;
+                continue;
             }
             if (!(node instanceof Element)) {
                 throw new SyntaxError(`Illegal node in class declaration`);
@@ -159,6 +164,7 @@ var Utils = {
                     classMetadata.properties[propName] = {
                         types: propTypes,
                         value: propValue,
+                        isArray: false,
                     };
 
                     break;
@@ -360,7 +366,7 @@ var Utils = {
                 default:
                     classMetadata.rootElem = node;
             }
-        });
+        }
 
         if (!classMetadata.rootElem && !classMetadata.isAbstract) {
             throw new SyntaxError(`The class "${ classMetadata.name }" does not have a root element`);
@@ -415,7 +421,7 @@ var Utils = {
             }
 
             let temp;
-            if (temp = /^(\?)?([\{\[])/.exec(toProcess)) {
+            if (temp = /^(\?)?([{[])/.exec(toProcess)) {
                 if (destructuringMode) {
                     throw new SyntaxError('Nested destructuring is not allowed');
                 }
@@ -661,6 +667,20 @@ var Utils = {
         codeStr = codeStr.trim() || undefined;
         return Function('return ' + codeStr)();
     },
+    clone: function(obj) {
+        let cloned;
+        if (Utils.isObjectLiteral(obj)) {
+            cloned = Utils.createCleanObject();
+            Object.keys(obj).forEach(key => {
+                cloned[key] = Utils.clone(obj[key]);
+            });
+        } else if (Array.isArray(obj)) {
+            cloned = obj.map(item => Utils.clone(item));
+        } else {
+            cloned = obj;
+        }
+        return cloned;
+    },
     concat: function() {
         let ret;
 
@@ -725,14 +745,15 @@ var Utils = {
         return true;
     },
     isOOMLClass: function(c) {
-        return c.prototype instanceof OOML.Element.prototype;
+        return c.prototype instanceof OOML.Element;
     },
     isPrimitiveValue: function(val) {
         return OOMLPrimitiveTypes.some(type => Utils.isType(type, val));
     },
     isObjectLiteral: function(obj) {
+        // typeof null == 'object'
         // Use typeof as .getPrototypeOf can't be used with non-objects
-        return typeof obj == 'object' && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
+        return !!obj && typeof obj == 'object' && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
     },
     isType: function(type, value) {
         switch (type) {
@@ -824,63 +845,5 @@ var Utils = {
             parts: strParts,
             map: paramMap,
         };
-    },
-    cloneElemForInstantiation: function cloneElemForInstantiation(rootElem) {
-
-        let clonedElem;
-
-        if (rootElem instanceof Element) {
-
-            clonedElem = document.createElement(rootElem.nodeName);
-
-            if (rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]) {
-                clonedElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_GENERICEVENTHANDLERS]; // Don't clone; keep reference to original function
-            }
-            if (rootElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]) {
-                clonedElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS] = rootElem[OOML_NODE_PROPNAME_CHILDEVENTHANDLERS]; // Don't clone; keep reference to original function
-            }
-
-            for (let i = 0; i < rootElem.attributes.length; i++) {
-                let rootAttr = rootElem.attributes[i];
-                let clonedAttr = document.createAttribute(rootAttr.name);
-                clonedAttr.nodeValue = rootAttr.nodeValue;
-
-                if (rootAttr[OOML_NODE_PROPNAME_TEXTFORMAT]) {
-                    clonedAttr[OOML_NODE_PROPNAME_TEXTFORMAT] = rootAttr[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
-                }
-                if (rootAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
-                    clonedAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP] = rootAttr[OOML_NODE_PROPNAME_FORMATPARAMMAP]; // Probably don't need to clone as it will never be mutilated
-                }
-
-                clonedElem.setAttributeNode(clonedAttr);
-            }
-
-            for (let i = 0; i < rootElem.childNodes.length; i++) {
-                let clonedChild = cloneElemForInstantiation(rootElem.childNodes[i]);
-                if (clonedChild) {
-                    clonedElem.appendChild(clonedChild);
-                }
-            }
-
-        } else if (rootElem instanceof Text) {
-
-            clonedElem = document.createTextNode(rootElem.nodeValue);
-            if (rootElem[OOML_NODE_PROPNAME_TEXTFORMAT]) {
-                clonedElem[OOML_NODE_PROPNAME_TEXTFORMAT] = rootElem[OOML_NODE_PROPNAME_TEXTFORMAT].slice();
-            }
-            if (rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]) {
-                clonedElem[OOML_NODE_PROPNAME_FORMATPARAMMAP] = rootElem[OOML_NODE_PROPNAME_FORMATPARAMMAP]; // Probably don't need to clone as it will never be mutilated
-            }
-
-        } else if (rootElem instanceof Comment) {
-
-            clonedElem = document.createComment(rootElem.nodeValue);
-            if (rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]) {
-                clonedElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG] = rootElem[OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG]; // Probably don't need to clone as it will never be mutilated
-            }
-
-        }
-
-        return clonedElem;
     },
 };

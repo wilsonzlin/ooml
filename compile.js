@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const zc = require('zcompile');
+const babel = require('babel-core');
 
 const ARGS = process.argv.slice(2);
 const DST_ARG = ARGS.find(arg => /^\-o=.+$/.test(arg));
@@ -47,6 +48,13 @@ zc({
 
 	minifyJS: !DEBUG,
 	files: ['ooml.js'],
+
+    onloadfile: (code, extension, path) => {
+	    if (DEBUG) {
+	        return code;
+        }
+	    return babel.transform(code, { presets: ['latest'] }).code;
+    },
 });
 
 if (!DEBUG) {

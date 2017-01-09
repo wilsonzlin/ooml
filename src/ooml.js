@@ -19,14 +19,23 @@
     var OOMLNodesWithUnwrittenChanges = new NodeSet(),
         OOMLWriteChangesSetTimeout,
         OOMLWriteChanges = function() {
-            if (OOMLWriteChangesSetTimeout) clearTimeout(OOMLWriteChangesSetTimeout);
-            OOMLWriteChangesSetTimeout = setTimeout(function() {
-                OOMLNodesWithUnwrittenChanges.forEach(function(node) {
-                    node.nodeValue = node[OOML_NODE_PROPNAME_TEXTFORMAT].join('');
+
+            if (!OOMLNodesWithUnwrittenChanges.size) {
+                return;
+            }
+
+            if (OOMLWriteChangesSetTimeout) {
+                clearTimeout(OOMLWriteChangesSetTimeout);
+            }
+
+            OOMLWriteChangesSetTimeout = setTimeout(() => {
+                OOMLNodesWithUnwrittenChanges.forEach(node => {
+                    node.nodeValue = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT].join('');
                 });
 
                 OOMLNodesWithUnwrittenChanges.clear();
             }, 50);
+
         };
 
     // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods or properties may use these
@@ -36,30 +45,33 @@
 
     var OOMLPrimitiveTypes = ['Date', 'null', 'Array', 'number', 'boolean', 'string'];
     var OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
-    var OOMLPropertyTypes = Utils.concat(['Date', 'null', 'Array' 'boolean', 'string'], OOMLPropertyNumberTypes);
+    var OOMLPropertyTypes = Utils.concat(['Date', 'null', 'Array', 'boolean', 'string'], OOMLPropertyNumberTypes);
     var OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['object', 'function', 'array', 'OOML.Array', 'OOML.Element']);
 
     var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
         OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
         OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
 
-        OOML_NODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
-        OOML_NODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
-        OOML_NODE_PROPNAME_GENERICEVENTHANDLERS = '__oomlGenericEventHandlers',
-        OOML_NODE_PROPNAME_CHILDEVENTHANDLERS = '__oomlChildEventHandlers',
-        OOML_NODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
-        OOML_NODE_PROPNAME_ELEMSUBSTITUTIONCONFIG = '__oomlIsElemPropertyPlaceholder',
+        OOML_ATTRNODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
+        OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
+
+        OOML_ELEMENTNODE_PROPNAME_GENERICEVENTHANDLERS = '__oomlGenericEventHandlers',
+        OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS = '__oomlChildEventHandlers',
+        OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
+
+        OOML_COMMENTNODE_PROPNAME_BINDEDPROPERTY = '__oomlIsElemPropertyPlaceholder',
+
+        OOML_TEXTNODE_PROPNAME_BINDEDPROPERTY = '__oomlBindedProperty',
 
         OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace',
 
-        OOML_ELEMENT_PROPNAME_DOMELEM = '__oomlDomElem',
-        OOML_ELEMENT_PROPNAME_ATTACH = '__oomlAttach',
-        OOML_ELEMENT_PROPNAME_DETACH = '__oomlDetach',
-        OOML_ELEMENT_PROPNAME_DETACHOWNELEMPROPELEM = '__oomlDetachElemPropElem',
+        OOML_INSTANCE_PROPNAME_DOMELEM = '__oomlDomElem',
+        OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach',
+        OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach',
 
+        OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
         OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes',
         OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
-        OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
         OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
 
     var OOML = {};
