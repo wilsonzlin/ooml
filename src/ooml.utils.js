@@ -517,7 +517,7 @@ let Utils = {
                 let dateConstructorMatch;
                 let digitsMatch;
 
-                if (toProcess.indexOf('null') == 0) {
+                if (/^null/.test(toProcess)) {
                     toProcess = toProcess.slice(4);
                     defaultValue = null;
                 } else if (matchedType == 'null') {

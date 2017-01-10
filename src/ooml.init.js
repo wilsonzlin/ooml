@@ -367,7 +367,8 @@ OOML.Namespace = function(namespace, settings) {
                 instanceProperties[propertyName].nodes = new NodeSet(); // Use NodeSet as attributes may be binded to the same property more than once
             });
 
-            var processClassDom = function(node) {
+            let instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
+            let instanceDom = (function processClassDom(node) {
 
                 let cloned;
 
@@ -453,16 +454,10 @@ OOML.Namespace = function(namespace, settings) {
                 }
 
                 return cloned;
-            };
-
-            let instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
-            let instanceDom = processClassDom(classRootElem);
+            })(classRootElem);
 
             let instanceAttributes = Utils.clone(classAttributes);
             let instanceAttributesInterface = Utils.createCleanObject();
-
-            console.log(classElementProperties, classArrayProperties);
-            console.log(instanceProperties);
 
             Object.keys(instanceAttributes).forEach(attrName => {
                 // Set initial attribute value
@@ -611,7 +606,6 @@ OOML.Namespace = function(namespace, settings) {
 
                     setter = function(newVal) {
                         if (!Utils.isPrimitiveValue(newVal)) {
-                            console.log(prop, newVal);
                             throw new TypeError(`Cannot set new property value; unrecognised type`);
                         }
 
