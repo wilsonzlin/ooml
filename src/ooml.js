@@ -30,7 +30,7 @@
 
             OOMLWriteChangesSetTimeout = setTimeout(() => {
                 OOMLNodesWithUnwrittenChanges.forEach(node => {
-                    node.nodeValue = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT].join('');
+                    node.value = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT].join('');
                 });
 
                 OOMLNodesWithUnwrittenChanges.clear();
@@ -38,7 +38,7 @@
 
         };
 
-    // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods or properties may use these
+    // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
     var OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'attributes'];
     // NOTE: Obviously list not complete, but hopefully the rest should be obvious...
     var OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'class'];

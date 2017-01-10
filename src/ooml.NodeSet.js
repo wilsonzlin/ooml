@@ -4,9 +4,16 @@ var NODESET_PROPNAME_AUTOINCREMENT = '__nodeSetAutoIncrement';
 var NODESET_PROPNAME_INTERNALARRAY = '__nodeSetInternalArray';
 var NodeSetCount = 0; // Start from zero so falsey checks won't false positive
 var NodeSet = function() {
-    this[NODESET_PROPNAME_NODESETID] = ++NodeSetCount;
-    this[NODESET_PROPNAME_AUTOINCREMENT] = 0; // Start from zero so falsey checks won't false positive
-    this[NODESET_PROPNAME_INTERNALARRAY] = [];
+    var _this = this;
+
+    _this[NODESET_PROPNAME_NODESETID] = ++NodeSetCount;
+    _this[NODESET_PROPNAME_AUTOINCREMENT] = 0; // Start from zero so falsey checks won't false positive
+    _this[NODESET_PROPNAME_INTERNALARRAY] = [];
+
+
+    Object.defineProperty(_this, 'size', {
+        get: function() { return _this[NODESET_PROPNAME_INTERNALARRAY].length },
+    });
 };
 var NodeSetProto = NodeSet.prototype;
 NodeSetProto.add = function(node) {

@@ -10,6 +10,19 @@ let Utils = {
                 domElem.setAttribute('data-' + Utils.toDashCase(key), value);
             }
         },
+        // COMPATIBILITY: IE 9 doesn't create empty text node if the offset is equal to the length
+        splitText: function(textNode, offset) {
+            if (offset < textNode.data.length) {
+                return textNode.splitText(offset);
+            }
+
+            let newTextNode = textNode.ownerDocument.createTextNode('');
+            // WARNING: Useless empty text node must be returned, otherwise IE 9 breaks
+            if (textNode.parentNode) {
+                textNode.parentNode.appendChild(newTextNode);
+            }
+            return newTextNode;
+        },
         hasAncestorNamespace: function(rootElem) {
             let toCheck = rootElem;
             while (toCheck) {
@@ -99,7 +112,7 @@ let Utils = {
                 continue;
             }
             if (node instanceof Text) {
-                if (/\S/.test(node.textContent)) {
+                if (/\S/.test(node.data)) {
                     throw new SyntaxError(`Illegal text node in class declaration`);
                 }
                 continue;
@@ -110,10 +123,6 @@ let Utils = {
 
             if (classMetadata.rootElem) {
                 throw new SyntaxError(`The class "${ classMetadata.name }" has more than one root element`);
-            }
-
-            if (classMetadata.isAbstract) {
-                throw new SyntaxError(`The abstract class "${ classMetadata.name }" has a root element`);
             }
 
             switch (node.nodeName) {
@@ -370,6 +379,10 @@ let Utils = {
 
         if (!classMetadata.rootElem && !classMetadata.isAbstract) {
             throw new SyntaxError(`The class "${ classMetadata.name }" does not have a root element`);
+        }
+
+        if (classMetadata.rootElem && classMetadata.isAbstract) {
+            throw new SyntaxError(`The abstract class "${ classMetadata.name }" has a root element`);
         }
 
         if (templateElem.parentNode) {

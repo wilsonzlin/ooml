@@ -96,7 +96,7 @@
                     Password
                     <input ooml-expose="newPassword" type="password" value="{{ this.password }}">
                 </label>
-                <button domonclick="alert('Password: ' + this.$newPassword.value);">Submit</button>
+                <button domonclick="dispatch('passwordChange', { password: this.$newPassword.value });">Submit</button>
                 <br>
                 <a href="/profiles/{{ this.userId }}">Go to my profile</a>
                 <br>
@@ -159,6 +159,9 @@
             postMessage: {
                 value: "Send something to ya mates",
             },
+        });
+        wilson.on.dispatch('passwordChange', function(e) {
+            alert(e.data.password);
         });
     </script>
 </body>

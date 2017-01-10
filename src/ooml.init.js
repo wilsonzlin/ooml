@@ -4,9 +4,9 @@ OOML.Namespace = function(namespace, settings) {
         throw new SyntaxError(`OOML.Namespace must be constructed`);
     }
 
-    namespace = namespace || document.body;
-
-    if (typeof namespace == 'string') {
+    if (namespace === undefined) {
+        namespace = document.body;
+    } else if (typeof namespace == 'string') {
         namespace = namespace.trim();
         if (namespace[0] == '<') {
             let domParser = document.createElement('div');
@@ -24,6 +24,12 @@ OOML.Namespace = function(namespace, settings) {
     }
 
     namespace[OOML_DOM_PROPNAME_ISNAMESPACE] = true;
+
+    if (settings === undefined) {
+        settings = {};
+    } else if (!Utils.isObjectLiteral(settings)) {
+        throw new TypeError(`Invalid settings object`);
+    }
 
     let imports = Utils.concat(OOMLGlobalImports);
     let settingStrictPropertyNames = true;
@@ -215,10 +221,10 @@ OOML.Namespace = function(namespace, settings) {
                 let currentNode = current;
                 let indexOfOpeningBrace;
 
-                while ((indexOfOpeningBrace = currentNode.nodeValue.indexOf('{')) > -1) {
+                while ((indexOfOpeningBrace = currentNode.data.indexOf('{')) > -1) {
                     // .splitText returns the new Text node that contains the REMAINING TEXT AFTER
-                    currentNode = currentNode.splitText(indexOfOpeningBrace);
-                    let nodeValue = currentNode.nodeValue;
+                    currentNode = Utils.DOM.splitText(currentNode, indexOfOpeningBrace);
+                    let nodeValue = currentNode.data;
 
                     // currentNode.nodeValue is now one of:
                     // "{{ this.propName }}"
@@ -269,7 +275,7 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         let textSubstitutionNode = currentNode;
-                        currentNode = currentNode.splitText(indexOfClosingBrace + 2);
+                        currentNode = Utils.DOM.splitText(currentNode, indexOfClosingBrace + 2);
 
                         textSubstitutionNode[OOML_TEXTNODE_PROPNAME_BINDEDPROPERTY] = propName;
 
@@ -281,7 +287,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         let toRemove = currentNode;
                         let elemSubstitutionCommentNode = document.createComment('');
-                        currentNode = currentNode.splitText(indexOfClosingBrace + 1);
+                        currentNode = Utils.DOM.splitText(currentNode, indexOfClosingBrace + 1);
                         currentNode.parentNode.replaceChild(elemSubstitutionCommentNode, toRemove);
 
                         let elemConstructorName = regexpMatches[1] || regexpMatches[2];
@@ -325,7 +331,7 @@ OOML.Namespace = function(namespace, settings) {
 
             } else if (current instanceof Attr) {
 
-                let nodeValue = current.nodeValue;
+                let nodeValue = current.value;
 
                 if (nodeValue.indexOf('{{') > -1) {
                     let paramsData = Utils.splitStringByParamholders(nodeValue);
@@ -356,9 +362,28 @@ OOML.Namespace = function(namespace, settings) {
             let instanceIsAttachedTo;
 
             function dispatchEventToParent(eventName, eventData) {
-                if (instanceDom.parentNode && instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] && instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName]) {
+
+                let prevented = false;
+
+                if (instanceEventHandlers.dispatch[eventName]) {
+                    instanceEventHandlers.dispatch[eventName].forEach(handler => {
+                        let eventObject = {
+                            preventDefault: () => { prevented = true },
+                            data: eventData,
+                        };
+
+                        let returnValue = handler.call(instance, eventObject);
+
+                        if (returnValue === false) {
+                            prevented = true;
+                        }
+                    });
+                }
+
+                if (!prevented && instanceDom.parentNode && instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] && instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName]) {
                     instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName](eventData);
                 }
+
             }
 
             let instanceProperties = Utils.clone(classProperties);
@@ -366,6 +391,11 @@ OOML.Namespace = function(namespace, settings) {
                 instanceProperties[propertyName].insertAfter = undefined;
                 instanceProperties[propertyName].nodes = new NodeSet(); // Use NodeSet as attributes may be binded to the same property more than once
             });
+
+            let instanceEventHandlers = {
+                mutation: Utils.createCleanObject(),
+                dispatch: Utils.createCleanObject(),
+            };
 
             let instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
             let instanceDom = (function processClassDom(node) {
@@ -416,7 +446,7 @@ OOML.Namespace = function(namespace, settings) {
 
                 } else if (node instanceof Text) {
 
-                    cloned = document.createTextNode(node.nodeValue);
+                    cloned = document.createTextNode(node.data);
 
                     if (node[OOML_TEXTNODE_PROPNAME_BINDEDPROPERTY]) {
                         let propertyName = node[OOML_TEXTNODE_PROPNAME_BINDEDPROPERTY];
@@ -426,7 +456,7 @@ OOML.Namespace = function(namespace, settings) {
                 } else if (node instanceof Attr) {
 
                     cloned = document.createAttribute(node.name);
-                    cloned.nodeValue = node.nodeValue;
+                    cloned.value = node.value;
 
                     if (node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT]) {
                         cloned[OOML_ATTRNODE_PROPNAME_TEXTFORMAT] = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT].slice();
@@ -438,7 +468,7 @@ OOML.Namespace = function(namespace, settings) {
 
                 } else if (node instanceof Comment) {
 
-                    cloned = document.createComment(node.nodeValue);
+                    cloned = document.createComment(node.data);
 
                     if (node[OOML_COMMENTNODE_PROPNAME_BINDEDPROPERTY]) {
 
@@ -509,6 +539,21 @@ OOML.Namespace = function(namespace, settings) {
                     });
                 },
                 get: () => instanceAttributesInterface,
+            };
+            propertiesGetterSetterFuncs.on = {
+                value: Object.defineProperties(Utils.createCleanObject(), Utils.concat.apply(undefined, Object.keys(instanceEventHandlers).map(eventType => {
+                    let ret = {};
+                    ret[eventType] = {
+                        value: (eventName, handler) => {
+                            if (!instanceEventHandlers[eventType][eventName]) {
+                                instanceEventHandlers[eventType][eventName] = [];
+                            }
+                            instanceEventHandlers[eventType][eventName].push(handler);
+                            return instance;
+                        },
+                    };
+                    return ret;
+                }))),
             };
             propertiesGetterSetterFuncs.detach = {
                 value: function() {
@@ -617,7 +662,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         instanceProperties[prop].nodes.forEach(node => {
                             if (node instanceof Text) {
-                                node.textContent = newVal;
+                                node.data = newVal;
                             } else { // Must be attribute
                                 let formatStr = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT];
                                 node[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP][prop].forEach(offset => {
@@ -629,7 +674,20 @@ OOML.Namespace = function(namespace, settings) {
 
                         OOMLWriteChanges();
 
+                        let oldVal = instanceProperties[prop].value;
                         instanceProperties[prop].value = newVal;
+
+                        if (instanceEventHandlers.mutation.propertyvaluechange) {
+                            instanceEventHandlers.mutation.propertyvaluechange.forEach(handler => {
+                                let eventObject = {
+                                    property: prop,
+                                    oldValue: oldVal,
+                                    newValue: newVal,
+                                };
+
+                                handler.call(instance, eventObject);
+                            });
+                        }
                     };
 
                 }

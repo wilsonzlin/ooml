@@ -29,7 +29,7 @@ if (!DEBUG) {
     fs.writeFileSync(SRC_DIR + 'ooml.utils.js', js_utils_minified);
 
     fs.readdirSync(SRC_DIR).forEach(file => {
-        let without_utils_obj = fs.readFileSync(SRC_DIR + file, 'utf8').replace(/Utils(\.[a-zA-Z]+)+/g, str => {
+        let without_utils_obj = fs.readFileSync(SRC_DIR + file, 'utf8').replace(/Utils(\.(?!apply)[a-zA-Z]+)+/g, str => {
             return str.replace(/\./g, '_');
         });
         fs.writeFileSync(SRC_DIR + file, without_utils_obj);
@@ -50,10 +50,13 @@ zc({
     files: ['ooml.js'],
 
     onloadfile: (code, extension, path) => {
-        if (DEBUG) {
-            return code;
-        }
-        return babel.transform(code, { presets: ['latest'] }).code;
+        return babel.transform(code, {
+            plugins: [
+                "transform-es2015-block-scoping",
+                "transform-es2015-arrow-functions",
+                "transform-es2015-template-literals",
+            ]
+        }).code;
     },
 });
 
