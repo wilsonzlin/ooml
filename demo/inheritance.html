@@ -144,9 +144,7 @@
     </main>
 
     <script>
-        var ooml = OOML.init({
-            rootElem: 'main',
-        });
+        var ooml = new OOML.Namespace('main');
 
         var app = ooml.objects.app;
         for (var className in ooml.classes) {

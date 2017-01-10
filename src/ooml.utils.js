@@ -361,7 +361,7 @@ let Utils = {
                         parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
 
                         let argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [
-                            self, parentMethod, undefined
+                            self.bind(this), parentMethod, undefined
                         ]);
                         return realFunc.apply(this, argVals);
                     };

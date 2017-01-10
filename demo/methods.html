@@ -30,7 +30,7 @@
                 parent();
                 console.log(prop1, prop2);
                 if (repeat) {
-                    self(false);
+                    self(undefined, false);
                 }
             }
         </ooml-method>
@@ -50,7 +50,7 @@
 </main>
 
 <script>
-    var ooml = OOML.init();
+    var ooml = new OOML.Namespace();
 
     for (var objectName in ooml.objects) {
         window[objectName] = ooml.objects[objectName];

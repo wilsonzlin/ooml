@@ -772,7 +772,7 @@ OOML.Namespace = function(namespace, settings) {
 
         // Set defined methods in class prototype
         for (var methodName in classMethods) {
-            classes[className].prototype[methodName] = classMethods[methodName];
+            classes[className].prototype[methodName] = classMethods[methodName].fn;
         }
     });
 
