@@ -12,7 +12,15 @@ OOMLElementProto.toObject = function() {
         } else if (value instanceof OOML.Element) {
             obj[propName] = value.toObject();
         } else {
-            obj[propName] = value;
+            let serialisedValue;
+
+            if ((value instanceof Date || Array.isArray(value)) && value.oomlSerialisationMethod) {
+                serialisedValue = value.oomlSerialisationMethod(value);
+            } else {
+                serialisedValue = value;
+            }
+
+            obj[propName] = serialisedValue;
         }
     });
 

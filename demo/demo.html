@@ -143,7 +143,7 @@
             age: 42,
             username: "appropriateUsername",
             lastUpdated: new Date(2016, 9, 3, 7, 1, 1),
-            birthday: new Date(1931, 4, 5).toDateString(),
+            birthday: Object.assign(new Date(1931, 4, 5), { oomlOutputMethod: function(d) { return d.toDateString(); } }),
             ethnicity: 'PCMaster',
             password: 'l33th4ck3r',
             contactedFriends: [

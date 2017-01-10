@@ -634,7 +634,7 @@ OOML.Namespace = function(namespace, settings) {
                         let elemDetails = instanceProperties[prop];
 
                         // Attach first to ensure that element is attachable
-                        if (newVal != null) {
+                        if (newVal !== null) {
                             newVal = Utils.constructElement(elemDetails.types[0], newVal);
                             newVal[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: elemDetails.insertAfter, parent: instance, property: prop });
                         }
@@ -661,12 +661,20 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         instanceProperties[prop].nodes.forEach(node => {
+                            let outputText;
+
+                            if ((newVal instanceof Date || Array.isArray(newVal)) && newVal.oomlOutputMethod) {
+                                outputText = newVal.oomlOutputMethod(newVal);
+                            } else {
+                                outputText = newVal;
+                            }
+
                             if (node instanceof Text) {
-                                node.data = newVal;
+                                node.data = outputText;
                             } else { // Must be attribute
                                 let formatStr = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT];
                                 node[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP][prop].forEach(offset => {
-                                    formatStr[offset] = newVal;
+                                    formatStr[offset] = outputText;
                                 });
                                 OOMLNodesWithUnwrittenChanges.add(node);
                             }
