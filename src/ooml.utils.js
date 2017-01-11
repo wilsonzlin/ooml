@@ -223,7 +223,7 @@ let Utils = {
                         }
                     });
 
-                    let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', `"use strict"; ${ methodMetadata.body }`]));
+                    let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', `"use strict"; ${ methodMetadata.body }`]));
 
                     let wrapperFunc = function self() {
                         // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
@@ -361,7 +361,7 @@ let Utils = {
                         parentMethod = parentMethod ? parentMethod.bind(this) : undefined;
 
                         let argVals = Utils.concat(lftArgVals, rgtArgVals.reverse(), [
-                            self.bind(this), parentMethod, undefined
+                            self.bind(this), parentMethod
                         ]);
                         return realFunc.apply(this, argVals);
                     };
