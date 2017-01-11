@@ -253,6 +253,14 @@ OOML.Namespace = function(namespace, settings) {
                             throw new SyntaxError(`"${ propName }" is not a valid property name`);
                         }
 
+                        if (classMethods[propName]) {
+                            throw new SyntaxError(`"${ propName }" already exists as a method`);
+                        }
+
+                        if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
+                            throw new SyntaxError(`The property "${ propName }" already exists as a element substitution`);
+                        }
+
                         let propAlreadyExists = !!classProperties[propName];
 
                         let types = regexpMatches[1] || undefined;
@@ -293,6 +301,10 @@ OOML.Namespace = function(namespace, settings) {
                         let elemConstructorName = regexpMatches[1] || regexpMatches[2];
                         let propName = regexpMatches[3];
                         let isArraySubstitution = !!regexpMatches[1];
+
+                        if (classMethods[propName]) {
+                            throw new SyntaxError(`"${ propName }" already exists as a method`);
+                        }
 
                         // The property can be predefined but not already in use
                         // NOTE: It's not possible for more than one element substitution of the same property
@@ -339,9 +351,19 @@ OOML.Namespace = function(namespace, settings) {
                     current[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP] = paramsData.map;
 
                     Object.keys(paramsData.map).forEach(propName => { // Use Object.keys to avoid scope issues
+
+                        if (classMethods[propName]) {
+                            throw new SyntaxError(`"${ propName }" already exists as a method`);
+                        }
+
+                        if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
+                            throw new SyntaxError(`The property "${ propName }" already exists as a element substitution`);
+                        }
+
                         if (!classProperties[propName]) {
                             classProperties[propName] = {
                                 types: undefined,
+                                isArray: false,
                                 value: undefined,
                             };
                         }
