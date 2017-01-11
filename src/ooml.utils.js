@@ -138,9 +138,12 @@ let Utils = {
                     }
 
                     let attrValue = Utils.getEvalValue(node.textContent);
+                    /*
+                    OVERRIDE: Attributes can contain any value
                     if (!Utils.isPrimitiveValue(attrValue)) {
                         throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
                     }
+                    */
 
                     classMetadata.attributes[attrName] = {
                         value: attrValue,

@@ -519,9 +519,12 @@ OOML.Namespace = function(namespace, settings) {
                 Object.defineProperty(instanceAttributesInterface, attrName, {
                     get: () => instanceAttributes[attrName].value,
                     set: newVal => {
+                        /*
+                        OVERRIDE: Attributes can contain any value
                         if (!Utils.isPrimitiveValue(newVal)) {
                             throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
                         }
+                        */
                         instanceAttributes[attrName].value = newVal;
                         Utils.DOM.setData(instanceDom, attrName, newVal);
                     },
