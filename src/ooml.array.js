@@ -27,7 +27,7 @@ OOML.Array = function(elementConstructor, insertAfterDomElem) {
                         if (typeof handler != 'function') {
                             throw new TypeError(`The mutation handler for the event "${ eventName }" is not a function`);
                         }
-                        _this[OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS].push(handler);
+                        _this[OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS].arraychange.push(handler);
                         break;
 
                     default:
