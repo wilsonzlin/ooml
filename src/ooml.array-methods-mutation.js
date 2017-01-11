@@ -1,7 +1,8 @@
 /*
     MUTATION
 */
-OOMLArrayProto.initialize = function(arr) {
+let OOMLArrayProtoMutation = Utils.createCleanObject();
+OOMLArrayProtoMutation.initialize = function(arr) {
     var elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR],
         insertAfter = this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM],
         that = this;
@@ -23,7 +24,7 @@ OOMLArrayProto.initialize = function(arr) {
     return this;
 };
 
-OOMLArrayProto.pop = function() {
+OOMLArrayProtoMutation.pop = function() {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
 
     var instanceToDetach = arr.pop();
@@ -34,7 +35,7 @@ OOMLArrayProto.pop = function() {
     return instanceToDetach;
 };
 
-OOMLArrayProto.push = function(newVal) {
+OOMLArrayProtoMutation.push = function(newVal) {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
         insertAfter = arr[arr.length - 1] ? arr[arr.length - 1][OOML_INSTANCE_PROPNAME_DOMELEM] : this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
@@ -47,7 +48,7 @@ OOMLArrayProto.push = function(newVal) {
     return this.length;
 };
 
-OOMLArrayProto.reverse = function() {
+OOMLArrayProtoMutation.reverse = function() {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
         lastElem = arr[arr.length - 1][OOML_INSTANCE_PROPNAME_DOMELEM];
 
@@ -61,7 +62,7 @@ OOMLArrayProto.reverse = function() {
     return this;
 };
 
-OOMLArrayProto.shift = function() {
+OOMLArrayProtoMutation.shift = function() {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
 
     var instanceToDetach = arr.shift();
@@ -72,7 +73,7 @@ OOMLArrayProto.shift = function() {
     return instanceToDetach;
 };
 
-OOMLArrayProto.sort = function(propName, ascending) {
+OOMLArrayProtoMutation.sort = function(propName, ascending) {
     if (ascending == undefined) {
         ascending = true;
     }
@@ -98,7 +99,7 @@ OOMLArrayProto.sort = function(propName, ascending) {
     this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = sorted;
 };
 
-OOMLArrayProto.splice = function(start, deleteCount) {
+OOMLArrayProtoMutation.splice = function(start, deleteCount) {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
         elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
 
@@ -116,7 +117,7 @@ OOMLArrayProto.splice = function(start, deleteCount) {
     return spliced;
 };
 
-OOMLArrayProto.unshift = function(newVal) {
+OOMLArrayProtoMutation.unshift = function(newVal) {
     var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
         insertAfter = this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
@@ -128,3 +129,12 @@ OOMLArrayProto.unshift = function(newVal) {
 
     return this.length;
 };
+for (let methodName in OOMLArrayProtoMutation) {
+    OOMLArrayProto[methodName] = function() {
+        let _this = this;
+        OOMLArrayProtoMutation[methodName].apply(_this, arguments);
+        _this[OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS].arraychange.forEach(handler => {
+            handler.call(_this);
+        });
+    };
+}

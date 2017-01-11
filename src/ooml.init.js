@@ -566,10 +566,13 @@ OOML.Namespace = function(namespace, settings) {
                 get: () => instanceAttributesInterface,
             };
             propertiesGetterSetterFuncs.on = {
-                value: Object.defineProperties(Utils.createCleanObject(), Utils.concat.apply(undefined, Object.keys(instanceEventHandlers).map(eventType => {
+                value: Object.freeze(Utils.concat.apply(undefined, Object.keys(instanceEventHandlers).map(eventType => {
                     let ret = Utils.createCleanObject();
                     ret[eventType] = {
                         value: (eventName, handler) => {
+                            if (typeof handler != 'function') {
+                                throw new TypeError(`The handler for the event "${ eventName }" of type "${ eventType }" is not a function`);
+                            }
                             if (!instanceEventHandlers[eventType][eventName]) {
                                 instanceEventHandlers[eventType][eventName] = [];
                             }

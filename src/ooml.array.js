@@ -12,8 +12,37 @@ OOML.Array = function(elementConstructor, insertAfterDomElem) {
     Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM, {
         value: insertAfterDomElem,
     });
+
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS, {
+        value: {
+            arraychange: [],
+        },
+    });
+
+    Object.defineProperty(_this, "on", {
+        value: Object.freeze({
+            mutation: function(eventName, handler) {
+                switch (eventName) {
+                    case 'arraychange':
+                        if (typeof handler != 'function') {
+                            throw new TypeError(`The mutation handler for the event "${ eventName }" is not a function`);
+                        }
+                        _this[OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS].push(handler);
+                        break;
+
+                    default:
+                        throw new SyntaxError(`Invalid mutation event name "${ eventName }"`);
+                }
+
+                return _this;
+            },
+        }),
+    });
+
     Object.defineProperty(_this, "length", {
         get: function() { return _this[OOML_ARRAY_PROPNAME_INTERNALARRAY].length; },
     });
+
+    Object.preventExtensions(_this);
 };
 var OOMLArrayProto = OOML.Array.prototype;

@@ -51,6 +51,7 @@
     var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
         OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
         OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
+        OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners',
 
         OOML_ATTRNODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
         OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
@@ -106,7 +107,7 @@
     };
 
     <ZC-IMPORT[array]>
-    <ZC-IMPORT[array-methods-getset]>
+    <ZC-IMPORT[array-methods-core]>
     <ZC-IMPORT[array-methods-mutation]>
     <ZC-IMPORT[array-methods-access]>
     <ZC-IMPORT[array-methods-iteration]>
