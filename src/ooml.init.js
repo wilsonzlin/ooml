@@ -530,7 +530,7 @@ OOML.Namespace = function(namespace, settings) {
             });
             Object.preventExtensions(instanceAttributesInterface);
 
-            let propertiesGetterSetterFuncs = {};
+            let propertiesGetterSetterFuncs = Utils.createCleanObject();
             propertiesGetterSetterFuncs.attributes = {
                 set: newObj => {
                     if (!Utils.isObjectLiteral(newObj)) {
@@ -564,7 +564,7 @@ OOML.Namespace = function(namespace, settings) {
             };
             propertiesGetterSetterFuncs.on = {
                 value: Object.defineProperties(Utils.createCleanObject(), Utils.concat.apply(undefined, Object.keys(instanceEventHandlers).map(eventType => {
-                    let ret = {};
+                    let ret = Utils.createCleanObject();
                     ret[eventType] = {
                         value: (eventName, handler) => {
                             if (!instanceEventHandlers[eventType][eventName]) {
@@ -738,6 +738,7 @@ OOML.Namespace = function(namespace, settings) {
 
             // Apply getters and setters for local properties
             Object.defineProperties(instance, propertiesGetterSetterFuncs);
+            Object.preventExtensions(instance);
 
             // Apply predefined property values
             for (let propName in classPredefinedProperties) {
