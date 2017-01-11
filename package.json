@@ -1,6 +1,6 @@
 {
   "name": "ooml",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "Object-orientated modern web UI anti-framework",
   "main": "dist/ooml.js",
   "repository": {
