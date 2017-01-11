@@ -187,7 +187,7 @@ OOML.Namespace = function(namespace, settings) {
                             throw new SyntaxError(`Another child "${ eventName }" event handler already exists`);
                         }
 
-                        current[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'data', attr.value.trim());
+                        current[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'data', `"use strict"; ${ attr.value.trim() }`);
                         current.removeAttributeNode(attr);
 
                     } else if (/^domon/.test(attr.name)) {
@@ -200,7 +200,7 @@ OOML.Namespace = function(namespace, settings) {
                             throw new SyntaxError(`Another DOM "${ eventName }" event handler already exists`);
                         }
 
-                        current[OOML_ELEMENTNODE_PROPNAME_GENERICEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'event', `event.preventDefault(); ${ attr.value.trim() }`);
+                        current[OOML_ELEMENTNODE_PROPNAME_GENERICEVENTHANDLERS][eventName] = Function('$self', 'dispatch', 'event', `"use strict"; event.preventDefault(); ${ attr.value.trim() }`);
                         current.removeAttributeNode(attr);
 
                     } else if (/^on/.test(attr.name)) {
@@ -771,7 +771,7 @@ OOML.Namespace = function(namespace, settings) {
         classes[className].prototype.constructor = classes[className];
 
         // Set defined methods in class prototype
-        for (var methodName in classMethods) {
+        for (let methodName in classMethods) {
             classes[className].prototype[methodName] = classMethods[methodName].fn;
         }
     });

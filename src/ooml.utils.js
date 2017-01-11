@@ -157,8 +157,8 @@ let Utils = {
                         throw new SyntaxError(`The property name "${ propName }" is invalid`);
                     }
 
-                    if (classMetadata.properties[propName]) {
-                        throw new SyntaxError(`The property "${ propName }" is already defined`);
+                    if (classMetadata.properties[propName] || classMetadata.methods[propName]) {
+                        throw new SyntaxError(`A property or method called "${ propName }" already exists`);
                     }
 
                     if (propTypes) {
@@ -203,8 +203,8 @@ let Utils = {
                         throw new SyntaxError(`The method name "${ methodName }" is invalid`);
                     }
 
-                    if (classMetadata.methods[methodName]) {
-                        throw new SyntaxError(`The method "${ methodName }" is already defined`);
+                    if (classMetadata.methods[methodName] || classMetadata.properties[methodName]) {
+                        throw new SyntaxError(`A method or property called "${ methodName }" already exists`);
                     }
 
                     let methodMetadata = Utils.parseMethodFunction(node.textContent.trim(), methodName);
@@ -223,7 +223,7 @@ let Utils = {
                         }
                     });
 
-                    let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', methodMetadata.body]));
+                    let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', 'arguments', `"use strict"; ${ methodMetadata.body }`]));
 
                     let wrapperFunc = function self() {
                         // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
