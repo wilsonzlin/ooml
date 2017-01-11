@@ -545,22 +545,14 @@ OOML.Namespace = function(namespace, settings) {
                     // Don't combine checking if attribute exists and setting it,
                     // as that may result in a half-state where some attributes
                     // are set and some aren't
-                    newObjKeys.forEach(propName => {
-                        if (!instanceAttributes[propName]) {
+                    newObjKeys.forEach(attrName => {
+                        if (!instanceAttributes[attrName]) {
                             throw new ReferenceError(`New attributes object provided has an unrecognised attribute "${ propName }"`);
                         }
                     });
 
-                    Object.keys(instanceAttributes).forEach(attrName => {
-                        if (!Object.getPrototypeOf(newObj) || newObj.hasOwnProperty(attrName)) {
-                            instanceAttributesInterface[attrName] = newObj[attrName];
-                        } else {
-                            instanceAttributesInterface[attrName] = null;
-                        }
-                    });
-
-                    newObjKeys.forEach(function(key) {
-                        instanceAttributesInterface[key] = newObj[key];
+                    newObjKeys.forEach(attrName => {
+                        instanceAttributesInterface[attrName] = newObj[attrName];
                     });
                 },
                 get: () => instanceAttributesInterface,
