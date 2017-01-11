@@ -1,18 +1,19 @@
 OOML.Array = function(elementConstructor, insertAfterDomElem) {
-    var internalArray = [];
+    var _this = this;
 
-    Object.defineProperty(this, OOML_ARRAY_PROPNAME_INTERNALARRAY, {
-        get: function() { return internalArray; },
-        set: function(newInternalArray) { internalArray = newInternalArray; }, // For .initialize(); NOTE: need to do get and set as otherwise internalArray variable is not updated (only OOML_ARRAY_PROPNAME_INTERNALARRAY property)
+    // Use defineProperty for properties to prevent enumeration
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INTERNALARRAY, {
+        value: [],
+        writable: true,
     });
-    Object.defineProperty(this, OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR, {
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR, {
         value: elementConstructor,
     });
-    Object.defineProperty(this, OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM, {
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM, {
         value: insertAfterDomElem,
     });
-    Object.defineProperty(this, "length", {
-        get: function() { return internalArray.length; },
+    Object.defineProperty(_this, "length", {
+        get: function() { return _this[OOML_ARRAY_PROPNAME_INTERNALARRAY].length; },
     });
 };
 var OOMLArrayProto = OOML.Array.prototype;
