@@ -129,7 +129,7 @@ let Utils = {
                 case 'OOML-ATTRIBUTE':
 
                     let attrName = node.getAttribute('name');
-                    if (!/^[a-z]+([A-Z][a-z]*)*$/.test(attrName)) {
+                    if (!Utils.isValidPropertyName(attrName)) {
                         throw new SyntaxError(`The attribute name "${ attrName }" is invalid`);
                     }
 
@@ -662,6 +662,9 @@ let Utils = {
             body: funcBody,
         };
     },
+    isValidAttributeName: function(name) {
+        return /^[a-z]+([A-Z][a-z]*)*$/.test(name);
+    },
     isValidPropertyName: function(name, strictMode) {
         return typeof name == 'string' &&
             !!name.length &&
@@ -837,10 +840,14 @@ let Utils = {
 
         while (true) {
             let posOfOpeningBraces = str.indexOf('{{');
+
             if (posOfOpeningBraces < 0) {
-                if (str) strParts.push(str);
+                if (str) {
+                    strParts.push(str);
+                }
                 break;
             }
+
             let strBeforeParam = str.slice(0, posOfOpeningBraces);
             if (strBeforeParam) strParts.push(strBeforeParam);
             str = str.slice(posOfOpeningBraces + 2);
@@ -849,9 +856,28 @@ let Utils = {
             if (posOfClosingBraces < 0) {
                 throw new SyntaxError('Unexpected end of input; expected closing text parameter braces');
             }
-            let param = str.slice(0, posOfClosingBraces).trim().slice(5); // Remove "this."
-            // Assume param is a well-formatted JS property name
-            if (!paramMap[param]) paramMap[param] = [];
+
+            let param = str.slice(0, posOfClosingBraces);
+            let regexpMatches;
+
+            if (!(regexpMatches = /^ this\.(attributes\.)?(.+) $/.test(param))) {
+                throw new SyntaxError(`Invalid property declaration in attribute value at "${ param }"`);
+            }
+
+            param = param[2];
+            let paramIsAttribute = !!regexpMatches[1];
+
+            if (paramIsAttribute) {
+                // TODO
+            }
+
+            if (!Utils.isValidPropertyName(param)) {
+                throw new SyntaxError(`"${ param }" is not a valid property name`);
+            }
+
+            if (!paramMap[param]) {
+                paramMap[param] = [];
+            }
             paramMap[param].push(strParts.length);
             strParts.push('');
 

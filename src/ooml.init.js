@@ -458,7 +458,17 @@ OOML.Namespace = function(namespace, settings) {
                             }
                             instanceExposedDOMElems[exposeKey] = cloned;
                         } else {
-                            cloned.setAttributeNode(processClassDom(attr));
+                            // COMPATIBILITY - IE: Don't use setAttributeNode -- buggy behaviour in IE
+                            cloned.setAttribute(attr.name, attr.value);
+                            let clonedAttr = cloned.getAttributeNode(attr.name);
+
+                            if (attr[OOML_ATTRNODE_PROPNAME_TEXTFORMAT]) {
+                                clonedAttr[OOML_ATTRNODE_PROPNAME_TEXTFORMAT] = attr[OOML_ATTRNODE_PROPNAME_TEXTFORMAT].slice();
+                                clonedAttr[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP] = attr[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP];
+                                Object.keys(clonedAttr[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP]).forEach(propertyName => {
+                                    instanceProperties[propertyName].nodes.add(clonedAttr);
+                                });
+                            }
                         }
                     }
 
@@ -475,19 +485,6 @@ OOML.Namespace = function(namespace, settings) {
                         instanceProperties[propertyName].nodes.add(cloned);
                     }
 
-                } else if (node instanceof Attr) {
-
-                    cloned = document.createAttribute(node.name);
-                    cloned.value = node.value;
-
-                    if (node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT]) {
-                        cloned[OOML_ATTRNODE_PROPNAME_TEXTFORMAT] = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT].slice();
-                        cloned[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP] = node[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP];
-                        Object.keys(cloned[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP]).forEach(propertyName => {
-                            instanceProperties[propertyName].nodes.add(cloned);
-                        });
-                    }
-
                 } else if (node instanceof Comment) {
 
                     cloned = document.createComment(node.data);
@@ -502,6 +499,10 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                     }
+
+                } else {
+
+                    throw new Error(`Invalid class DOM node type to process`);
 
                 }
 
@@ -560,17 +561,15 @@ OOML.Namespace = function(namespace, settings) {
             propertiesGetterSetterFuncs.on = {
                 value: Object.freeze(Utils.concat.apply(undefined, Object.keys(instanceEventHandlers).map(eventType => {
                     let ret = Utils.createCleanObject();
-                    ret[eventType] = {
-                        value: (eventName, handler) => {
-                            if (typeof handler != 'function') {
-                                throw new TypeError(`The handler for the event "${ eventName }" of type "${ eventType }" is not a function`);
-                            }
-                            if (!instanceEventHandlers[eventType][eventName]) {
-                                instanceEventHandlers[eventType][eventName] = [];
-                            }
-                            instanceEventHandlers[eventType][eventName].push(handler);
-                            return instance;
-                        },
+                    ret[eventType] = (eventName, handler) => {
+                        if (typeof handler != 'function') {
+                            throw new TypeError(`The handler for the event "${ eventName }" of type "${ eventType }" is not a function`);
+                        }
+                        if (!instanceEventHandlers[eventType][eventName]) {
+                            instanceEventHandlers[eventType][eventName] = [];
+                        }
+                        instanceEventHandlers[eventType][eventName].push(handler);
+                        return instance;
                     };
                     return ret;
                 }))),
