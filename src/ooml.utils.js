@@ -10,19 +10,6 @@ let Utils = {
                 domElem.setAttribute('data-' + Utils.toDashCase(key), value);
             }
         },
-        // COMPATIBILITY: IE 9 doesn't create empty text node if the offset is equal to the length
-        splitText: function(textNode, offset) {
-            if (offset < textNode.data.length) {
-                return textNode.splitText(offset);
-            }
-
-            let newTextNode = textNode.ownerDocument.createTextNode('');
-            // WARNING: Useless empty text node must be returned, otherwise IE 9 breaks
-            if (textNode.parentNode) {
-                textNode.parentNode.appendChild(newTextNode);
-            }
-            return newTextNode;
-        },
         hasAncestorNamespace: function(rootElem) {
             let toCheck = rootElem;
             while (toCheck) {
