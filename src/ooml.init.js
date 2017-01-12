@@ -232,10 +232,13 @@ OOML.Namespace = function(namespace, settings) {
 
                 while ((indexOfOpeningBrace = nodeValue.indexOf('{')) > -1) {
 
-                    ret.push({
-                        type: 'text',
-                        value: nodeValue.slice(0, indexOfOpeningBrace),
-                    });
+                    let textBeforeParam = nodeValue.slice(0, indexOfOpeningBrace);
+                    if (textBeforeParam) {
+                        ret.push({
+                            type: 'text',
+                            value: textBeforeParam,
+                        });
+                    }
 
                     nodeValue = nodeValue.slice(indexOfOpeningBrace);
 
