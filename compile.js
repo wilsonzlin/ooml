@@ -3,7 +3,8 @@ const zc = require('zcompile');
 const babel = require('babel-core');
 
 const ARGS = process.argv.slice(2);
-const DST_ARG = ARGS.find(arg => /^\-o=.+$/.test(arg));
+const DST_ARG = ARGS.find(arg => /^-o=.+$/.test(arg));
+const HARMONY_ARG = ARGS.some(arg => arg == 'harmony');
 
 const DEBUG = ARGS.some(arg => arg == 'debug');
 const SRC_DIR = __dirname + '/tmp/';
@@ -46,11 +47,14 @@ zc({
     src: SRC_DIR,
     dst: DST_DIR,
 
-    minifyJS: !DEBUG,
+    minifyJS: DEBUG ? false : {
+        harmony: HARMONY_ARG,
+        passes: 3,
+    },
     files: ['ooml.js'],
 
     onloadfile: (code, extension, path) => {
-        return babel.transform(code, {
+        return HARMONY_ARG ? code : babel.transform(code, {
             plugins: [
                 "transform-es2015-block-scoping",
                 "transform-es2015-arrow-functions",

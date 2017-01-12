@@ -343,7 +343,7 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         let elemConstructor =
-                            elemConstructorName == 'HTMLElement' ? HTMLElement :
+                            elemConstructorName == 'Element' ? HTMLElement :
                                 elemConstructorName == 'OOML.Element' ? OOML.Element :
                                     getClassFromString(elemConstructorName);
 
@@ -839,7 +839,7 @@ OOML.Namespace = function(namespace, settings) {
 
         // Set defined methods in class prototype
         for (let methodName in classMethods) {
-            classes[className].prototype[methodName] = classMethods[methodName].fn;
+            Object.defineProperty(classes[className].prototype, methodName, classMethods[methodName].fn);
         }
     });
 
@@ -850,7 +850,7 @@ OOML.Namespace = function(namespace, settings) {
             instanceName = instDetails[1];
 
         if (objects[instanceName]) {
-            throw new SyntaxError('An object already exists with the name ' + instanceName);
+            throw new SyntaxError(`An object already exists with the name "${ instanceName }"`);
         }
 
         var initState = Utils.getEvalValue(instanceInstantiationElem.textContent);
@@ -871,8 +871,8 @@ OOML.Namespace = function(namespace, settings) {
         objects[instanceName] = instance;
     });
 
-    return {
-        classes: classes,
-        objects: objects,
-    };
+    this.classes = classes;
+    this.objects = objects;
+
+    Object.freeze(this);
 };

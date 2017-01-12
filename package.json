@@ -22,9 +22,9 @@
   "homepage": "https://github.com/lerouche/ooml#readme",
   "devDependencies": {
     "babel-core": "*",
-    "babel-plugin-transform-es2015-arrow-functions": "^6.8.0",
-    "babel-plugin-transform-es2015-block-scoping": "^6.21.0",
-    "babel-plugin-transform-es2015-template-literals": "^6.8.0",
+    "babel-plugin-transform-es2015-arrow-functions": "*",
+    "babel-plugin-transform-es2015-block-scoping": "*",
+    "babel-plugin-transform-es2015-template-literals": "*",
     "fs-extra": "*",
     "zcompile": "*"
   },
