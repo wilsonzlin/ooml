@@ -860,7 +860,7 @@ let Utils = {
             let param = str.slice(0, posOfClosingBraces);
             let regexpMatches;
 
-            if (!(regexpMatches = /^ this\.(attributes\.)?(.+) $/.test(param))) {
+            if (!(regexpMatches = /^ this\.(attributes\.)?(.+) $/.exec(param))) {
                 throw new SyntaxError(`Invalid property declaration in attribute value at "${ param }"`);
             }
 
