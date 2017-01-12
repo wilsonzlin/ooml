@@ -731,10 +731,8 @@ OOML.Namespace = function(namespace, settings) {
                             }
 
                             if (node instanceof Text) {
-                                console.log('test');
                                 node.data = outputText;
-                            } else { // Must be attributeSet
-                                console.log("ie sucks " + node.nodeType);
+                            } else { // Must be attribute
                                 let formatStr = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT];
                                 node[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP][prop].forEach(offset => {
                                     formatStr[offset] = outputText;

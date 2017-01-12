@@ -551,7 +551,7 @@ let Utils = {
                     throw new SyntaxError('A boolean argument has an invalid default value');
                 }
 
-                else if (dateConstructorMatch = /^new Date\(\s*((?:[0-9]+,\s*)*(?:[0-9]+)?)\s*\)/.exec(toProcess)) {
+                else if (dateConstructorMatch = /^new Date\(\s*(?:[0-9]+,\s*)*(?:[0-9]+)?\s*\)/.exec(toProcess)) {
                     toProcess = toProcess.slice(dateConstructorMatch[0].length);
                     defaultValue = Function('return ' + dateConstructorMatch);
                 } else if (matchedType == 'Date') {
@@ -559,55 +559,32 @@ let Utils = {
                 }
 
                 else if (toProcess[0] == '"' || toProcess[0] == "'") {
-                    let parseFlagStringEscape = false;
                     let parseFlagStringEndChar = toProcess[0];
-                    let ended = false;
+                    let done = false;
                     toProcess = toProcess.slice(1);
                     defaultValue = '';
-                    while (!ended) {
+                    while (!done) {
                         if (!toProcess.length) {
                             throw new SyntaxError('Unexpected end of input');
                         }
-                        switch (toProcess[0]) {
-                            case parseFlagStringEndChar:
-                                if (parseFlagStringEscape) {
-                                    defaultValue += toProcess[0];
-                                    parseFlagStringEscape = false;
-                                } else {
-                                    ended = true;
-                                }
-                                break;
 
-                            case '\\':
-                                if (parseFlagStringEscape) {
-                                    defaultValue += '\\';
-                                }
-                                parseFlagStringEscape = !parseFlagStringEscape;
-                                break;
-
-                            case '\n':
-                                if (parseFlagStringEscape) {
-                                    parseFlagStringEscape = false;
-                                } else {
-                                    throw new SyntaxError("A string argument has an invalid default value");
-                                }
-                                break;
-
-                            default:
-                                if (parseFlagStringEscape) {
-                                    let escapeMatches = /^(u([a-fA-F0-9]{4}|\{[a-fA-F0-9]+\})|x[a-fA-F0-9]{2})/.exec(toProcess);
-                                    if (escapeMatches) {
-                                        defaultValue += eval('"\\' + escapeMatches[0] + '"');
-                                        toProcess = toProcess.slice(escapeMatches[0].length - 1); // Leave last character to be sliced by outer .slice call
-                                    } else {
-                                        defaultValue += eval('"\\' + toProcess[0] + '"');
-                                    }
-                                    parseFlagStringEscape = false;
-                                } else {
-                                    defaultValue += toProcess[0];
-                                }
+                        let tempIndex = toProcess.indexOf(parseFlagStringEndChar);
+                        if (tempIndex == -1) {
+                            // .slice to prevent super-long messages
+                            throw new SyntaxError(`A string argument has an invalid default value at "${ toProcess.slice(0, 200) }"`);
                         }
-                        toProcess = toProcess.slice(1);
+
+                        let tempValue = toProcess.slice(0, tempIndex);
+
+                        let tempRegexp = /\\+$/.exec(tempValue);
+                        if (!tempRegexp || tempRegexp[0].length % 2 == 0) {
+                            defaultValue += eval(parseFlagStringEndChar + tempValue + parseFlagStringEndChar);
+                            done = true;
+                        } else {
+                            defaultValue += eval(parseFlagStringEndChar + tempValue + parseFlagStringEndChar + parseFlagStringEndChar);
+                        }
+
+                        toProcess = toProcess.slice(tempIndex + 1);
                     }
                 } else if (matchedType == 'string') {
                     throw new SyntaxError('A string argument has an invalid default value');
