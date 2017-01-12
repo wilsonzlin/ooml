@@ -864,7 +864,7 @@ let Utils = {
                 throw new SyntaxError(`Invalid property declaration in attribute value at "${ param }"`);
             }
 
-            param = param[2];
+            param = regexpMatches[2];
             let paramIsAttribute = !!regexpMatches[1];
 
             if (paramIsAttribute) {
