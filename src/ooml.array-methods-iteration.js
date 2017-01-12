@@ -8,11 +8,11 @@
 });
 if (OOMLCompatSymbolExists) {
     OOMLArrayProto[Symbol.iterator] = function() {
-        var i = -1,
-            arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
+        let i = -1;
+        let arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
 
         return {
-            next: function() {
+            next: () => {
                 if (++i == arr.length) {
                     return { done: true };
                 }

@@ -4,33 +4,28 @@
 OOMLArrayProto.includes = function(elem, fromIdx) {
     return this.indexOf(elem, fromIdx) > -1;
 };
-OOMLArrayProto.indexOf = function(elem, fromIdx) {
-    if (!(elem instanceof this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR])) {
-        throw new TypeError('Can\'t find the index of non-element');
-    }
+['indexOf', 'lastIndexOf'].forEach(methodName => {
+    OOMLArrayProto[methodName] = function(elem, fromIdx) {
+        if (!(elem instanceof this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR])) {
+            throw new TypeError(`Can't find the index of non-element`);
+        }
 
-    return this[OOML_ARRAY_PROPNAME_INTERNALARRAY].indexOf(elem, fromIdx);
-};
-OOMLArrayProto.lastIndexOf = function(elem, fromIdx) {
-    if (!(elem instanceof this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR])) {
-        throw new TypeError('Can\'t find the index of non-element');
-    }
-
-    return this[OOML_ARRAY_PROPNAME_INTERNALARRAY].lastIndexOf(elem, fromIdx);
-};
+        return this[OOML_ARRAY_PROPNAME_INTERNALARRAY][methodName](elem, fromIdx);
+    };
+});
 OOMLArrayProto.toString = function() {
     return this.toJSON();
 };
 OOMLArrayProto.toArray = function(startIdx, endIdx) {
 
-    var arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
+    let arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
 
     startIdx = startIdx || 0;
     endIdx = endIdx == undefined ? this.length : endIdx;
 
-    var ret = [];
+    let ret = [];
 
-    for (var i = startIdx; i < endIdx; i++) {
+    for (let i = startIdx; i < endIdx; i++) {
         ret.push(arr[i].toObject());
     }
 

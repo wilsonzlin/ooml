@@ -11,7 +11,7 @@ var NodeSet = function() {
     _this[NODESET_PROPNAME_INTERNALARRAY] = [];
 
     Object.defineProperty(_this, 'size', {
-        get: function() { return _this[NODESET_PROPNAME_INTERNALARRAY].length },
+        get: () => _this[NODESET_PROPNAME_INTERNALARRAY].length,
     });
 };
 var NodeSetProto = NodeSet.prototype;
@@ -25,7 +25,7 @@ NodeSetProto.add = function(node) {
 };
 NodeSetProto.clear = function() {
     var nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
-    this[NODESET_PROPNAME_INTERNALARRAY].forEach(function(node) {
+    this[NODESET_PROPNAME_INTERNALARRAY].forEach((node) => {
         delete node[nodeIdPropName];
     });
     this[NODESET_PROPNAME_INTERNALARRAY] = [];
@@ -42,10 +42,10 @@ NodeSetProto.delete = function(node) {
     return false;
 };
 NodeSetProto.forEach = function(callback, thisArg) {
-    var that = this;
-    this[NODESET_PROPNAME_INTERNALARRAY].forEach(function(node, index) {
-        callback.call(this, node, index, that);
-    }, thisArg);
+    var _this = this;
+    this[NODESET_PROPNAME_INTERNALARRAY].forEach((node, index) => {
+        callback.call(thisArg, node, index, _this);
+    });
 };
 NodeSetProto.has = function(node) {
     var nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
@@ -53,5 +53,5 @@ NodeSetProto.has = function(node) {
 };
 NodeSetProto.values = function() {
     // .filter callback is never called on deleted/non-set indexes
-    return this[NODESET_PROPNAME_INTERNALARRAY].filter(function() { return true });
+    return this[NODESET_PROPNAME_INTERNALARRAY].filter(() => true);
 };

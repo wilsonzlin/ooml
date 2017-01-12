@@ -20,7 +20,7 @@ OOML.Namespace = function(namespace, settings) {
     }
 
     if (Utils.DOM.hasAncestorNamespace(namespace)) {
-        throw new ReferenceError('That namespace already exists');
+        throw new ReferenceError(`That namespace already exists`);
     }
 
     namespace[OOML_DOM_PROPNAME_ISNAMESPACE] = true;
@@ -249,7 +249,7 @@ OOML.Namespace = function(namespace, settings) {
                     // Therefore the index of the closing brace can't be less than 3
                     let indexOfClosingBrace = nodeValue.indexOf('}');
                     if (indexOfClosingBrace < 3) {
-                        throw new SyntaxError('Matching closing brace not found');
+                        throw new SyntaxError(`Matching closing brace not found`);
                     }
                     // Remove first opening and all closing braces:
                     // "{{ this.propName }}"         becomes "{ this.propName "

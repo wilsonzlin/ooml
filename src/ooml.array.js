@@ -1,5 +1,5 @@
 OOML.Array = function(elementConstructor, insertAfterDomElem) {
-    var _this = this;
+    let _this = this;
 
     // Use defineProperty for properties to prevent enumeration
     Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INTERNALARRAY, {
@@ -21,7 +21,7 @@ OOML.Array = function(elementConstructor, insertAfterDomElem) {
 
     Object.defineProperty(_this, "on", {
         value: Object.freeze({
-            mutation: function(eventName, handler) {
+            mutation: (eventName, handler) => {
                 switch (eventName) {
                     case 'arraychange':
                         if (typeof handler != 'function') {
@@ -40,7 +40,7 @@ OOML.Array = function(elementConstructor, insertAfterDomElem) {
     });
 
     Object.defineProperty(_this, "length", {
-        get: function() { return _this[OOML_ARRAY_PROPNAME_INTERNALARRAY].length; },
+        get: () => _this[OOML_ARRAY_PROPNAME_INTERNALARRAY].length,
     });
 
     Object.preventExtensions(_this);

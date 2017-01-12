@@ -7,7 +7,7 @@ var StringSet = function() {
     _this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils.createCleanObject();
 
     Object.defineProperty(_this, 'size', {
-        get: function() { return _this[STRINGSET_PROPNAME_INTERNALARRAY].length },
+        get: () => _this[STRINGSET_PROPNAME_INTERNALARRAY].length,
     });
 };
 var StringSetProto = StringSet.prototype;
@@ -32,10 +32,10 @@ StringSetProto.delete = function(str) {
     return false;
 };
 StringSetProto.forEach = function(callback, thisArg) {
-    var that = this;
-    this[STRINGSET_PROPNAME_INTERNALARRAY].forEach(function(str, index) {
-        callback.call(this, str, index, that);
-    }, thisArg);
+    var _this = this;
+    this[STRINGSET_PROPNAME_INTERNALARRAY].forEach((str, index) => {
+        callback.call(thisArg, str, index, _this);
+    });
 };
 StringSetProto.has = function(str) {
     return this[STRINGSET_PROPNAME_INTERNALOBJECT][str] != undefined;

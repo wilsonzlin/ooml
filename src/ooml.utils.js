@@ -254,7 +254,7 @@ let Utils = {
 
                             if (providedArgument === undefined) {
                                 if (!arg.optional) {
-                                    throw new TypeError('Argument ' + argIdx + ' must be provided');
+                                    throw new TypeError(`Argument ${ argIdx } must be provided`);
                                 }
 
                                 // This will be undefined if there is no default value
@@ -272,7 +272,7 @@ let Utils = {
                                     providedArgumentIsOmittedDestructure = true;
                                 }
                             } else if (arg.type && !Utils.isType(arg.type, providedArgument)) {
-                                throw new TypeError('Argument ' + argIdx + ' should be of type ' + arg.type);
+                                throw new TypeError(`Argument ${ argIdx } should be of type "${ arg.type }"`);
                             }
 
                             if (arg.destructure) {
@@ -299,7 +299,7 @@ let Utils = {
                                         } else if (Utils.isArrayLike(providedArgument)) {
                                             providedProperty = providedArgument[propIdx];
                                         } else {
-                                            throw new TypeError('Unrecognised array argument provided')
+                                            throw new TypeError(`Unrecognised array argument provided`)
                                         }
                                     }
 
@@ -308,12 +308,12 @@ let Utils = {
                                         // if the destructuring argument is optional
                                         // regardless of invididual property settings
                                         if (!providedArgumentIsOmittedDestructure && !prop.optional) {
-                                            throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' must be provided');
+                                            throw new TypeError(`Property "${ propKey }" in the ${ arg.type } provided as argument ${ argIdx } must be provided`);
                                         }
                                         // This will be undefined if there is no default value
                                         providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
                                     } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
-                                        throw new TypeError('Property `' + propKey + '` in the ' + arg.type + ' provided as argument ' + argIdx + ' should be of type ' + prop.type);
+                                        throw new TypeError(`Property "${ propKey }" in the ${ arg.type } provided as argument ${ argIdx } should be of type "${ prop.type }"`);
                                     }
 
                                     pushTo.push(providedProperty);
@@ -330,7 +330,7 @@ let Utils = {
                                 let argIdx = collectArgIdx + offset;
 
                                 if (collectArg.type && !Utils.isType(collectArg.type, providedArgument)) {
-                                    throw new TypeError('Argument ' + argIdx + ' should be of type ' + collectArg.type);
+                                    throw new TypeError(`Argument ${ argIdx } should be of type "${ collectArg.type }"`);
                                 }
 
                                 providedArgumentsUsedCount++;
@@ -338,13 +338,13 @@ let Utils = {
                                 collectedVals.push(providedArgument);
                             });
                             if (!collectedVals.length && !collectArg.optional) {
-                                throw new TypeError('No arguments were provided to a collecting argument');
+                                throw new TypeError(`No arguments were provided to a collecting argument`);
                             }
                             lftArgVals.push(collectedVals);
                         }
 
                         if (providedArgumentsUsedCount !== arguments.length) { // Don't use providedArguments as that has been mutated
-                            throw new TypeError('Too many arguments provided');
+                            throw new TypeError(`Too many arguments provided`);
                         }
 
                         let parentMethod = Object.getPrototypeOf(Object.getPrototypeOf(this))[methodName];
@@ -384,12 +384,12 @@ let Utils = {
     parseMethodFunction: function(funcdef, methodName) {
         let regexpMatches = /^function *([a-zA-Z_][a-zA-Z0-9_]+)?\s*\(/.exec(funcdef);
         if (!regexpMatches) {
-            throw new SyntaxError('Invalid function declaration for method `' + methodName + '`');
+            throw new SyntaxError(`Invalid function declaration for method "${ methodName }"`);
         }
 
         let funcName = regexpMatches[1];
         if (funcName) {
-            throw new SyntaxError('Function names are not supported for method functions; call the `self` function in the body to do recursion');
+            throw new SyntaxError(`Function names are not supported for method functions; call the "self" function in the body to do recursion`);
         }
 
         let toProcess = funcdef.slice(regexpMatches[0].length).trim();
@@ -401,32 +401,32 @@ let Utils = {
         while (true) {
             if (toProcess[0] == ',') {
                 if (!args.length) {
-                    throw new SyntaxError('Unexpected comma');
+                    throw new SyntaxError(`Unexpected comma`);
                 }
                 toProcess = toProcess.slice(1).trim();
             } else { // No comma
                 if (toProcess[0] == ')') {
                     if (destructuringMode) {
-                        throw new SyntaxError('Unexpected end of function destructuring argument declaration');
+                        throw new SyntaxError(`Unexpected end of function destructuring argument declaration`);
                     }
                     toProcess = toProcess.slice(1).trim();
                     break;
                 } else if (toProcess[0] == '}') {
                     if (!destructuringMode) {
-                        throw new SyntaxError('Unexpected closing brace');
+                        throw new SyntaxError(`Unexpected closing brace`);
                     }
                     destructuringMode = false;
                     toProcess = toProcess.slice(1).trim();
                     continue;
                 } else if (destructuringMode ? args[args.length - 1].properties.length : args.length) {
-                    throw new SyntaxError('Expected comma or closing bracket');
+                    throw new SyntaxError(`Expected comma or closing bracket`);
                 }
             }
 
             let temp;
             if (temp = /^(\?)?([{[])/.exec(toProcess)) {
                 if (destructuringMode) {
-                    throw new SyntaxError('Nested destructuring is not allowed');
+                    throw new SyntaxError(`Nested destructuring is not allowed`);
                 }
                 destructuringMode = true;
                 let isOptional = temp[1] == '?';
@@ -443,7 +443,7 @@ let Utils = {
 
             let argmatches = /^([a-zA-Z.]+ )?(\?)?(\.\.\.)?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
             if (!argmatches) {
-                throw new SyntaxError('Unrecognised function argument declaration');
+                throw new SyntaxError(`Unrecognised function argument declaration`);
             }
             argmatches = argmatches.map(function(val) {
                 let trimmed = val ? val.trim() : null;
@@ -459,32 +459,32 @@ let Utils = {
             let matchedOpenBrace = argmatches[6];
 
             if (effectiveArgNames.has(matchedArgname)) {
-                throw new SyntaxError('Argument name `' + matchedArgname + '` has already been used');
+                throw new SyntaxError(`Argument name "${ matchedArgname }" has already been used`);
             }
 
             if (OOMLReservedFnArgNames.indexOf(matchedArgname) > -1) {
-                throw new SyntaxError('Argument name `' + matchedArgname + '` is a reserved keyword');
+                throw new SyntaxError(`Argument name "${ matchedArgname }" is a reserved keyword`);
             }
 
             if (matchedType && OOMLFnArgTypes.indexOf(matchedType) == -1) {
-                throw new SyntaxError('Unrecognised argument type `' + matchedType + '`');
+                throw new SyntaxError(`Unrecognised argument type "${ matchedType }"`);
             }
 
             if (matchedOpenBrace && !matchedEqualsSign) {
                 if (destructuringMode) {
-                    throw new SyntaxError('Nested destructuring is not allowed');
+                    throw new SyntaxError(`Nested destructuring is not allowed`);
                 }
                 if (matchedType) {
                     if ((matchedOpenBrace == '{' && matchedType != 'object') ||
                         (matchedOpenBrace == '[' && ['array', 'OOML.Array', 'Array'].indexOf(matchedType) == -1)
                     ) {
-                        throw new SyntaxError('Destructuring argument type provided is not recognised');
+                        throw new SyntaxError(`Destructuring argument type provided is not recognised`);
                     }
                 } else {
                     matchedType = matchedOpenBrace == '{' ? 'object' : 'array';
                 }
                 if (matchedCollectOperator) {
-                    throw new SyntaxError('Destructuring argument contains invalid operator');
+                    throw new SyntaxError(`Destructuring argument contains invalid operator`);
                 }
 
                 destructuringMode = true;
@@ -499,18 +499,18 @@ let Utils = {
             }
 
             if (matchedEqualsSign && (matchedCollectOperator || matchedOptionalOperator)) {
-                throw new SyntaxError('Argument with a default value has an operator');
+                throw new SyntaxError(`Argument with a default value has an operator`);
             }
             if (matchedEqualsSign && ['function', 'OOML.Element'].indexOf(matchedType) > -1) {
-                throw new SyntaxError('An argument with type ' + matchedType + ' cannot have a default argument');
+                throw new SyntaxError(`An argument with type "${ matchedType }" cannot have a default argument`);
             }
             if (destructuringMode && matchedCollectOperator) {
-                throw new SyntaxError('The collect operator cannot be used inside a destructuring argument');
+                throw new SyntaxError(`The collect operator cannot be used inside a destructuring argument`);
             }
             if (matchedCollectOperator) {
                 collectArgsCount++;
                 if (collectArgsCount > 1) {
-                    throw new SyntaxError('A method cannot have more than one collecting argument');
+                    throw new SyntaxError(`A method cannot have more than one collecting argument`);
                 }
             }
 
@@ -524,14 +524,14 @@ let Utils = {
                     toProcess = toProcess.slice(4);
                     defaultValue = null;
                 } else if (matchedType == 'null') {
-                    throw new SyntaxError('A null argument has an invalid default value');
+                    throw new SyntaxError(`A null argument has an invalid default value`);
                 }
 
                 else if (matchedOpenBrace == '{' && toProcess[0] == '}') {
                     toProcess = toProcess.slice(1);
                     defaultValue = Utils.createCleanObject;
                 } else if (matchedType == 'object') {
-                    throw new SyntaxError('An object argument has an invalid default value');
+                    throw new SyntaxError(`An object argument has an invalid default value`);
                 }
 
                 else if (matchedOpenBrace == '[' && toProcess[0] == ']') {
@@ -541,21 +541,21 @@ let Utils = {
                         return type == 'OOML.Array' ? new OOML.Array : []
                     }.bind(matchedType);
                 } else if (['array', 'Array', 'OOML.Array'].indexOf(matchedType) > -1) {
-                    throw new SyntaxError('An array argument has an invalid default value');
+                    throw new SyntaxError(`An array argument has an invalid default value`);
                 }
 
                 else if (booleanMatch = /^(true|false)/.exec(toProcess)) {
                     toProcess = toProcess.slice(booleanMatch[0].length);
                     defaultValue = booleanMatch[0] == 'true';
                 } else if (matchedType == 'boolean') {
-                    throw new SyntaxError('A boolean argument has an invalid default value');
+                    throw new SyntaxError(`A boolean argument has an invalid default value`);
                 }
 
                 else if (dateConstructorMatch = /^new Date\(\s*(?:[0-9]+,\s*)*(?:[0-9]+)?\s*\)/.exec(toProcess)) {
                     toProcess = toProcess.slice(dateConstructorMatch[0].length);
                     defaultValue = Function('return ' + dateConstructorMatch);
                 } else if (matchedType == 'Date') {
-                    throw new SyntaxError('A Date argument has an invalid default value');
+                    throw new SyntaxError(`A Date argument has an invalid default value`);
                 }
 
                 else if (toProcess[0] == '"' || toProcess[0] == "'") {
@@ -565,7 +565,7 @@ let Utils = {
                     defaultValue = '';
                     while (!done) {
                         if (!toProcess.length) {
-                            throw new SyntaxError('Unexpected end of input');
+                            throw new SyntaxError(`Unexpected end of input`);
                         }
 
                         let tempIndex = toProcess.indexOf(parseFlagStringEndChar);
@@ -587,19 +587,19 @@ let Utils = {
                         toProcess = toProcess.slice(tempIndex + 1);
                     }
                 } else if (matchedType == 'string') {
-                    throw new SyntaxError('A string argument has an invalid default value');
+                    throw new SyntaxError(`A string argument has an invalid default value`);
                 }
 
                 else if (digitsMatch = /^(?:0b[01]+|0o[0-7]+|0x[0-9a-f]+|[0-9]*\.?[0-9]+(?:e[0-9]+)?)/i.exec(toProcess)) {
                     toProcess = toProcess.slice(digitsMatch[0].length);
                     defaultValue = Number(digitsMatch[0]);
                     if (!Utils.isType(matchedType, defaultValue)) { // Will check for NaN if necessary
-                        throw new SyntaxError('A number argument has an invalid default value');
+                        throw new SyntaxError(`A number argument has an invalid default value`);
                     }
                 } else if (['number', 'natural', 'integer', 'float'].indexOf(matchedType) > -1) {
-                    throw new SyntaxError('A number argument has an invalid default value');
+                    throw new SyntaxError(`A number argument has an invalid default value`);
                 } else {
-                    throw new SyntaxError('Unrecognised default value');
+                    throw new SyntaxError(`Unrecognised default value`);
                 }
             }
 
@@ -616,7 +616,7 @@ let Utils = {
         }
 
         if (toProcess[0] != '{' || toProcess[toProcess.length - 1] != '}') {
-            throw new SyntaxError('Function body braces are missing');
+            throw new SyntaxError(`Function body braces are missing`);
         }
 
         let funcBody = toProcess.slice(1, -1).trim();
@@ -781,7 +781,7 @@ let Utils = {
                 return value instanceof OOML.Element;
 
             default:
-                throw new Error('Unrecognised type for checking against');
+                throw new Error(`Unrecognised type for checking against`);
         }
     },
     createCleanObject: function() {
@@ -791,9 +791,9 @@ let Utils = {
         if (obj instanceof elemConstructor) {
             return obj;
         } else if (elemConstructor == OOML.Element || elemConstructor == HTMLElement) {
-            throw new SyntaxError('Unable to construct new instance; the type is an abstract class');
+            throw new SyntaxError(`Unable to construct new instance; the type is an abstract class`);
         } else if (!Utils.isObjectLiteral(obj)) {
-            throw new TypeError('Unable to construct new instance; the provided object is not of the correct type');
+            throw new TypeError(`Unable to construct new instance; the provided object is not of the correct type`);
         }
 
         return new elemConstructor(obj);
@@ -818,7 +818,7 @@ let Utils = {
 
             let posOfClosingBraces = str.indexOf('}}');
             if (posOfClosingBraces < 0) {
-                throw new SyntaxError('Unexpected end of input; expected closing text parameter braces');
+                throw new SyntaxError(`Unexpected end of input; expected closing text parameter braces`);
             }
 
             let param = str.slice(0, posOfClosingBraces);
