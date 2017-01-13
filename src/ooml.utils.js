@@ -25,8 +25,8 @@ let Utils = {
         // Don't restrict to Date and Array instances, as attributes can hold any value
         if (value && typeof value.oomlOutputMethod == 'function') {
             value = value.oomlOutputMethod(value);
-            if (!Utils.isPrimitiveValue(value)) {
-                throw new TypeError(`An oomlOutputMethod function returned an invalid value`);
+            if (typeof value != 'string') {
+                throw new TypeError(`An oomlOutputMethod function returned a non-string value`);
             }
         }
         return '' + value;
