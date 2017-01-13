@@ -140,11 +140,19 @@ zc({
 
 if (NANO_ARG) {
     fs.writeFileSync(DST_DIR + 'ooml.nano.exceptions.json', JSON.stringify(nano_js_exceptions));
-    fs.copySync(DST_DIR + 'ooml.js', DST_DIR + 'ooml.nano.js');
-    fs.removeSync(DST_DIR + 'ooml.js');
+    fs.writeFileSync(DST_DIR + 'ooml.nano.exceptions.html', `
+        <table>
+            <thead>
+                <tr style="text-align: left"><th>Code</th><th>Message</th></tr>                
+            </thead>
+            <tbody>
+                ${ nano_js_exceptions.map((msg, id) => `<tr><td>${ id }</td><td>${ msg }</td></tr>`).join('') }            
+            </tbody>
+        </table>
+    `)
 } else {
     fs.removeSync(DST_DIR + 'ooml.nano.exceptions.json');
-    fs.removeSync(DST_DIR + 'ooml.nano.js');
+    fs.removeSync(DST_DIR + 'ooml.nano.exceptions.html');
 }
 
 if (!DEBUG) {

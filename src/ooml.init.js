@@ -839,7 +839,9 @@ OOML.Namespace = function(namespace, settings) {
 
         // Set defined methods in class prototype
         for (let methodName in classMethods) {
-            Object.defineProperty(classes[className].prototype, methodName, classMethods[methodName].fn);
+            Object.defineProperty(classes[className].prototype, methodName, {
+                value: classMethods[methodName].fn
+            });
         }
     });
 
