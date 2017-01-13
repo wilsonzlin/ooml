@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script>
+            $(function() {
+                var isNatural = function(value) {
+                    return typeof value == 'number' &&
+                        isFinite(value) &&
+                        Math.floor(value) === value &&
+                        value >= 0;
+                }
+                window.isArrayLike = function(obj) {
+                    if (!obj) {
+                        return false;
+                    }
+
+                    // A "real" array fails most of the other tests, so short-circuit here
+                    if (Array.isArray(obj)) {
+                        return true;
+                    }
+
+                    // typeof null == 'object'; Object.create(null) instanceof Object == false
+                    if (typeof obj != 'object' || !(obj instanceof Object)) {
+                        return false;
+                    }
+
+                    var length = obj.length;
+                    if (!isNatural(length)) {
+                        return false;
+                    }
+
+                    if (obj.hasOwnProperty('length')) {
+                        return false;
+                    }
+
+                    var descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), 'length');
+                    if (!descriptor || !descriptor.get || descriptor.set) {
+                        return false;
+                    }
+
+                    return true;
+                };
+
+                var tests = {};
+                tests.passes = {
+                    '[]': function() { return [5, 7, 'test', true, {}, []] },
+                    'Array': function() { return Array(16) },
+                    'Function.arguments': function() { return arguments },
+                    'querySelectorAll': function() { return document.querySelectorAll('div') },
+                    'getElementsByClassName': function() { return document.getElementsByClassName('test') },
+                    'getElementsByTagName': function() { return document.getElementsByTagName('div') },
+                    'HTMLInputElement.files': function() { return document.querySelector('#files').files },
+                    'HTMLElement.attributes': function() { return document.querySelector('#files').attributes },
+                    'HTMLElement.childNodes': function() { return document.body.childNodes },
+                    'Object.create(Object.defineProperties({}, { length: {get: function() {return 1}} }))': function() { return Object.create(Object.defineProperties({}, { length: {get: function() {return 1}} })) },
+                };
+                tests.fails = {
+                    'jQuery': function() { return $( "div" ) },
+                    '{ length: 1 }': function() { return { length: 1 } },
+                    'Object.create({ length: 1 })': function() { return Object.create({ length: 1 }) },
+                    'Object.defineProperties({}, { length: {get: function() {return 1}} })': function() { return Object.defineProperties({}, { length: {get: function() {return 1}} }) },
+                    'Object.create(Object.defineProperties({}, { length: {get: function() {return 1}, set: function() {}} }))': function() { return Object.create(Object.defineProperties({}, { length: {get: function() {return 1}, set: function() {}} })) },
+                };
+
+                ['passes', 'fails'].forEach(function(testType) {
+                    Object.keys(tests[testType]).forEach(function(testName) {
+                        var value = tests[testType][testName]();
+                        var expectedValue = testType == 'passes';
+                        var actualValue = isArrayLike(value);
+
+                        $( '<tr><td>' + testName + '</td><td>' + expectedValue + '</td><td>' + actualValue + '</td></tr>' )
+                            .appendTo( '#results > tbody' )
+                            .css('color', expectedValue === actualValue ? 'green' : 'red');
+                    });
+                });
+            });
+        </script>
+    </head>
+
+    <body>
+        <div id="testing">
+            <input id="files" type="file" multiple>
+            <div class="test">
+                <div class="test"></div>
+            </div>
+            <div></div>
+        </div>
+        <table id="results">
+            <thead>
+                <tr>
+                    <th>Test name</th>
+                    <th>Expected</th>
+                    <th>Actual</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <style>
+            body {
+                margin: 0;
+                font-family: sans-serif;
+                font-size: 16px;
+            }
+            #testing {
+                display: none;
+            }
+            #results {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th {
+                text-align: left;
+                background: black;
+                color: white;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 8px;
+            }
+        </style>
+    </body>
+</html>

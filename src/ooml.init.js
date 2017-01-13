@@ -185,7 +185,7 @@ OOML.Namespace = function(namespace, settings) {
                 for (let i = 0; i < current.attributes.length; i++) {
 
                     let attr = current.attributes[i];
-                    let attrName = attr.name;
+                    let attrName = attr.name.toLowerCase();
 
                     if (attrNames.has(attrName)) {
                         throw new SyntaxError(`Duplicate attribute "${ attrName }"`);
@@ -406,7 +406,7 @@ OOML.Namespace = function(namespace, settings) {
 
                 let nodeName = current.name;
                 if (nodeName == 'ooml-style') {
-                    // IE discards invalid style attributes (and one with OOML bindings is invalid), so allow alternative syntax
+                    // IE discards invalid style attributes (and ones with OOML bindings count as invalid), so allow alternative syntax
                     nodeName = nodeName.slice(5);
                 }
                 let nodeValue = current.value;

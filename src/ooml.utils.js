@@ -714,6 +714,7 @@ let Utils = {
             return true;
         }
 
+        // typeof null == 'object'; Object.create(null) instanceof Object == false
         if (typeof obj != 'object' || !(obj instanceof Object)) {
             return false;
         }
