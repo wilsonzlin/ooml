@@ -26,8 +26,8 @@ var OOMLNodesWithUnwrittenChanges = new NodeSet(),
         }
 
         OOMLWriteChangesSetTimeout = setTimeout(() => {
-            OOMLNodesWithUnwrittenChanges.forEach(node => {
-                node.value = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT].join('');
+            OOMLNodesWithUnwrittenChanges.forEach(attr => {
+                attr.ownerElement.setAttribute(attr.name, attr.valueFormat.join(''));
             });
 
             OOMLNodesWithUnwrittenChanges.clear();
@@ -43,15 +43,12 @@ var OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'c
 var OOMLPrimitiveTypes = ['Date', 'null', 'Array', 'number', 'boolean', 'string'];
 var OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
 var OOMLPropertyTypes = Utils.concat(['Date', 'null', 'Array', 'boolean', 'string'], OOMLPropertyNumberTypes);
-var OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['object', 'function', 'array', 'OOML.Array', 'OOML.Element']);
+var OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['Object', 'function', 'array', 'OOML.Array', 'OOML.Element']);
 
 var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
     OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
     OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners',
-
-    OOML_ATTRNODE_PROPNAME_TEXTFORMAT = '__oomlFormatStr',
-    OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP = '__oomlParamMap',
 
     OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
 

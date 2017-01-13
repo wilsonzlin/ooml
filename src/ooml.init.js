@@ -180,12 +180,21 @@ OOML.Namespace = function(namespace, settings) {
                     childNodes: [],
                 };
 
+                let attrNames = new StringSet();
+
                 for (let i = 0; i < current.attributes.length; i++) {
+
                     let attr = current.attributes[i];
+                    let attrName = attr.name;
 
-                    if (/^childon/.test(attr.name)) {
+                    if (attrNames.has(attrName)) {
+                        throw new SyntaxError(`Duplicate attribute "${ attrName }"`);
+                    }
+                    attrNames.add(attrName);
 
-                        let eventName = attr.name.slice(7);
+                    if (/^childon/.test(attrName)) {
+
+                        let eventName = attrName.slice(7);
 
                         if (ret.childEventHandlers[eventName]) {
                             throw new SyntaxError(`Another child "${ eventName }" event handler already exists`);
@@ -193,9 +202,9 @@ OOML.Namespace = function(namespace, settings) {
 
                         ret.childEventHandlers[eventName] = Function('$self', 'dispatch', 'data', `"use strict"; ${ attr.value.trim() }`);
 
-                    } else if (/^domon/.test(attr.name)) {
+                    } else if (/^domon/.test(attrName)) {
 
-                        let eventName = attr.name.slice(5);
+                        let eventName = attrName.slice(5);
 
                         if (ret.domEventHandlers[eventName]) {
                             throw new SyntaxError(`Another DOM "${ eventName }" event handler already exists`);
@@ -203,7 +212,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'event', `"use strict"; event.preventDefault(); ${ attr.value.trim() }`);
 
-                    } else if (/^on/.test(attr.name)) {
+                    } else if (/^on/.test(attrName)) {
 
                         throw new SyntaxError(`Native DOM event handlers are not allowed`);
 
@@ -258,51 +267,68 @@ OOML.Namespace = function(namespace, settings) {
 
                     let regexpMatches;
                     if (code[0] == '{') {
-                        regexpMatches = /^\{(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(.+?) $/.exec(code);
-                        if (!regexpMatches || !regexpMatches[2]) {
+                        regexpMatches = /^\{(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(attributes\.)?(.+?) $/.exec(code);
+                        if (!regexpMatches || !regexpMatches[3]) {
                             throw new SyntaxError(`Invalid property declaration at "${ code }"`);
                         }
 
-                        let propName = regexpMatches[2];
+                        let propName = regexpMatches[3];
+                        let isAttribute = !!regexpMatches[2];
 
-                        if (!Utils.isValidPropertyName(propName, settingStrictPropertyNames)) {
-                            throw new SyntaxError(`"${ propName }" is not a valid property name`);
-                        }
-
-                        if (classMethods[propName]) {
-                            throw new SyntaxError(`"${ propName }" already exists as a method`);
-                        }
-
-                        if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
-                            throw new SyntaxError(`The property "${ propName }" already exists as a element substitution`);
-                        }
-
-                        let propAlreadyExists = !!classProperties[propName];
-
-                        let types = regexpMatches[1] || undefined;
-                        if (types) {
-                            if (propAlreadyExists && classProperties[propName].types) {
-                                if (classProperties[propName].types.join('|') !== types) {
-                                    throw new SyntaxError(`The types for the property "${ propName }" have already been declared`);
-                                }
-                            } else {
-                                types = Utils.parseTypeDeclaration(types);
+                        if (isAttribute) {
+                            if (!Utils.isValidAttributeName(propName)) {
+                                throw new SyntaxError(`"${ propName }" is not a valid attribute name`);
                             }
-                        }
 
-                        if (!propAlreadyExists) {
-                            classProperties[propName] = {
-                                types: types,
-                                isArray: false,
-                                value: undefined,
-                            };
-                        }
+                            if (!classAttributes[propName]) {
+                                throw new ReferenceError(`The attribute "${ propName }" does not exist`);
+                            }
 
-                        ret.push({
-                            type: 'text',
-                            value: '',
-                            bindedProperty: propName,
-                        });
+                            ret.push({
+                                type: 'text',
+                                value: '',
+                                bindedAttribute: propName,
+                            });
+                        } else {
+                            if (!Utils.isValidPropertyName(propName, settingStrictPropertyNames)) {
+                                throw new SyntaxError(`"${ propName }" is not a valid property name`);
+                            }
+
+                            if (classMethods[propName]) {
+                                throw new SyntaxError(`"${ propName }" already exists as a method`);
+                            }
+
+                            if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
+                                throw new SyntaxError(`The property "${ propName }" already exists as a element substitution`);
+                            }
+
+                            let propAlreadyExists = !!classProperties[propName];
+
+                            let types = regexpMatches[1] || undefined;
+                            if (types) {
+                                if (propAlreadyExists && classProperties[propName].types) {
+                                    if (classProperties[propName].types.join('|') !== types) {
+                                        throw new SyntaxError(`The types for the property "${ propName }" have already been declared`);
+                                    }
+                                } else {
+                                    types = Utils.parseTypeDeclaration(types);
+                                }
+                            }
+
+                            if (!propAlreadyExists) {
+                                classProperties[propName] = {
+                                    types: types,
+                                    isArray: false,
+                                    value: undefined,
+                                };
+                            }
+
+                            ret.push({
+                                type: 'text',
+                                value: '',
+                                bindedProperty: propName,
+                            });
+                        }
 
                         nodeValue = nodeValue.slice(indexOfClosingBrace + 2);
 
@@ -378,11 +404,16 @@ OOML.Namespace = function(namespace, settings) {
 
             } else if (current instanceof Attr) {
 
+                let nodeName = current.name;
+                if (nodeName == 'ooml-style') {
+                    // IE discards invalid style attributes (and one with OOML bindings is invalid), so allow alternative syntax
+                    nodeName = nodeName.slice(5);
+                }
                 let nodeValue = current.value;
 
                 ret = {
                     type: 'attribute',
-                    name: current.name,
+                    name: nodeName,
                     value: nodeValue,
                 };
 
@@ -392,6 +423,10 @@ OOML.Namespace = function(namespace, settings) {
                     ret.valueFormatMap = paramsData.map;
 
                     Object.keys(paramsData.map).forEach(propName => { // Use Object.keys to avoid scope issues
+
+                        if (propName == 'attributes') {
+                            return;
+                        }
 
                         if (classMethods[propName]) {
                             throw new SyntaxError(`"${ propName }" already exists as a method`);
@@ -457,6 +492,46 @@ OOML.Namespace = function(namespace, settings) {
                 instanceProperties[propertyName].nodes = new NodeSet(); // Use NodeSet as attributes may be binded to the same property more than once
             });
 
+            let instanceAttributes = Utils.clone(classAttributes);
+            let instanceAttributesInterface = Utils.createCleanObject();
+
+            // Must be before instanceDom initialisation as processClassDom uses instanceAttributes[attrName].nodes
+            Object.keys(instanceAttributes).forEach(attrName => {
+                // Use set as one DOM attribute can refer to one attribute more than once
+                instanceAttributes[attrName].nodes = new NodeSet();
+
+                // Set up attributes interface object
+                Object.defineProperty(instanceAttributesInterface, attrName, {
+                    get: () => instanceAttributes[attrName].value,
+                    set: newVal => {
+                        if (newVal === undefined) {
+                            throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
+                        }
+
+                        let outputText = Utils.getOOMLOutputValue(newVal);
+
+                        instanceAttributes[attrName].nodes.forEach(node => {
+                            if (node instanceof Text) {
+                                node.data = outputText;
+                            } else { // Must be attribute
+                                let formatStr = node.valueFormat;
+                                node.valueFormatMap.attributes[attrName].forEach(offset => {
+                                    formatStr[offset] = outputText;
+                                });
+                                OOMLNodesWithUnwrittenChanges.add(node);
+                            }
+                        });
+
+                        OOMLWriteChanges();
+
+                        instanceAttributes[attrName].value = newVal;
+                        Utils.DOM.setData(instanceDom, attrName, outputText);
+                    },
+                    enumerable: true,
+                });
+            });
+            Object.preventExtensions(instanceAttributesInterface);
+
             let instanceEventHandlers = {
                 mutation: Utils.createCleanObject(),
                 dispatch: Utils.createCleanObject(),
@@ -497,15 +572,25 @@ OOML.Namespace = function(namespace, settings) {
                                 }
                                 instanceExposedDOMElems[exposeKey] = cloned;
                             } else {
-                                // COMPATIBILITY - IE: Don't use setAttributeNode -- buggy behaviour in IE
-                                cloned.setAttribute(attr.name, attr.value);
-                                let clonedAttr = cloned.getAttributeNode(attr.name);
+                                if (!attr.valueFormat) {
+                                    cloned.setAttribute(attr.name, attr.value);
+                                } else {
+                                    // COMPATIBILITY - IE: Don't use .(get|set)Attribute(Node)? -- buggy behaviour in IE
+                                    let clonedAttr = {
+                                        name: attr.name,
+                                        valueFormat: attr.valueFormat.slice(),
+                                        valueFormatMap: attr.valueFormatMap,
+                                        ownerElement: cloned,
+                                    };
 
-                                if (attr.valueFormat) {
-                                    clonedAttr[OOML_ATTRNODE_PROPNAME_TEXTFORMAT] = attr.valueFormat.slice();
-                                    clonedAttr[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP] = attr.valueFormatMap;
                                     Object.keys(attr.valueFormatMap).forEach(propertyName => {
-                                        instanceProperties[propertyName].nodes.add(clonedAttr);
+                                        if (propertyName != 'attributes') {
+                                            instanceProperties[propertyName].nodes.add(clonedAttr);
+                                        }
+                                    });
+
+                                    Object.keys(attr.valueFormatMap.attributes).forEach(attrName => {
+                                        instanceAttributes[attrName].nodes.add(clonedAttr);
                                     });
                                 }
                             }
@@ -524,6 +609,10 @@ OOML.Namespace = function(namespace, settings) {
                         if (node.bindedProperty) {
                             let propertyName = node.bindedProperty;
                             instanceProperties[propertyName].nodes.add(cloned);
+                        }
+
+                        if (node.bindedAttribute) {
+                            instanceAttributes[node.bindedAttribute].nodes.add(cloned);
                         }
 
                         break;
@@ -554,30 +643,11 @@ OOML.Namespace = function(namespace, settings) {
                 return cloned;
             })(classRootElem);
 
-            let instanceAttributes = Utils.clone(classAttributes);
-            let instanceAttributesInterface = Utils.createCleanObject();
-
+            // Must be done after instanceDom and instanceAttributesInterface is initialised
             Object.keys(instanceAttributes).forEach(attrName => {
                 // Set initial attribute value
-                Utils.DOM.setData(instanceDom, attrName, instanceAttributes[attrName].value);
-
-                // Set up attributes interface object
-                Object.defineProperty(instanceAttributesInterface, attrName, {
-                    get: () => instanceAttributes[attrName].value,
-                    set: newVal => {
-                        /*
-                        OVERRIDE: Attributes can contain any value
-                        if (!Utils.isPrimitiveValue(newVal)) {
-                            throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
-                        }
-                        */
-                        instanceAttributes[attrName].value = newVal;
-                        Utils.DOM.setData(instanceDom, attrName, newVal);
-                    },
-                    enumerable: true,
-                });
+                instanceAttributesInterface[attrName] = instanceAttributes[attrName].value;
             });
-            Object.preventExtensions(instanceAttributesInterface);
 
             let propertiesGetterSetterFuncs = Utils.createCleanObject();
             propertiesGetterSetterFuncs.attributes = {
@@ -724,20 +794,14 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
+                        let outputText = Utils.getOOMLOutputValue(newVal);
+
                         instanceProperties[prop].nodes.forEach(node => {
-                            let outputText;
-
-                            if ((newVal instanceof Date || Array.isArray(newVal)) && newVal.oomlOutputMethod) {
-                                outputText = newVal.oomlOutputMethod(newVal);
-                            } else {
-                                outputText = newVal;
-                            }
-
                             if (node instanceof Text) {
                                 node.data = outputText;
                             } else { // Must be attribute
-                                let formatStr = node[OOML_ATTRNODE_PROPNAME_TEXTFORMAT];
-                                node[OOML_ATTRNODE_PROPNAME_FORMATPARAMMAP][prop].forEach(offset => {
+                                let formatStr = node.valueFormat;
+                                node.valueFormatMap[prop].forEach(offset => {
                                     formatStr[offset] = outputText;
                                 });
                                 OOMLNodesWithUnwrittenChanges.add(node);
@@ -824,8 +888,6 @@ OOML.Namespace = function(namespace, settings) {
             // Update attribute nodes with parameter handlebars that have just been changed
             OOMLWriteChanges();
         };
-
-        classes[className].debugClassDom = classRootElem;
 
         // Set properties for accessing properties' names and predefined properties' values
         classes[className][OOML_CLASS_PROPNAME_PROPNAMES] = classPropertyNames; // Already frozen

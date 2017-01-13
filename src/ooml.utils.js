@@ -21,6 +21,16 @@ let Utils = {
             return false;
         },
     },
+    getOOMLOutputValue: function(value) {
+        // Don't restrict to Date and Array instances, as attributes can hold any value
+        if (value && typeof value.oomlOutputMethod == 'function') {
+            value = value.oomlOutputMethod(value);
+            if (!Utils.isPrimitiveValue(value)) {
+                throw new TypeError(`An oomlOutputMethod function returned an invalid value`);
+            }
+        }
+        return '' + value;
+    },
     parseTypeDeclaration: function(types) {
         return types.split('|').filter((type, idx, types) => {
             if (OOMLPropertyTypes.indexOf(type) == -1) {
@@ -125,12 +135,9 @@ let Utils = {
                     }
 
                     let attrValue = Utils.getEvalValue(node.textContent);
-                    /*
-                    OVERRIDE: Attributes can contain any value
-                    if (!Utils.isPrimitiveValue(attrValue)) {
+                    if (attrValue === undefined) {
                         throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
                     }
-                    */
 
                     classMetadata.attributes[attrName] = {
                         value: attrValue,
@@ -768,7 +775,7 @@ let Utils = {
                 return typeof value == 'number' &&
                     isFinite(value); // Returns false on NaN and +/-Infinity
 
-            case 'object':
+            case 'Object':
                 return Utils.isObjectLiteral(value);
 
             case 'array':
@@ -802,6 +809,8 @@ let Utils = {
         let strParts = [],
             paramMap = Utils.createCleanObject();
 
+        paramMap.attributes = Utils.createCleanObject();
+
         while (true) {
             let posOfOpeningBraces = str.indexOf('{{');
 
@@ -832,17 +841,19 @@ let Utils = {
             let paramIsAttribute = !!regexpMatches[1];
 
             if (paramIsAttribute) {
-                // TODO
-            }
-
-            if (!Utils.isValidPropertyName(param)) {
+                if (!Utils.isValidAttributeName(param)) {
+                    throw new SyntaxError(`"${ param }" is not a valid attribute name`);
+                }
+            } else if (!Utils.isValidPropertyName(param)) {
                 throw new SyntaxError(`"${ param }" is not a valid property name`);
             }
 
-            if (!paramMap[param]) {
-                paramMap[param] = [];
+            let mapToUse = paramIsAttribute ? paramMap.attributes : paramMap;
+
+            if (!mapToUse[param]) {
+                mapToUse[param] = [];
             }
-            paramMap[param].push(strParts.length);
+            mapToUse[param].push(strParts.length);
             strParts.push('');
 
             str = str.slice(posOfClosingBraces + 2);

@@ -54,7 +54,7 @@
         </template>
 
         <template ooml-class="User">
-            <ooml-attribute name="unusedProperty">null</ooml-attribute>
+            <ooml-attribute name="color">"red"</ooml-attribute>
             <ooml-property name="unusedProperty">42</ooml-property>
             <ooml-property name="gender">"Undecided voter"</ooml-property>
             <ooml-property name="performanceData">[
@@ -82,6 +82,8 @@
                     <dd>{{ this.gender }}</dd>
                     <dt>Ethnicity</dt>
                     <dd>{{ this.ethnicity }}</dd>
+                    <dt>Favourite colour</dt>
+                    <dd ooml-style="color: {{ this.attributes.color }}">{{ this.attributes.color }}</dd>
                 </dl>
 
                 <h2>Account</h2>

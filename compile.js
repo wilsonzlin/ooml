@@ -92,15 +92,19 @@ if (!DEBUG) {
     });
     fs.writeFileSync(SRC_DIR + 'ooml.js', js_propname_constants_minified);
 
+    let alphabet = 'abcdefghijklmnopqrstuvwxyz';
+
+    // Use alphabetical characters for NodeSet and StringSet minfied hidden properties
+    // as some are just a prefix for combination with another number, causing potential overlap
     propname_autoincrement = -1;
     js_propname_constants_minified = fs.readFileSync(SRC_DIR + 'ooml.NodeSet.js', 'utf8').replace(/'__nodeSet[a-zA-Z]+';$/gm, () => {
-        return `'__${++propname_autoincrement}';`;
+        return `'__${ alphabet[++propname_autoincrement] || (() => { throw "Alphabet exceeded" })() }';`;
     });
     fs.writeFileSync(SRC_DIR + 'ooml.NodeSet.js', js_propname_constants_minified);
 
     propname_autoincrement = -1;
     js_propname_constants_minified = fs.readFileSync(SRC_DIR + 'ooml.StringSet.js', 'utf8').replace(/'__stringSet[a-zA-Z]+';$/gm, () => {
-        return `'__${++propname_autoincrement}';`;
+        return `'__${ alphabet[++propname_autoincrement] || (() => { throw "Alphabet exceeded" })() }';`;
     });
     fs.writeFileSync(SRC_DIR + 'ooml.StringSet.js', js_propname_constants_minified);
 }

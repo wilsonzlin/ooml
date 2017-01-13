@@ -1,4 +1,6 @@
-OOML.Element = function() {};
+OOML.Element = function() {
+    throw new SyntaxError(`OOML.Element is an abstract class`);
+};
 let OOMLElementProto = OOML.Element.prototype;
 OOMLElementProto.toObject = function() {
 
