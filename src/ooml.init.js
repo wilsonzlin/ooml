@@ -194,7 +194,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     if (/^childon/.test(attrName)) {
 
-                        let eventName = attrName.slice(7);
+                        let eventName = attrName.slice(7).toLowerCase();
 
                         if (ret.childEventHandlers[eventName]) {
                             throw new SyntaxError(`Another child "${ eventName }" event handler already exists`);
@@ -204,7 +204,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     } else if (/^domon/.test(attrName)) {
 
-                        let eventName = attrName.slice(5);
+                        let eventName = attrName.slice(5).toLowerCase();
 
                         if (ret.domEventHandlers[eventName]) {
                             throw new SyntaxError(`Another DOM "${ eventName }" event handler already exists`);
@@ -429,11 +429,11 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         if (classMethods[propName]) {
-                            throw new SyntaxError(`"${ propName }" already exists as a method`);
+                            throw new ReferenceError(`"${ propName }" already exists as a method`);
                         }
 
                         if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
-                            throw new SyntaxError(`The property "${ propName }" already exists as a element substitution`);
+                            throw new ReferenceError(`The property "${ propName }" already exists as a element substitution`);
                         }
 
                         if (!classProperties[propName]) {
@@ -442,6 +442,12 @@ OOML.Namespace = function(namespace, settings) {
                                 isArray: false,
                                 value: undefined,
                             };
+                        }
+                    });
+
+                    Object.keys(paramsData.map.attributes).forEach(attrName => {
+                        if (!classAttributes[attrName]) {
+                            throw new ReferenceError(`The attribute "${ attrName }" does not exist`);
                         }
                     });
                 }
@@ -464,6 +470,7 @@ OOML.Namespace = function(namespace, settings) {
             function dispatchEventToParent(eventName, eventData) {
 
                 let prevented = false;
+                eventName = eventName.toLowerCase();
 
                 if (instanceEventHandlers.dispatch[eventName]) {
                     instanceEventHandlers.dispatch[eventName].forEach(handler => {

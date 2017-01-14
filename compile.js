@@ -35,9 +35,10 @@ if (NANO_ARG) {
     fs.writeFileSync(
         SRC_DIR + 'ooml.js',
 
-        '(function(Object, TypeError, SyntaxError, undefined) {' +
+        '(function(Object, TypeError, SyntaxError, ReferenceError, Error, undefined) {' +
+            '"use strict";' +
             fs.readFileSync(SRC_DIR + 'ooml.js', 'utf8') +
-        '})(Object, TypeError, SyntaxError)'
+        '})(Object, TypeError, SyntaxError, ReferenceError, Error)'
     );
 }
 
