@@ -20,6 +20,28 @@ let Utils = {
             }
             return false;
         },
+        writeValue: function(type, name, nodes, value) {
+            nodes.forEach(node => {
+                if (node instanceof Text) {
+                    node.data = value;
+                } else { // Must be attribute
+                    let formatStr = node.valueFormat;
+
+                    let setToUse;
+                    if (type == 'attribute') {
+                        setToUse = node.valueFormatMap.attributes[name];
+                    } else {
+                        setToUse = node.valueFormatMap[name];
+                    }
+                    setToUse.forEach(offset => {
+                        formatStr[offset] = value;
+                    });
+                    OOMLNodesWithUnwrittenChanges.add(node);
+                }
+            });
+
+            OOMLWriteChanges();
+        },
     },
     getOOMLOutputValue: function(value) {
         // Don't restrict to Date and Array instances, as attributes can hold any value

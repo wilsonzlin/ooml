@@ -510,19 +510,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         let outputText = Utils.getOOMLOutputValue(newVal);
 
-                        instanceAttributes[attrName].nodes.forEach(node => {
-                            if (node instanceof Text) {
-                                node.data = outputText;
-                            } else { // Must be attribute
-                                let formatStr = node.valueFormat;
-                                node.valueFormatMap.attributes[attrName].forEach(offset => {
-                                    formatStr[offset] = outputText;
-                                });
-                                OOMLNodesWithUnwrittenChanges.add(node);
-                            }
-                        });
-
-                        OOMLWriteChanges();
+                        Utils.DOM.writeValue('attribute', attrName, instanceAttributes[attrName].nodes, outputText);
 
                         instanceAttributes[attrName].value = newVal;
                         Utils.DOM.setData(instanceDom, attrName, outputText);
@@ -796,19 +784,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         let outputText = Utils.getOOMLOutputValue(newVal);
 
-                        instanceProperties[prop].nodes.forEach(node => {
-                            if (node instanceof Text) {
-                                node.data = outputText;
-                            } else { // Must be attribute
-                                let formatStr = node.valueFormat;
-                                node.valueFormatMap[prop].forEach(offset => {
-                                    formatStr[offset] = outputText;
-                                });
-                                OOMLNodesWithUnwrittenChanges.add(node);
-                            }
-                        });
-
-                        OOMLWriteChanges();
+                        Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, outputText);
 
                         let oldVal = instanceProperties[prop].value;
                         instanceProperties[prop].value = newVal;
