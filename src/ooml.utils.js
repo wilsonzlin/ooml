@@ -148,6 +148,8 @@ let Utils = {
                 case 'OOML-ATTRIBUTE':
 
                     let attrName = node.getAttribute('name');
+                    let attrTypes = node.getAttribute('type') || undefined;
+
                     if (!Utils.isValidAttributeName(attrName)) {
                         throw new SyntaxError(`The attribute name "${ attrName }" is invalid`);
                     }
@@ -156,12 +158,17 @@ let Utils = {
                         throw new SyntaxError(`The attribute "${ attrName }" is already defined`);
                     }
 
+                    if (attrTypes) {
+                        attrTypes = Utils.parseTypeDeclaration(attrTypes);
+                    }
+
                     let attrValue = Utils.getEvalValue(node.textContent);
                     if (attrValue === undefined) {
                         throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
                     }
 
                     classMetadata.attributes[attrName] = {
+                        types: attrTypes,
                         value: attrValue,
                     };
 

@@ -539,6 +539,12 @@ OOML.Namespace = function(namespace, settings) {
                             throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
                         }
 
+                        if (instanceAttributes[attrName].types) {
+                            if (!instanceAttributes[attrName].types.some(type => Utils.isType(type, newVal))) {
+                                throw new TypeError(`Cannot set new attribute value; expected type to be one of: ${ instanceAttributes[attrName].types.join(', ') }`);
+                            }
+                        }
+
                         let outputText = Utils.getOOMLOutputValue(newVal);
 
                         Utils.DOM.writeValue('attribute', attrName, instanceAttributes[attrName].nodes, outputText);
