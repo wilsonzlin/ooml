@@ -16,7 +16,7 @@ OOMLElementProto.toObject = function() {
         } else {
             let serialisedValue;
 
-            if ((value instanceof Date || Array.isArray(value)) && value.oomlSerialisationMethod) {
+            if (value && typeof value.oomlSerialisationMethod == 'function') {
                 serialisedValue = value.oomlSerialisationMethod(value);
             } else {
                 serialisedValue = value;
