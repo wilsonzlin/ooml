@@ -148,7 +148,7 @@ let Utils = {
                 case 'OOML-ATTRIBUTE':
 
                     let attrName = node.getAttribute('name');
-                    if (!Utils.isValidPropertyName(attrName)) {
+                    if (!Utils.isValidAttributeName(attrName)) {
                         throw new SyntaxError(`The attribute name "${ attrName }" is invalid`);
                     }
 
@@ -791,64 +791,5 @@ let Utils = {
         }
 
         return new elemConstructor(obj);
-    },
-    splitStringByParamholders: function(str) {
-        let strParts = [],
-            paramMap = Utils.createCleanObject();
-
-        paramMap.attributes = Utils.createCleanObject();
-
-        while (true) {
-            let posOfOpeningBraces = str.indexOf('{{');
-
-            if (posOfOpeningBraces < 0) {
-                if (str) {
-                    strParts.push(str);
-                }
-                break;
-            }
-
-            let strBeforeParam = str.slice(0, posOfOpeningBraces);
-            if (strBeforeParam) strParts.push(strBeforeParam);
-            str = str.slice(posOfOpeningBraces + 2);
-
-            let posOfClosingBraces = str.indexOf('}}');
-            if (posOfClosingBraces < 0) {
-                throw new SyntaxError(`Unexpected end of input; expected closing text parameter braces`);
-            }
-
-            let param = str.slice(0, posOfClosingBraces);
-            let regexpMatches;
-
-            if (!(regexpMatches = /^ this\.(attributes\.)?(.+) $/.exec(param))) {
-                throw new SyntaxError(`Invalid property declaration in attribute value at "${ param }"`);
-            }
-
-            param = regexpMatches[2];
-            let paramIsAttribute = !!regexpMatches[1];
-
-            if (paramIsAttribute) {
-                if (!Utils.isValidAttributeName(param)) {
-                    throw new SyntaxError(`"${ param }" is not a valid attribute name`);
-                }
-            } else if (!Utils.isValidPropertyName(param)) {
-                throw new SyntaxError(`"${ param }" is not a valid property name`);
-            }
-
-            let mapToUse = paramIsAttribute ? paramMap.attributes : paramMap;
-
-            if (!mapToUse[param]) {
-                mapToUse[param] = [];
-            }
-            mapToUse[param].push(strParts.length);
-            strParts.push('');
-
-            str = str.slice(posOfClosingBraces + 2);
-        }
-
-        return {
-            parts: strParts,
-            map: paramMap,
-        };
     },
 };
