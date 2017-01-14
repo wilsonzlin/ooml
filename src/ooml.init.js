@@ -165,6 +165,71 @@ OOML.Namespace = function(namespace, settings) {
             classConstructor = classMetadata.constructor ? classMetadata.constructor.bind(undefined, parentClassConstructor) : parentClassConstructor;
         }
 
+        function parseClassDomTextSubstitution(code) {
+            let regexpMatches = /^(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(attributes\.)?(.+?) $/.exec(code);
+            if (!regexpMatches || !regexpMatches[3]) {
+                throw new SyntaxError(`Invalid property declaration at "${ code }"`);
+            }
+
+            let types = regexpMatches[1] || undefined;
+            let propName = regexpMatches[3];
+            let isAttribute = !!regexpMatches[2];
+
+            if (isAttribute) {
+                if (!Utils.isValidAttributeName(propName)) {
+                    throw new SyntaxError(`"${ propName }" is not a valid attribute name`);
+                }
+
+                if (!classAttributes[propName]) {
+                    throw new ReferenceError(`The attribute "${ propName }" does not exist`);
+                }
+
+                if (types && (!classProperties[propName].types || classAttributes[propName].types.join('|') !== types)) {
+                    throw new SyntaxError(`Invalid type declaration for the attribute substitution "${ propName }"`);
+                }
+            } else {
+                if (!Utils.isValidPropertyName(propName, settingStrictPropertyNames)) {
+                    throw new SyntaxError(`"${ propName }" is not a valid property name`);
+                }
+
+                if (classMethods[propName]) {
+                    throw new ReferenceError(`"${ propName }" already exists as a method`);
+                }
+
+                if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
+                    throw new ReferenceError(`The property "${ propName }" already exists as a element substitution`);
+                }
+
+                let propAlreadyExists = !!classProperties[propName];
+
+                if (types) {
+                    if (propAlreadyExists) {
+                        if (classProperties[propName].types) {
+                            if (classProperties[propName].types.join('|') !== types) {
+                                throw new SyntaxError(`The types for the property "${ propName }" have already been declared`);
+                            }
+                        } else {
+                            classProperties[propName].types = Utils.parseTypeDeclaration(types);
+                        }
+                    }
+                }
+
+                if (!propAlreadyExists) {
+                    classProperties[propName] = {
+                        // types is undefined if not matched in RegExp
+                        types: types && Utils.parseTypeDeclaration(types),
+                        isArray: false,
+                        value: undefined,
+                    };
+                }
+            }
+
+            return {
+                isAttribute: isAttribute,
+                name: propName,
+            };
+        }
+
         var classRootElem = (function parseClassDom(current) {
 
             let ret;
@@ -267,75 +332,14 @@ OOML.Namespace = function(namespace, settings) {
 
                     let regexpMatches;
                     if (code[0] == '{') {
-                        regexpMatches = /^\{(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(attributes\.)?(.+?) $/.exec(code);
-                        if (!regexpMatches || !regexpMatches[3]) {
-                            throw new SyntaxError(`Invalid property declaration at "${ code }"`);
-                        }
+                        let textSubstitutionConfig = parseClassDomTextSubstitution(code.slice(1));
 
-                        let types = regexpMatches[1] || undefined;
-                        let propName = regexpMatches[3];
-                        let isAttribute = !!regexpMatches[2];
-
-                        if (isAttribute) {
-                            if (!Utils.isValidAttributeName(propName)) {
-                                throw new SyntaxError(`"${ propName }" is not a valid attribute name`);
-                            }
-
-                            if (!classAttributes[propName]) {
-                                throw new ReferenceError(`The attribute "${ propName }" does not exist`);
-                            }
-
-                            if (types && (!classProperties[propName].types || classAttributes[propName].types.join('|') !== types)) {
-                                throw new SyntaxError(`Invalid type declaration for the attribute substitution "${ propName }"`);
-                            }
-
-                            ret.push({
-                                type: 'text',
-                                value: '',
-                                bindedAttribute: propName,
-                            });
-                        } else {
-                            if (!Utils.isValidPropertyName(propName, settingStrictPropertyNames)) {
-                                throw new SyntaxError(`"${ propName }" is not a valid property name`);
-                            }
-
-                            if (classMethods[propName]) {
-                                throw new ReferenceError(`"${ propName }" already exists as a method`);
-                            }
-
-                            if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
-                                throw new ReferenceError(`The property "${ propName }" already exists as a element substitution`);
-                            }
-
-                            let propAlreadyExists = !!classProperties[propName];
-
-                            if (types) {
-                                if (propAlreadyExists) {
-                                    if (classProperties[propName].types) {
-                                        if (classProperties[propName].types.join('|') !== types) {
-                                            throw new SyntaxError(`The types for the property "${ propName }" have already been declared`);
-                                        }
-                                    } else {
-                                        classProperties[propName].types = Utils.parseTypeDeclaration(types);
-                                    }
-                                }
-                            }
-
-                            if (!propAlreadyExists) {
-                                classProperties[propName] = {
-                                    // types is undefined if not matched in RegExp
-                                    types: types && Utils.parseTypeDeclaration(types),
-                                    isArray: false,
-                                    value: undefined,
-                                };
-                            }
-
-                            ret.push({
-                                type: 'text',
-                                value: '',
-                                bindedProperty: propName,
-                            });
-                        }
+                        ret.push({
+                            type: 'text',
+                            value: '',
+                            bindedProperty: textSubstitutionConfig.isAttribute ? undefined : textSubstitutionConfig.name,
+                            bindedAttribute: !textSubstitutionConfig.isAttribute ? undefined : textSubstitutionConfig.name,
+                        });
 
                         nodeValue = nodeValue.slice(indexOfClosingBrace + 2);
 
@@ -452,48 +456,12 @@ OOML.Namespace = function(namespace, settings) {
                             throw new SyntaxError(`Unexpected end of input; expected closing text parameter braces`);
                         }
 
-                        let param = str.slice(0, posOfClosingBraces);
-                        let regexpMatches;
+                        let code = str.slice(0, posOfClosingBraces);
 
-                        if (!(regexpMatches = /^(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(attributes\.)?(.+) $/.exec(param))) {
-                            throw new SyntaxError(`Invalid property declaration in attribute value at "${ param }"`);
-                        }
+                        let textSubstitutionConfig = parseClassDomTextSubstitution(code);
+                        let param = textSubstitutionConfig.name;
 
-                        param = regexpMatches[3];
-                        let paramIsAttribute = !!regexpMatches[2];
-                        let paramTypeDeclaration = regexpMatches[1];
-
-                        if (paramIsAttribute) {
-                            if (!Utils.isValidAttributeName(param)) {
-                                throw new SyntaxError(`"${ param }" is not a valid attribute name`);
-                            }
-
-                            if (!classAttributes[param]) {
-                                throw new ReferenceError(`The attribute "${ param }" does not exist`);
-                            }
-                        } else {
-                            if (!Utils.isValidPropertyName(param, settingStrictPropertyNames)) {
-                                throw new SyntaxError(`"${ param }" is not a valid property name`);
-                            }
-
-                            if (classMethods[param]) {
-                                throw new ReferenceError(`"${ param }" already exists as a method`);
-                            }
-
-                            if (classElementProperties.has(param) || classArrayProperties.has(param)) {
-                                throw new ReferenceError(`The property "${ param }" already exists as a element substitution`);
-                            }
-
-                            if (!classProperties[param]) {
-                                classProperties[param] = {
-                                    types: undefined,
-                                    isArray: false,
-                                    value: undefined,
-                                };
-                            }
-                        }
-
-                        let mapToUse = paramIsAttribute ? paramMap.attributes : paramMap;
+                        let mapToUse = textSubstitutionConfig.isAttribute ? paramMap.attributes : paramMap;
 
                         if (!mapToUse[param]) {
                             mapToUse[param] = [];
