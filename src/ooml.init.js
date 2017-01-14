@@ -705,6 +705,9 @@ OOML.Namespace = function(namespace, settings) {
                         if (typeof handler != 'function') {
                             throw new TypeError(`The handler for the event "${ eventName }" of type "${ eventType }" is not a function`);
                         }
+
+                        eventName = eventName.toLocaleLowerCase();
+
                         if (!instanceEventHandlers[eventType][eventName]) {
                             instanceEventHandlers[eventType][eventName] = [];
                         }
