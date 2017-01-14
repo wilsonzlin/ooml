@@ -185,7 +185,7 @@ OOML.Namespace = function(namespace, settings) {
                 for (let i = 0; i < current.attributes.length; i++) {
 
                     let attr = current.attributes[i];
-                    let attrName = attr.name.toLowerCase();
+                    let attrName = attr.name.toLocaleLowerCase();
 
                     if (attrNames.has(attrName)) {
                         throw new SyntaxError(`Duplicate attribute "${ attrName }"`);
@@ -194,7 +194,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     if (/^childon/.test(attrName)) {
 
-                        let eventName = attrName.slice(7).toLowerCase();
+                        let eventName = attrName.slice(7).toLocaleLowerCase();
 
                         if (ret.childEventHandlers[eventName]) {
                             throw new SyntaxError(`Another child "${ eventName }" event handler already exists`);
@@ -204,7 +204,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     } else if (/^domon/.test(attrName)) {
 
-                        let eventName = attrName.slice(5).toLowerCase();
+                        let eventName = attrName.slice(5).toLocaleLowerCase();
 
                         if (ret.domEventHandlers[eventName]) {
                             throw new SyntaxError(`Another DOM "${ eventName }" event handler already exists`);
@@ -470,7 +470,7 @@ OOML.Namespace = function(namespace, settings) {
             function dispatchEventToParent(eventName, eventData) {
 
                 let prevented = false;
-                eventName = eventName.toLowerCase();
+                eventName = eventName.toLocaleLowerCase();
 
                 if (instanceEventHandlers.dispatch[eventName]) {
                     instanceEventHandlers.dispatch[eventName].forEach(handler => {

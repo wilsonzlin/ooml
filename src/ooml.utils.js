@@ -316,16 +316,16 @@ let Utils = {
                                         // If destructuring argument is optional and was not provided,
                                         // then all containing properties are also optional
                                         providedProperty = undefined;
-                                    } else if (arg.type == 'object') {
+                                    } else if (arg.type == 'Object') {
                                         providedProperty = providedArgument[prop.name];
                                         propKey = prop.name;
-                                    } else { // arg.type is 'array' or 'Array' or 'OOML.Array'
+                                    } else { // arg.type is 'Array' or 'OOML.Array'
                                         propKey = propIdx;
                                         // NOTE: Don't need to check if type matches defined array type,
                                         // as previous Utils.isType call already did
                                         if (providedArgument instanceof OOML.Array) {
                                             providedProperty = providedArgument.get(propIdx);
-                                        } else if (Utils.isArrayLike(providedArgument)) {
+                                        } else if (Array.isArray(providedArgument)) {
                                             providedProperty = providedArgument[propIdx];
                                         } else {
                                             throw new TypeError(`Unrecognised array argument provided`)
@@ -461,7 +461,7 @@ let Utils = {
                 let isOptional = temp[1] == '?';
                 args.push({
                     destructure: true,
-                    type: temp[2] == '{' ? 'object' : 'array',
+                    type: temp[2] == '{' ? 'Object' : 'Array',
                     name: undefined,
                     optional: isOptional,
                     properties: [],
@@ -504,13 +504,13 @@ let Utils = {
                     throw new SyntaxError(`Nested destructuring is not allowed`);
                 }
                 if (matchedType) {
-                    if ((matchedOpenBrace == '{' && matchedType != 'object') ||
-                        (matchedOpenBrace == '[' && ['array', 'OOML.Array', 'Array'].indexOf(matchedType) == -1)
+                    if ((matchedOpenBrace == '{' && matchedType != 'Object') ||
+                        (matchedOpenBrace == '[' && ['OOML.Array', 'Array'].indexOf(matchedType) == -1)
                     ) {
                         throw new SyntaxError(`Destructuring argument type provided is not recognised`);
                     }
                 } else {
-                    matchedType = matchedOpenBrace == '{' ? 'object' : 'array';
+                    matchedType = matchedOpenBrace == '{' ? 'Object' : 'Array';
                 }
                 if (matchedCollectOperator) {
                     throw new SyntaxError(`Destructuring argument contains invalid operator`);
@@ -559,7 +559,7 @@ let Utils = {
                 else if (matchedOpenBrace == '{' && toProcess[0] == '}') {
                     toProcess = toProcess.slice(1);
                     defaultValue = Utils.createCleanObject;
-                } else if (matchedType == 'object') {
+                } else if (matchedType == 'Object') {
                     throw new SyntaxError(`An object argument has an invalid default value`);
                 }
 
@@ -569,7 +569,7 @@ let Utils = {
                     defaultValue = function (type) {
                         return type == 'OOML.Array' ? new OOML.Array : []
                     }.bind(matchedType);
-                } else if (['array', 'Array', 'OOML.Array'].indexOf(matchedType) > -1) {
+                } else if (['Array', 'OOML.Array'].indexOf(matchedType) > -1) {
                     throw new SyntaxError(`An array argument has an invalid default value`);
                 }
 
@@ -724,39 +724,6 @@ let Utils = {
             Array.prototype.push.apply(arr, arguments[i]);
         }
     },
-    // Function that matches host array-like objects as well as primitive Array instances
-    // Should not match external library array-like objects (e.g. jQuery or OOML.Array)
-    isArrayLike: function(obj) {
-        if (!obj) {
-            return false;
-        }
-
-        // A "real" array fails most of the other tests, so short-circuit here
-        if (Array.isArray(obj)) {
-            return true;
-        }
-
-        // typeof null == 'object'; Object.create(null) instanceof Object == false
-        if (typeof obj != 'object' || !(obj instanceof Object)) {
-            return false;
-        }
-
-        let length = obj.length;
-        if (!Utils.isType('natural', length)) {
-            return false;
-        }
-
-        if (obj.hasOwnProperty('length')) {
-            return false;
-        }
-
-        let descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), 'length');
-        if (!descriptor || !descriptor.get || descriptor.set) {
-            return false;
-        }
-
-        return true;
-    },
     isOOMLClass: function(c) {
         return c.prototype instanceof OOML.Element;
     },
@@ -800,9 +767,6 @@ let Utils = {
 
             case 'Object':
                 return Utils.isObjectLiteral(value);
-
-            case 'array':
-                return Utils.isArrayLike(value) || value instanceof OOML.Array;
 
             case 'OOML.Array':
                 return value instanceof OOML.Array;
