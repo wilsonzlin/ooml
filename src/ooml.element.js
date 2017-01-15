@@ -7,7 +7,13 @@ OOMLElementProto.toObject = function() {
     let instance = this;
     let obj = Utils.createCleanObject();
 
-    this.constructor[OOML_CLASS_PROPNAME_PROPNAMES].forEach((propName) => {
+    let klass = this.constructor;
+
+    klass[OOML_CLASS_PROPNAME_PROPNAMES].forEach((propName) => {
+        if (klass[OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES].has(propName)) {
+            return;
+        }
+
         let value = instance[propName];
         if (value instanceof OOML.Array) {
             obj[propName] = value.toArray();

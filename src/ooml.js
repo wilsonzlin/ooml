@@ -59,6 +59,7 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach',
 
     OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
+    OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties',
     OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes',
     OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
     OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';

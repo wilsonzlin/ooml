@@ -150,8 +150,17 @@ OOML.Namespace = function(namespace, settings) {
         var classProperties = classMetadata.properties;
 
         // Just for quick reference, nothing more
+        var classTextProperties = new StringSet();
         var classArrayProperties = new StringSet();
         var classElementProperties = new StringSet();
+
+        // For .toObject
+        var classSuppressedProperties = new StringSet();
+        Object.keys(classProperties).forEach(propName => {
+            if (classProperties[propName].suppressed) {
+                classSuppressedProperties.add(propName);
+            }
+        });
 
         var classAttributes = Utils.deepFreeze(Utils.concat(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDATTRS] || Utils.createCleanObject(), classMetadata.attributes));
 
@@ -166,16 +175,21 @@ OOML.Namespace = function(namespace, settings) {
         }
 
         function parseClassDomTextSubstitution(code) {
-            let regexpMatches = /^(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? this\.(attributes\.)?(.+?) $/.exec(code);
-            if (!regexpMatches || !regexpMatches[3]) {
+            let regexpMatches = /^(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? (@)?this\.(attributes\.)?(.+?) $/.exec(code);
+            if (!regexpMatches || !regexpMatches[4]) {
                 throw new SyntaxError(`Invalid property declaration at "${ code }"`);
             }
 
             let types = regexpMatches[1] || undefined;
-            let propName = regexpMatches[3];
-            let isAttribute = !!regexpMatches[2];
+            let propName = regexpMatches[4];
+            let isAttribute = !!regexpMatches[3];
+            let isSuppressed = !!regexpMatches[2];
 
             if (isAttribute) {
+                if (isSuppressed) {
+                    throw new SyntaxError(`Attributes cannot be suppressed`);
+                }
+
                 if (!Utils.isValidAttributeName(propName)) {
                     throw new SyntaxError(`"${ propName }" is not a valid attribute name`);
                 }
@@ -202,8 +216,18 @@ OOML.Namespace = function(namespace, settings) {
 
                 let propAlreadyExists = !!classProperties[propName];
 
-                if (types) {
-                    if (propAlreadyExists) {
+                // Do this regardless of whether it already exists or not
+                // as predefined properties "exist" but do not count as a text property
+                classTextProperties.add(propName);
+
+                if (propAlreadyExists) {
+                    if (isSuppressed && !classProperties[propName].suppressed) {
+                        classProperties[propName].suppressed = true;
+                        classSuppressedProperties.add(propName);
+                    }
+                    isSuppressed = classProperties[propName].suppressed;
+
+                    if (types) {
                         if (classProperties[propName].types) {
                             if (classProperties[propName].types.join('|') !== types) {
                                 throw new SyntaxError(`The types for the property "${ propName }" have already been declared`);
@@ -212,15 +236,17 @@ OOML.Namespace = function(namespace, settings) {
                             classProperties[propName].types = Utils.parseTypeDeclaration(types);
                         }
                     }
-                }
-
-                if (!propAlreadyExists) {
+                } else {
                     classProperties[propName] = {
                         // types is undefined if not matched in RegExp
                         types: types && Utils.parseTypeDeclaration(types),
                         isArray: false,
                         value: undefined,
+                        suppressed: isSuppressed,
                     };
+                    if (isSuppressed) {
+                        classSuppressedProperties.add(propName);
+                    }
                 }
             }
 
@@ -344,27 +370,38 @@ OOML.Namespace = function(namespace, settings) {
                         nodeValue = nodeValue.slice(indexOfClosingBrace + 2);
 
                     } else {
-                        regexpMatches = /^ (?:for ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)) of|((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+))) this\.([a-zA-Z0-9_]+) $/.exec(code);
-                        if (!regexpMatches || !regexpMatches[3] || (!regexpMatches[1] && !regexpMatches[2])) {
+                        regexpMatches = /^ (?:for ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)) of|((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+))) (@)?this\.([a-zA-Z0-9_]+) $/.exec(code);
+                        if (!regexpMatches || !regexpMatches[4] || (!regexpMatches[1] && !regexpMatches[2])) {
                             throw new SyntaxError(`Invalid element substitution at "${ code }"`);
                         }
 
                         nodeValue = nodeValue.slice(indexOfClosingBrace + 1);
 
                         let elemConstructorName = regexpMatches[1] || regexpMatches[2];
-                        let propName = regexpMatches[3];
+                        let propName = regexpMatches[4];
                         let isArraySubstitution = !!regexpMatches[1];
+                        let isSuppressed = !!regexpMatches[3];
 
                         if (classMethods[propName]) {
                             throw new SyntaxError(`"${ propName }" already exists as a method`);
                         }
 
-                        // The property can be predefined but not already in use
-                        // NOTE: It's not possible for more than one element substitution of the same property
-                        // NOTE: Predefined properties always have a non-undefined value,
-                        //       and other properties always have undefined as their value
-                        if (classProperties[propName] && classProperties[propName].value === undefined) {
-                            throw new SyntaxError(`The property "${ propName }" is already defined`);
+                        let propAlreadyExists = !!classProperties[propName];
+
+                        if (propAlreadyExists) {
+                            // NOTE: It's not possible for more than one element substitution of the same property
+                            if (classTextProperties.has(propName)) {
+                                throw new SyntaxError(`The property "${ propName }" is already defined`);
+                            }
+                            if (isSuppressed && !classProperties[propName].suppressed) {
+                                classProperties[propName].suppressed = true;
+                                classSuppressedProperties.add(propName);
+                            }
+                            isSuppressed = classProperties[propName].suppressed;
+                        } else {
+                            if (isSuppressed) {
+                                classSuppressedProperties.add(propName);
+                            }
                         }
 
                         if (isArraySubstitution) {
@@ -384,10 +421,12 @@ OOML.Namespace = function(namespace, settings) {
                                 elemConstructorName == 'OOML.Element' ? OOML.Element :
                                     getClassFromString(elemConstructorName);
 
+
                         classProperties[propName] = {
                             types: [elemConstructor],
                             isArray: isArraySubstitution,
-                            value: undefined,
+                            value: propAlreadyExists ? classPredefinedProperties[propName].value : undefined,
+                            suppressed: isSuppressed,
                         };
 
                         ret.push({
@@ -907,6 +946,7 @@ OOML.Namespace = function(namespace, settings) {
 
         // Set properties for accessing properties' names and predefined properties' values
         classes[className][OOML_CLASS_PROPNAME_PROPNAMES] = classPropertyNames; // Already frozen
+        classes[className][OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES] = classSuppressedProperties;
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDATTRS] = classAttributes; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = classPredefinedProperties; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = classConstructor;

@@ -55,7 +55,7 @@
 
         <template ooml-class="User">
             <ooml-attribute name="color">"red"</ooml-attribute>
-            <ooml-property name="unusedProperty">42</ooml-property>
+            <ooml-property suppressed name="unusedProperty">42</ooml-property>
             <ooml-property name="gender">"Undecided voter"</ooml-property>
             <ooml-property name="performanceData">[
                 { id: 234908, jobTitle: 'Head of no-scoping', score: 420 },
@@ -112,7 +112,7 @@
                 <span>Send a message</span>
                 Hint: You are awesome!
                 { TextEditor this.postMessage }
-                { TextEditor this.postMessage2 }
+                { TextEditor @this.postMessageHidden }
 
                 <h2>Performance</h2>
                 <div class="table">

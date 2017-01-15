@@ -178,6 +178,7 @@ let Utils = {
 
                     let propName = node.getAttribute('name');
                     let propTypes = node.getAttribute('type') || undefined;
+                    let isSuppressed = node.hasAttribute('suppressed');
 
                     if (!Utils.isValidPropertyName(propName, strictPropertyNames)) {
                         throw new SyntaxError(`The property name "${ propName }" is invalid`);
@@ -200,6 +201,7 @@ let Utils = {
                         types: propTypes,
                         value: propValue,
                         isArray: false,
+                        suppressed: isSuppressed,
                     };
 
                     break;
