@@ -43,6 +43,11 @@ let Utils = {
             OOMLWriteChanges();
         },
     },
+    iterate: function(iterable, iterator) {
+        for (let i = 0; i < iterable.length; i++) {
+            iterator(iterable[i], i, iterable);
+        }
+    },
     getOOMLOutputValue: function(value) {
         // Don't restrict to Date and Array instances, as attributes can hold any value
         if (value && typeof value.oomlOutputMethod == 'function') {
@@ -82,8 +87,7 @@ let Utils = {
     },
     preprocessClassDeclaration: function(templateElem, strictPropertyNames) {
         let className, classIsAbstract, classExtends;
-        for (let i = 0; i < templateElem.attributes.length; i++) {
-            let attribute = templateElem.attributes[i];
+        Utils.iterate(templateElem.attributes, attribute => {
             switch (attribute.name) {
                 case 'ooml-class':
                 case 'ooml-abstract-class':
@@ -104,7 +108,7 @@ let Utils = {
                 default:
                     throw new SyntaxError(`Unrecognised "${ attribute.name }" attribute on class declaration`);
             }
-        }
+        });
 
         // Get all nodes in template to process
         let templateContent = OOMLCompatTemplateExists ?
@@ -124,17 +128,16 @@ let Utils = {
             rootElem: undefined,
         };
 
-        for (let i = 0; i < templateContent.childNodes.length; i++) {
-            let node = templateContent.childNodes[i];
+        Utils.iterate(templateContent.childNodes, node => {
 
             if (node instanceof Comment) {
-                continue;
+                return;
             }
             if (node instanceof Text) {
                 if (/\S/.test(node.data)) {
                     throw new SyntaxError(`Illegal text node in class declaration`);
                 }
-                continue;
+                return;
             }
             if (!(node instanceof Element)) {
                 throw new SyntaxError(`Illegal node in class declaration`);
@@ -147,8 +150,27 @@ let Utils = {
             switch (node.nodeName) {
                 case 'OOML-ATTRIBUTE':
 
-                    let attrName = node.getAttribute('name');
-                    let attrTypes = node.getAttribute('type') || undefined;
+                    let attrName;
+                    let attrTypes;
+
+                    Utils.iterate(node.attributes, attr => {
+                        let attrVal = attr.value;
+                        switch (attr.name) {
+                            case 'name':
+                                attrName = attrVal;
+                                break;
+
+                            case 'type':
+                                if (!attrVal || !attrVal.trim()) {
+                                    throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-attribute tag`);
+                                }
+                                attrTypes = attrVal;
+                                break;
+
+                            default:
+                                throw new SyntaxError(`Unrecognised attribute "${ attr.name }" on ooml-attribute tag`);
+                        }
+                    });
 
                     if (!Utils.isValidAttributeName(attrName)) {
                         throw new SyntaxError(`The attribute name "${ attrName }" is invalid`);
@@ -176,9 +198,36 @@ let Utils = {
 
                 case 'OOML-PROPERTY':
 
-                    let propName = node.getAttribute('name');
-                    let propTypes = node.getAttribute('type') || undefined;
-                    let isSuppressed = node.hasAttribute('suppressed');
+                    let propName;
+                    let propTypes;
+                    let isSuppressed = false;
+
+                    Utils.iterate(node.attributes, attr => {
+                        let attrVal = attr.value;
+                        switch (attr.name) {
+                            case 'name':
+                                propName = attrVal;
+                                break;
+
+                            case 'type':
+                                if (!attrVal || !attrVal.trim()) {
+                                    throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-property tag`);
+                                }
+                                propTypes = attrVal;
+                                break;
+
+                            case 'suppressed':
+                                let attrValStr = '' + attrVal;
+                                if (attrVal && attrValStr != 'true' && attrValStr != 'false') {
+                                    throw new SyntaxError(`Invalid suppressed value for attribute declared by ooml-property tag`);
+                                }
+                                isSuppressed = attrValStr != 'false';
+                                break;
+
+                            default:
+                                throw new SyntaxError(`Unrecognised attribute "${ attr.name }" on ooml-property tag`);
+                        }
+                    });
 
                     if (!Utils.isValidPropertyName(propName, strictPropertyNames)) {
                         throw new SyntaxError(`The property name "${ propName }" is invalid`);
@@ -208,7 +257,19 @@ let Utils = {
 
                 case 'OOML-METHOD':
 
-                    let methodName = node.getAttribute('name');
+                    let methodName;
+
+                    Utils.iterate(node.attributes, attr => {
+                        let attrVal = attr.value;
+                        switch (attr.name) {
+                            case 'name':
+                                methodName = attrVal;
+                                break;
+
+                            default:
+                                throw new SyntaxError(`Unrecognised attribute "${ attr.name }" on ooml-method tag`);
+                        }
+                    });
 
                     if (methodName == 'constructor') {
                         if (classMetadata.constructor) {
@@ -403,7 +464,7 @@ let Utils = {
                 default:
                     classMetadata.rootElem = node;
             }
-        }
+        });
 
         if (!classMetadata.rootElem && !classMetadata.isAbstract) {
             throw new SyntaxError(`The class "${ classMetadata.name }" does not have a root element`);

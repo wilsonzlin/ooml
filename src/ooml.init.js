@@ -175,7 +175,7 @@ OOML.Namespace = function(namespace, settings) {
         }
 
         function parseClassDomTextSubstitution(code) {
-            let regexpMatches = /^(?: ((?:(?:[a-zA-Z]+)\|)*[a-zA-Z]+))? (@)?this\.(attributes\.)?(.+?) $/.exec(code);
+            let regexpMatches = /^(?: ((?:(?:[a-zA-Z.]+)\|)*[a-zA-Z.]+))? (@)?this\.(attributes\.)?(.+?) $/.exec(code);
             if (!regexpMatches || !regexpMatches[4]) {
                 throw new SyntaxError(`Invalid property declaration at "${ code }"`);
             }
@@ -273,9 +273,8 @@ OOML.Namespace = function(namespace, settings) {
 
                 let attrNames = new StringSet();
 
-                for (let i = 0; i < current.attributes.length; i++) {
+                Utils.iterate(current.attributes, attr => {
 
-                    let attr = current.attributes[i];
                     let attrName = attr.name.toLocaleLowerCase();
 
                     if (attrNames.has(attrName)) {
@@ -312,16 +311,16 @@ OOML.Namespace = function(namespace, settings) {
                         ret.attributes.push(parseClassDom(attr));
 
                     }
-                }
+                });
 
-                for (let i = 0; i < current.childNodes.length; i++) {
-                    let parsedChildNodes = parseClassDom(current.childNodes[i]);
+                Utils.iterate(current.childNodes, childNode => {
+                    let parsedChildNodes = parseClassDom(childNode);
                     if (Array.isArray(parsedChildNodes)) {
                         Array.prototype.push.apply(ret.childNodes, parsedChildNodes);
                     } else {
                         ret.childNodes.push(parsedChildNodes);
                     }
-                }
+                });
 
             } else if (current instanceof Text) {
 
