@@ -19,7 +19,7 @@ OOML.Namespace = function(namespace, settings) {
         throw new TypeError(`Invalid namespace`);
     }
 
-    if (Utils.DOM.hasAncestorNamespace(namespace)) {
+    if (Utils.DOM.hasAncestorOrDescendantNamespace(namespace)) {
         throw new ReferenceError(`That namespace already exists`);
     }
 
