@@ -290,7 +290,7 @@ OOML.Namespace = function(namespace, settings) {
                             throw new SyntaxError(`Another child "${ eventName }" event handler already exists`);
                         }
 
-                        ret.childEventHandlers[eventName] = Function('$self', 'dispatch', 'data', `"use strict"; ${ attr.value.trim() }`);
+                        ret.childEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'data', `"use strict"; ${ attr.value.trim() }`);
 
                     } else if (/^domon/.test(attrName)) {
 
@@ -300,7 +300,7 @@ OOML.Namespace = function(namespace, settings) {
                             throw new SyntaxError(`Another DOM "${ eventName }" event handler already exists`);
                         }
 
-                        ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'event', `"use strict"; event.preventDefault(); ${ attr.value.trim() }`);
+                        ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'event', `"use strict"; event.preventDefault(); ${ attr.value.trim() }`);
 
                     } else if (/^on/.test(attrName)) {
 
@@ -613,7 +613,7 @@ OOML.Namespace = function(namespace, settings) {
                         Object.keys(node.domEventHandlers).forEach(eventName => {
 
                             // Event object will be provided when called by browser
-                            cloned['on' + eventName] = node.domEventHandlers[eventName].bind(instance, cloned, dispatchEventToParent);
+                            cloned['on' + eventName] = node.domEventHandlers[eventName].bind(instance, cloned, dispatchEventToParent, classes);
 
                         });
 
@@ -623,7 +623,7 @@ OOML.Namespace = function(namespace, settings) {
                                 cloned[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] = Utils.createCleanObject();
                             }
                             // Event data will be provided when called by child OOML element
-                            cloned[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName] = node.childEventHandlers[eventName].bind(instance, cloned, dispatchEventToParent);
+                            cloned[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName] = node.childEventHandlers[eventName].bind(instance, cloned, dispatchEventToParent, classes);
 
                         });
 
@@ -961,6 +961,8 @@ OOML.Namespace = function(namespace, settings) {
             });
         }
     });
+
+    Object.freeze(classes);
 
     Utils.DOM.find(namespace, '[ooml-instantiate]').forEach(instanceInstantiationElem => {
 
