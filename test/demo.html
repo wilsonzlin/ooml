@@ -8,26 +8,27 @@
             font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Ubuntu, Cantarell, Oxygen, Droid Sans, Fira Sans, sans-serif;
         }
 
-        .table {
+        table {
             display: table;
             border-collapse: collapse;
             width: 100%;
         }
-        .thead, .tbody {
+        thead, tbody {
             display: table-row-group;
         }
-        .tr {
+        tr {
             display: table-row;
         }
-        .th, .td {
+        th, td {
             display: table-cell;
             padding: 7px;
             border: 1px solid black;
         }
-        .th {
+        th {
             background: black;
             color: white;
             font-weight: bold;
+            text-align: left;
         }
     </style>
 
@@ -46,11 +47,11 @@
         </template>
 
         <template ooml-class="PerformanceEntry">
-            <div class="tr">
-                <div class="td">{{ this.id }}</div>
-                <div class="td">{{ this.jobTitle }}</div>
-                <div class="td">{{ this.score }}</div>
-            </div>
+            <ooml-tr>
+                <ooml-td>{{ this.id }}</ooml-td>
+                <ooml-td>{{ this.jobTitle }}</ooml-td>
+                <ooml-td>{{ this.score }}</ooml-td>
+            </ooml-tr>
         </template>
 
         <template ooml-class="User">
@@ -115,16 +116,16 @@
                 { TextEditor @this.postMessageHidden }
 
                 <h2>Performance</h2>
-                <div class="table">
-                    <div class="thead">
-                        <div class="th">ID</div>
-                        <div class="th">Job Title</div>
-                        <div class="th">Score</div>
-                    </div>
-                    <div class="tbody">
+                <ooml-table>
+                    <ooml-thead>
+                        <ooml-th>ID</ooml-th>
+                        <ooml-th>Job Title</ooml-th>
+                        <ooml-th>Score</ooml-th>
+                    </ooml-thead>
+                    <ooml-tbody>
                         { for PerformanceEntry of this.performanceData }
-                    </div>
-                </div>
+                    </ooml-tbody>
+                </ooml-table>
             </article>
         </template>
 
