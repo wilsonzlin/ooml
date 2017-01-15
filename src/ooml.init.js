@@ -978,7 +978,7 @@ OOML.Namespace = function(namespace, settings) {
         instanceInstantiationElem.parentNode.insertBefore(instance[OOML_INSTANCE_PROPNAME_DOMELEM], instanceInstantiationElem.nextSibling);
 
         // Copy attributes on instantiation element to new instance's root element
-        Utils.concat(instanceInstantiationElem.attributes).forEach(function(attr) {
+        Utils.iterate(instanceInstantiationElem.attributes, attr => {
             if (attr.name != 'ooml-instantiate') {
                 instance[OOML_INSTANCE_PROPNAME_DOMELEM].setAttribute(attr.name, attr.value);
             }
