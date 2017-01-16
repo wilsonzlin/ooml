@@ -79,7 +79,7 @@ OOMLArrayProtoMutation.sort = function(propName, ascending) {
     }
     let ascendingMultiplier = ascending ? 1 : -1;
 
-    let sorted = this[OOML_ARRAY_PROPNAME_INTERNALARRAY].sort(function(a, b) {
+    let sorted = this[OOML_ARRAY_PROPNAME_INTERNALARRAY].sort((a, b) => {
         if (a[propName] < b[propName]) {
             return -1 * ascendingMultiplier;
         } else if (a[propName] === b[propName]) {

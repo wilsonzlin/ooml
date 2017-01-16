@@ -156,6 +156,7 @@ OOML.Namespace = function(namespace, settings) {
 
         // For .toObject
         var classSuppressedProperties = new StringSet();
+
         Object.keys(classProperties).forEach(propName => {
             if (classProperties[propName].suppressed) {
                 classSuppressedProperties.add(propName);
@@ -831,7 +832,7 @@ OOML.Namespace = function(namespace, settings) {
                 } else if (classElementProperties.has(prop)) {
 
                     // Element substitution
-                    setter = function(newVal) {
+                    setter = newVal => {
                         if (newVal !== null && !Utils.isObjectLiteral(newVal) && !(newVal instanceof OOML.Element)) {
                             throw new TypeError(`Invalid value provided to element property`);
                         }
@@ -854,7 +855,24 @@ OOML.Namespace = function(namespace, settings) {
 
                 } else {
 
-                    setter = function(newVal) {
+                    setter = newVal => {
+                        let customHtml;
+
+                        if (classProperties[prop].setter) {
+                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, newVal);
+                            if (!Utils.isObjectLiteral(setterReturnVal)) {
+                                throw new TypeError(`Invalid setter return value`);
+                            }
+
+                            if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
+                                newVal = setterReturnVal.value;
+                            }
+
+                            if (Utils.hasOwnProperty(setterReturnVal, 'HTML')) {
+                                customHtml = setterReturnVal.HTML;
+                            }
+                        }
+
                         if (!Utils.isPrimitiveValue(newVal)) {
                             throw new TypeError(`Cannot set new property value; unrecognised type`);
                         }
@@ -867,12 +885,12 @@ OOML.Namespace = function(namespace, settings) {
 
                         let outputText = Utils.getOOMLOutputValue(newVal);
 
-                        Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, outputText);
+                        Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, outputText, customHtml);
 
                         let oldVal = instanceProperties[prop].value;
                         instanceProperties[prop].value = newVal;
 
-                        if (instanceEventHandlers.mutation.propertyvaluechange) {
+                        if (oldVal !== newVal && instanceEventHandlers.mutation.propertyvaluechange) {
                             instanceEventHandlers.mutation.propertyvaluechange.forEach(handler => {
                                 let eventObject = {
                                     property: prop,
@@ -888,7 +906,12 @@ OOML.Namespace = function(namespace, settings) {
                 }
 
                 propertiesGetterSetterFuncs[prop] = {
-                    get: () => instanceProperties[prop].value,
+                    get: () => {
+                        if (classProperties[prop].getter) {
+                            classProperties[prop].getter.call(instance, classes, prop);
+                        }
+                        return instanceProperties[prop].value;
+                    },
                     set: setter,
                     enumerable: true,
                 };

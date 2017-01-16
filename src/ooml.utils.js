@@ -32,10 +32,42 @@ let Utils = {
             return false;
         },
 
-        writeValue: (type, name, nodes, value) => {
+        writeValue: (type, name, nodes, value, customHtml) => {
+            let customDom;
+            let useCustomHtml = typeof customHtml == 'string';
+
+            // customHtml may be empty, which means that custom HTML is still wanted (i.e. don't write text value), but remove any current custom HTML
+            if (useCustomHtml) {
+                let dom = document.createElement('div');
+                dom.innerHTML = customHtml.trim();
+                if (dom.children.length > 1) {
+                    throw new SyntaxError(`Custom HTML has more than one root element`);
+                }
+                customDom = dom.children[0];
+            }
+
             nodes.forEach(node => {
                 if (node instanceof Text) {
-                    node.data = value;
+                    if (useCustomHtml) {
+
+                        if (node.nextSibling && node.nextSibling[OOML_DOM_PROPNAME_ISCUSTOMHTML]) {
+                            node.parentNode.removeChild(node.nextSibling);
+                        }
+
+                        if (customDom) {
+                            let customDomDuplicated = customDom.cloneNode(true);
+                            customDomDuplicated[OOML_DOM_PROPNAME_ISCUSTOMHTML] = true;
+
+                            node.parentNode.insertBefore(customDomDuplicated, node.nextSibling);
+                        }
+
+                        node.data = '';
+
+                    } else {
+
+                        node.data = value;
+
+                    }
                 } else { // Must be attribute
                     let formatStr = node.valueFormat;
 
@@ -61,6 +93,8 @@ let Utils = {
             iterator(iterable[i], i, iterable);
         }
     },
+
+    hasOwnProperty: (obj, propName) => Object.prototype.hasOwnProperty.call(obj, propName),
 
     getOOMLOutputValue: value => {
         // Don't restrict to Date and Array instances, as attributes can hold any value
@@ -171,21 +205,24 @@ let Utils = {
                     let attrTypes;
 
                     Utils.iterate(node.attributes, attr => {
-                        let attrVal = attr.value;
-                        switch (attr.name) {
+                        // DOM attribute, not OOML attribute!!
+                        let _attrName = attr.name;
+                        let _attrVal = attr.value;
+
+                        switch (_attrName) {
                             case 'name':
-                                attrName = attrVal;
+                                attrName = _attrVal;
                                 break;
 
                             case 'type':
-                                if (Utils.isEmptyString(attrVal)) {
+                                if (Utils.isEmptyString(_attrVal)) {
                                     throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-attribute tag`);
                                 }
-                                attrTypes = attrVal;
+                                attrTypes = _attrVal;
                                 break;
 
                             default:
-                                throw new SyntaxError(`Unrecognised attribute "${ attr.name }" on ooml-attribute tag`);
+                                throw new SyntaxError(`Unrecognised attribute "${ _attrName }" on ooml-attribute tag`);
                         }
                     });
 
@@ -222,51 +259,55 @@ let Utils = {
                     let propGetter, propSetter;
 
                     Utils.iterate(node.attributes, attr => {
-                        let attrVal = attr.value;
-                        switch (attr.name) {
+                        let _attrName = attr.name;
+                        let _attrVal = attr.value;
+
+                        switch (_attrName) {
                             case 'name':
-                                propName = attrVal;
+                                propName = _attrVal;
                                 break;
 
                             case 'type':
-                                if (Utils.isEmptyString(attrVal)) {
+                                if (Utils.isEmptyString(_attrVal)) {
                                     throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-property tag`);
                                 }
-                                propTypes = attrVal;
+                                propTypes = _attrVal;
                                 break;
 
                             case 'suppressed':
-                                /* attrVal could be (depending on browser intrepretation and user-supplied attribute value):
+                                /* Valid _attrVal values could be (depending on browser intrepretation):
                                  * - Boolean true or false
                                  * - String "true" or "false"
                                  * - Empty string or null
                                  *
-                                 * Therefore attrValStr could be "", "true", "false" or "null"
+                                 * Therefore _attrValStr could be "", "true", "false" or "null"
                                  */
-                                let attrValStr = '' + attrVal;
+                                let _attrValStr = '' + _attrVal;
 
-                                if (attrVal && attrValStr != 'true' && attrValStr != 'false') {
+                                if (_attrVal && _attrValStr != 'true' && _attrValStr != 'false') {
                                     throw new SyntaxError(`Invalid suppressed value for attribute declared by ooml-property tag`);
                                 }
-                                isSuppressed = attrValStr != 'false';
+                                isSuppressed = _attrValStr != 'false';
                                 break;
 
                             case 'get':
-                            case 'set':
-                                if (Utils.isEmptyString(attrVal)) {
-                                    throw new SyntaxError(`Invalid ${ attr.name } function`);
+                                if (Utils.isEmptyString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                let fn = Function('classes', attrVal.trim());
-                                if (attr.name == 'get') {
-                                    propGetter = fn;
-                                } else {
-                                    propSetter = fn;
+                                propGetter = Function('classes', 'property', _attrVal.trim());
+                                break;
+
+                            case 'set':
+                                if (Utils.isEmptyString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
+
+                                propSetter = Function('classes', 'property', 'newValue', _attrVal.trim());
                                 break;
 
                             default:
-                                throw new SyntaxError(`Unrecognised attribute "${ attr.name }" on ooml-property tag`);
+                                throw new SyntaxError(`Unrecognised attribute "${ _attrName }" on ooml-property tag`);
                         }
                     });
 
@@ -421,7 +462,7 @@ let Utils = {
                                 if (arg.name) {
                                     pushTo.push(providedArgument);
                                 }
-                                arg.properties.forEach(function (prop, propIdx) {
+                                arg.properties.forEach((prop, propIdx) => {
                                     let propKey;
                                     let providedProperty;
 
@@ -584,7 +625,7 @@ let Utils = {
                 continue;
             }
 
-            let argmatches = /^([a-zA-Z.]+ )?(\?)?(\.{3})?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
+            let argmatches = /^([a-zA-Z.]+ )?(\?)?(\.{3})?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[{[]\s*)?/.exec(toProcess);
             if (!argmatches) {
                 throw new SyntaxError(`Unrecognised function argument declaration`);
             }
@@ -767,7 +808,7 @@ let Utils = {
         };
     },
 
-    isValidAttributeName: name => /^[a-z]+([A-Z][a-z]*)*$/.test(name),
+    isValidAttributeName: name => (/^[a-z]+([A-Z][a-z]*)*$/.test(name)),
 
     isValidPropertyName: (name, strictMode) =>
         typeof name == 'string' &&
@@ -886,7 +927,7 @@ let Utils = {
         }
     },
 
-    createCleanObject: Object.create.bind(undefined, null),
+    createCleanObject: () => Object.create(null),
 
     constructElement: (elemConstructor, obj) => {
         if (obj instanceof elemConstructor) {

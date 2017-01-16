@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+<head>
+    <meta charset="UTF-8">
+    <title>OOML + Markdown</title>
+
+    <script src="../dist/ooml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.6/marked.min.js"></script>
+</head>
+<body>
+    <template ooml-class="App">
+        <ooml-property name="markdown" type="string" suppressed set="
+            console.log('arguments', arguments);
+            console.log('this', this);
+            console.log('classes', classes);
+            console.log('property', property);
+            console.log('newValue', newValue);
+
+            return {
+                HTML: marked('' + newValue),
+            };
+        ">""</ooml-property>
+
+        <div>
+            <textarea style="resize: none" cols="120" rows="16" domoninput="this.markdown = $self.value.trim()"></textarea>
+            <div>{{ this.markdown }}</div>
+        </div>
+    </template>
+    <div ooml-instantiate="App app"></div>
+    <script>
+        new OOML.Namespace();
+    </script>
+</body>
+</html>
