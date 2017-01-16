@@ -84,7 +84,7 @@ OOML.Namespace = function(namespace, settings) {
         let ret = imports[className];
 
         if (!Utils.isOOMLClass(ret)) {
-            throw new TypeError(`The class "${ className }" does not exist`);
+            throw new ReferenceError(`The class "${ className }" does not exist`);
         }
 
         return ret;
@@ -134,7 +134,7 @@ OOML.Namespace = function(namespace, settings) {
 
         let className = classMetadata.name;
         if (classes[className]) {
-            throw new SyntaxError(`The class "${ className }" already exists`);
+            throw new ReferenceError(`The class "${ className }" already exists`);
         }
 
         let classIsAbstract = classMetadata.isAbstract;
@@ -194,7 +194,7 @@ OOML.Namespace = function(namespace, settings) {
 
             if (isAttribute) {
                 if (isSuppressed) {
-                    throw new SyntaxError(`Attributes cannot be suppressed`);
+                    throw new TypeError(`Attributes cannot be suppressed`);
                 }
 
                 if (!Utils.isValidAttributeName(propName)) {
@@ -237,7 +237,7 @@ OOML.Namespace = function(namespace, settings) {
                     if (types) {
                         if (classProperties[propName].types) {
                             if (classProperties[propName].types.join('|') !== types) {
-                                throw new SyntaxError(`The types for the property "${ propName }" have already been declared`);
+                                throw new ReferenceError(`The types for the property "${ propName }" have already been declared`);
                             }
                         } else {
                             classProperties[propName].types = Utils.parseTypeDeclaration(types);
@@ -290,7 +290,7 @@ OOML.Namespace = function(namespace, settings) {
                     let attrName = attr.name.toLocaleLowerCase();
 
                     if (attrNames.has(attrName)) {
-                        throw new SyntaxError(`Duplicate attribute "${ attrName }"`);
+                        throw new ReferenceError(`Duplicate attribute "${ attrName }"`);
                     }
                     attrNames.add(attrName);
 
@@ -299,7 +299,7 @@ OOML.Namespace = function(namespace, settings) {
                         let eventName = attrName.slice(7).toLocaleLowerCase();
 
                         if (ret.childEventHandlers[eventName]) {
-                            throw new SyntaxError(`Another child "${ eventName }" event handler already exists`);
+                            throw new ReferenceError(`Another child "${ eventName }" event handler already exists`);
                         }
 
                         ret.childEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'data', `"use strict"; ${ attr.value.trim() }`);
@@ -309,14 +309,14 @@ OOML.Namespace = function(namespace, settings) {
                         let eventName = attrName.slice(5).toLocaleLowerCase();
 
                         if (ret.domEventHandlers[eventName]) {
-                            throw new SyntaxError(`Another DOM "${ eventName }" event handler already exists`);
+                            throw new ReferenceError(`Another DOM "${ eventName }" event handler already exists`);
                         }
 
                         ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'event', `"use strict"; event.preventDefault(); ${ attr.value.trim() }`);
 
                     } else if (/^on/.test(attrName)) {
 
-                        throw new SyntaxError(`Native DOM event handlers are not allowed`);
+                        throw new TypeError(`Native DOM event handlers are not allowed`);
 
                     } else {
 
@@ -394,7 +394,7 @@ OOML.Namespace = function(namespace, settings) {
                         let isSuppressed = !!regexpMatches[3];
 
                         if (classMethods[propName]) {
-                            throw new SyntaxError(`"${ propName }" already exists as a method`);
+                            throw new ReferenceError(`"${ propName }" already exists as a method`);
                         }
 
                         let propAlreadyExists = !!classProperties[propName];
@@ -402,7 +402,7 @@ OOML.Namespace = function(namespace, settings) {
                         if (propAlreadyExists) {
                             // NOTE: It's not possible for more than one element substitution of the same property
                             if (classTextProperties.has(propName)) {
-                                throw new SyntaxError(`The property "${ propName }" is already defined`);
+                                throw new ReferenceError(`The property "${ propName }" is already defined`);
                             }
                             if (isSuppressed && !classProperties[propName].suppressed) {
                                 classProperties[propName].suppressed = true;
@@ -417,12 +417,12 @@ OOML.Namespace = function(namespace, settings) {
 
                         if (isArraySubstitution) {
                             if (classArrayProperties.has(propName)) {
-                                throw new SyntaxError(`The property "${ propName }" is already defined`);
+                                throw new ReferenceError(`The property "${ propName }" is already defined`);
                             }
                             classArrayProperties.add(propName);
                         } else {
                             if (classElementProperties.has(propName)) {
-                                throw new SyntaxError(`The property "${ propName }" is already defined`);
+                                throw new ReferenceError(`The property "${ propName }" is already defined`);
                             }
                             classElementProperties.add(propName);
                         }
@@ -535,7 +535,7 @@ OOML.Namespace = function(namespace, settings) {
 
         classes[className] = function(initState) {
             if (!(this instanceof classes[className])) {
-                throw new Error(`OOML instances need to be constructed`);
+                throw new ReferenceError(`OOML instances need to be constructed`);
             }
 
             if (initState !== undefined && !Utils.isObjectLiteral(initState)) {
@@ -544,7 +544,7 @@ OOML.Namespace = function(namespace, settings) {
 
             if (classIsAbstract) {
                 if (!classMetadata.abstractFactory) {
-                    throw new SyntaxError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
+                    throw new TypeError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
                 }
 
                 let ret = classMetadata.abstractFactory(initState, classes);
@@ -660,7 +660,7 @@ OOML.Namespace = function(namespace, settings) {
                             if (attr.name == 'ooml-expose') {
                                 let exposeKey = attr.value;
                                 if (instanceExposedDOMElems[exposeKey]) {
-                                    throw new SyntaxError(`A DOM element is already exposed with the key "${ exposeKey }"`);
+                                    throw new ReferenceError(`A DOM element is already exposed with the key "${ exposeKey }"`);
                                 }
                                 instanceExposedDOMElems[exposeKey] = cloned;
                             } else {
@@ -1022,7 +1022,7 @@ OOML.Namespace = function(namespace, settings) {
             instanceName = instDetails[1];
 
         if (objects[instanceName]) {
-            throw new SyntaxError(`An object already exists with the name "${ instanceName }"`);
+            throw new ReferenceError(`An object already exists with the name "${ instanceName }"`);
         }
 
         var initState = Utils.getEvalValue(instanceInstantiationElem.textContent);

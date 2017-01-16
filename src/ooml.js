@@ -73,22 +73,22 @@ OOML.import = function() {
         var importName = arguments[0];
         var importClass = arguments[1];
         if (typeof importName != 'string') {
-            throw new SyntaxError(`Invalid import name`);
+            throw new TypeError(`Invalid import name`);
         }
         if (!Utils.isOOMLClass(importClass)) {
-            throw new SyntaxError(`Invalid import class`);
+            throw new TypeError(`Invalid import class`);
         }
         if (OOMLGlobalImports[importName]) {
-            throw new SyntaxError(`The class "${ importName }" has already been imported`);
+            throw new ReferenceError(`The class "${ importName }" has already been imported`);
         }
         OOMLGlobalImports[importName] = importClass;
     } else {
         for (var i = 0; i < arguments.length; i++) {
             var argobj = arguments[i];
             if (!Utils.isObjectLiteral(argobj)) {
-                throw new SyntaxError(`Invalid import definition`);
+                throw new TypeError(`Invalid import definition`);
             }
-            Object.keys(argobj).forEach(function(importName) {
+            Object.keys(argobj).forEach(importName => {
                 var importClass = argobj[importName];
                 OOML.import(importName, importClass);
             });

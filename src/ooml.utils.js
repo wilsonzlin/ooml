@@ -144,7 +144,7 @@ let Utils = {
                 case 'ooml-class':
                 case 'ooml-abstract-class':
                     if (className) {
-                        throw new SyntaxError(`Duplicate class declaration attribute`);
+                        throw new ReferenceError(`Duplicate class declaration attribute`);
                     }
 
                     // Class may extend class name with dot (.) as imported classes' names may have dot
@@ -159,7 +159,7 @@ let Utils = {
                     break;
 
                 default:
-                    throw new SyntaxError(`Unrecognised "${ attribute.name }" attribute on class declaration`);
+                    throw new ReferenceError(`Unrecognised "${ attribute.name }" attribute on class declaration`);
             }
         });
 
@@ -186,14 +186,16 @@ let Utils = {
             if (node instanceof Comment) {
                 return;
             }
+
             if (node instanceof Text) {
                 if (/\S/.test(node.data)) {
-                    throw new SyntaxError(`Illegal text node in class declaration`);
+                    throw new TypeError(`Illegal text node in class declaration`);
                 }
                 return;
             }
+
             if (!(node instanceof Element)) {
-                throw new SyntaxError(`Illegal node in class declaration`);
+                throw new TypeError(`Illegal node in class declaration`);
             }
 
             if (classMetadata.rootElem) {
@@ -224,7 +226,7 @@ let Utils = {
                                 break;
 
                             default:
-                                throw new SyntaxError(`Unrecognised attribute "${ _attrName }" on ooml-attribute tag`);
+                                throw new ReferenceError(`Unrecognised attribute "${ _attrName }" on ooml-attribute tag`);
                         }
                     });
 
@@ -233,7 +235,7 @@ let Utils = {
                     }
 
                     if (classMetadata.attributes[attrName]) {
-                        throw new SyntaxError(`The attribute "${ attrName }" is already defined`);
+                        throw new ReferenceError(`The attribute "${ attrName }" is already defined`);
                     }
 
                     if (attrTypes) {
@@ -309,7 +311,7 @@ let Utils = {
                                 break;
 
                             default:
-                                throw new SyntaxError(`Unrecognised attribute "${ _attrName }" on ooml-property tag`);
+                                throw new ReferenceError(`Unrecognised attribute "${ _attrName }" on ooml-property tag`);
                         }
                     });
 
@@ -318,7 +320,7 @@ let Utils = {
                     }
 
                     if (classMetadata.properties[propName] || classMetadata.methods[propName]) {
-                        throw new SyntaxError(`A property or method called "${ propName }" already exists`);
+                        throw new ReferenceError(`A property or method called "${ propName }" already exists`);
                     }
 
                     if (propTypes) {
@@ -353,13 +355,13 @@ let Utils = {
                                 break;
 
                             default:
-                                throw new SyntaxError(`Unrecognised attribute "${ attr.name }" on ooml-method tag`);
+                                throw new ReferenceError(`Unrecognised attribute "${ attr.name }" on ooml-method tag`);
                         }
                     });
 
                     if (methodName == 'constructor') {
                         if (classMetadata.constructor) {
-                            throw new SyntaxError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
+                            throw new ReferenceError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
                         }
 
                         classMetadata.constructor = Utils.getEvalValue(node.textContent.trim());
@@ -368,7 +370,7 @@ let Utils = {
                         }
 
                         if (classMetadata.constructor.length > 1) {
-                            throw new SyntaxError(`The constructor method for the class "${ classMetadata.name }" has more than one argument`);
+                            throw new TypeError(`The constructor method for the class "${ classMetadata.name }" has more than one argument`);
                         }
 
                         break;
@@ -379,7 +381,7 @@ let Utils = {
                     }
 
                     if (classMetadata.methods[methodName] || classMetadata.properties[methodName]) {
-                        throw new SyntaxError(`A method or property called "${ methodName }" already exists`);
+                        throw new ReferenceError(`A method or property called "${ methodName }" already exists`);
                     }
 
                     let methodMetadata = Utils.parseMethodFunction(node.textContent.trim(), methodName);
@@ -523,13 +525,13 @@ let Utils = {
                                 collectedVals.push(providedArgument);
                             });
                             if (!collectedVals.length && !collectArg.optional) {
-                                throw new TypeError(`No arguments were provided to a collecting argument`);
+                                throw new ReferenceError(`No arguments were provided to a collecting argument`);
                             }
                             lftArgVals.push(collectedVals);
                         }
 
                         if (providedArgumentsUsedCount !== arguments.length) { // Don't use providedArguments as that has been mutated
-                            throw new TypeError(`Too many arguments provided`);
+                            throw new ReferenceError(`Too many arguments provided`);
                         }
 
                         let parentMethod = Object.getPrototypeOf(Object.getPrototypeOf(this))[methodName];
@@ -549,11 +551,11 @@ let Utils = {
 
                 case 'OOML-ABSTRACT-FACTORY':
                     if (node.attributes.length) {
-                        throw new SyntaxError(`Unrecognised attribute "${ node.attributes[0] }" on ooml-abstract-factory tag`);
+                        throw new ReferenceError(`Unrecognised attribute "${ node.attributes[0] }" on ooml-abstract-factory tag`);
                     }
 
                     if (!classMetadata.isAbstract) {
-                        throw new SyntaxError(`Abstract factory functions are only allowed on abstract classes`);
+                        throw new TypeError(`Abstract factory functions are only allowed on abstract classes`);
                     }
 
                     let fn = Utils.getEvalValue(node.textContent.trim());
@@ -659,7 +661,7 @@ let Utils = {
             let matchedOpenBrace = argmatches[6];
 
             if (effectiveArgNames.has(matchedArgname)) {
-                throw new SyntaxError(`Argument name "${ matchedArgname }" has already been used`);
+                throw new ReferenceError(`Argument name "${ matchedArgname }" has already been used`);
             }
 
             if (OOMLReservedFnArgNames.indexOf(matchedArgname) > -1) {
@@ -667,7 +669,7 @@ let Utils = {
             }
 
             if (matchedType && OOMLFnArgTypes.indexOf(matchedType) == -1) {
-                throw new SyntaxError(`Unrecognised argument type "${ matchedType }"`);
+                throw new TypeError(`Unrecognised argument type "${ matchedType }"`);
             }
 
             if (matchedOpenBrace && !matchedEqualsSign) {
@@ -678,7 +680,7 @@ let Utils = {
                     if ((matchedOpenBrace == '{' && matchedType != 'Object') ||
                         (matchedOpenBrace == '[' && ['OOML.Array', 'Array'].indexOf(matchedType) == -1)
                     ) {
-                        throw new SyntaxError(`Destructuring argument type provided is not recognised`);
+                        throw new TypeError(`Destructuring argument type provided is not recognised`);
                     }
                 } else {
                     matchedType = matchedOpenBrace == '{' ? 'Object' : 'Array';
@@ -702,7 +704,7 @@ let Utils = {
                 throw new SyntaxError(`Argument with a default value has an operator`);
             }
             if (matchedEqualsSign && ['function', 'OOML.Element'].indexOf(matchedType) > -1) {
-                throw new SyntaxError(`An argument with type "${ matchedType }" cannot have a default argument`);
+                throw new TypeError(`An argument with type "${ matchedType }" cannot have a default argument`);
             }
             if (destructuringMode && matchedCollectOperator) {
                 throw new SyntaxError(`The collect operator cannot be used inside a destructuring argument`);
@@ -724,14 +726,14 @@ let Utils = {
                     toProcess = toProcess.slice(4);
                     defaultValue = null;
                 } else if (matchedType == 'null') {
-                    throw new SyntaxError(`A null argument has an invalid default value`);
+                    throw new TypeError(`A null argument has an invalid default value`);
                 }
 
                 else if (matchedOpenBrace == '{' && toProcess[0] == '}') {
                     toProcess = toProcess.slice(1);
                     defaultValue = Utils.createCleanObject;
                 } else if (matchedType == 'Object') {
-                    throw new SyntaxError(`An object argument has an invalid default value`);
+                    throw new TypeError(`An object argument has an invalid default value`);
                 }
 
                 else if (matchedOpenBrace == '[' && toProcess[0] == ']') {
@@ -741,21 +743,21 @@ let Utils = {
                         return type == 'OOML.Array' ? new OOML.Array : []
                     }.bind(matchedType);
                 } else if (['Array', 'OOML.Array'].indexOf(matchedType) > -1) {
-                    throw new SyntaxError(`An array argument has an invalid default value`);
+                    throw new TypeError(`An array argument has an invalid default value`);
                 }
 
                 else if (booleanMatch = /^(true|false)/.exec(toProcess)) {
                     toProcess = toProcess.slice(booleanMatch[0].length);
                     defaultValue = booleanMatch[0] == 'true';
                 } else if (matchedType == 'boolean') {
-                    throw new SyntaxError(`A boolean argument has an invalid default value`);
+                    throw new TypeError(`A boolean argument has an invalid default value`);
                 }
 
                 else if (dateConstructorMatch = /^new Date\(\s*(?:[0-9]+,\s*)*(?:[0-9]+)?\s*\)/.exec(toProcess)) {
                     toProcess = toProcess.slice(dateConstructorMatch[0].length);
                     defaultValue = Function('return ' + dateConstructorMatch);
                 } else if (matchedType == 'Date') {
-                    throw new SyntaxError(`A Date argument has an invalid default value`);
+                    throw new TypeError(`A Date argument has an invalid default value`);
                 }
 
                 else if (toProcess[0] == '"' || toProcess[0] == "'") {
@@ -771,7 +773,7 @@ let Utils = {
                         let tempIndex = toProcess.indexOf(parseFlagStringEndChar);
                         if (tempIndex == -1) {
                             // .slice to prevent super-long messages
-                            throw new SyntaxError(`A string argument has an invalid default value at "${ toProcess.slice(0, 200) }"`);
+                            throw new TypeError(`A string argument has an invalid default value at "${ toProcess.slice(0, 200) }"`);
                         }
 
                         let tempValue = toProcess.slice(0, tempIndex);
@@ -787,19 +789,19 @@ let Utils = {
                         toProcess = toProcess.slice(tempIndex + 1);
                     }
                 } else if (matchedType == 'string') {
-                    throw new SyntaxError(`A string argument has an invalid default value`);
+                    throw new TypeError(`A string argument has an invalid default value`);
                 }
 
                 else if (digitsMatch = /^(?:0b[01]+|0o[0-7]+|0x[0-9a-f]+|[0-9]*\.?[0-9]+(?:e[0-9]+)?)/i.exec(toProcess)) {
                     toProcess = toProcess.slice(digitsMatch[0].length);
                     defaultValue = Number(digitsMatch[0]);
                     if (!Utils.isType(matchedType, defaultValue)) { // Will check for NaN if necessary
-                        throw new SyntaxError(`A number argument has an invalid default value`);
+                        throw new TypeError(`A number argument has an invalid default value`);
                     }
                 } else if (['number', 'natural', 'integer', 'float'].indexOf(matchedType) > -1) {
-                    throw new SyntaxError(`A number argument has an invalid default value`);
+                    throw new TypeError(`A number argument has an invalid default value`);
                 } else {
-                    throw new SyntaxError(`Unrecognised default value`);
+                    throw new TypeError(`Unrecognised default value`);
                 }
             }
 
@@ -886,14 +888,6 @@ let Utils = {
         return ret;
     },
 
-    // Use full function declaration for "arguments" object
-    pushAll: function() {
-        let arr = arguments[0];
-        for (let i = 1; i < arguments.length; i++) {
-            Array.prototype.push.apply(arr, arguments[i]);
-        }
-    },
-
     isOOMLClass: c => typeof c == 'function' && c.prototype instanceof OOML.Element,
 
     isPrimitiveValue: val => OOMLPrimitiveTypes.some(type => Utils.isType(type, val)),
@@ -952,7 +946,7 @@ let Utils = {
         if (obj instanceof elemConstructor) {
             return obj;
         } else if (elemConstructor == OOML.Element || elemConstructor == HTMLElement) {
-            throw new SyntaxError(`Unable to construct new instance; the type is an abstract class`);
+            throw new TypeError(`Unable to construct new instance; the type is an abstract class`);
         } else if (!Utils.isObjectLiteral(obj)) {
             throw new TypeError(`Unable to construct new instance; the provided object is not of the correct type`);
         }

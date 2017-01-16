@@ -31,7 +31,7 @@ OOML.Array = function(elementConstructor, insertAfterDomElem) {
                         break;
 
                     default:
-                        throw new SyntaxError(`Invalid mutation event name "${ eventName }"`);
+                        throw new ReferenceError(`Invalid mutation event name "${ eventName }"`);
                 }
 
                 return _this;

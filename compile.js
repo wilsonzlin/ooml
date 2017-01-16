@@ -22,17 +22,17 @@ if (HARMONY_ARG) {
 fs.writeFileSync(
     SRC_DIR + 'ooml.js',
 
-    '(function(Object, TypeError, SyntaxError, ReferenceError, Error, undefined) {' +
+    '(function(Object, TypeError, SyntaxError, ReferenceError, RangeError, Error, undefined) {' +
         '"use strict";' +
         fs.readFileSync(SRC_DIR + 'ooml.js', 'utf8') +
-    '})(Object, TypeError, SyntaxError, ReferenceError, Error)'
+    '})(Object, TypeError, SyntaxError, ReferenceError, RangeError, Error)'
 );
 
 /*
     OPTIMISATION: Remove the "new" keyword from exceptions
 */
 fs.readdirSync(SRC_DIR).forEach(file => {
-    let without_new_keyword = fs.readFileSync(SRC_DIR + file, 'utf8').replace(/new ((?:Syntax|Type|Reference)?Error)/g, (_, errorClass) => {
+    let without_new_keyword = fs.readFileSync(SRC_DIR + file, 'utf8').replace(/new ((?:Syntax|Type|Reference|Range)?Error)/g, (_, errorClass) => {
         return errorClass;
     });
     fs.writeFileSync(SRC_DIR + file, without_new_keyword);
@@ -113,7 +113,7 @@ zc({
                     'transform-es2015-arrow-functions',
                     'transform-es2015-template-literals',
                 ]
-            }).code;
+            }).code.replace(/void 0/g, 'undefined');
         }
 
         return code;
