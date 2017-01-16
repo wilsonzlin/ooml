@@ -823,7 +823,7 @@ let Utils = {
 
     toDashCase: str => str.replace(/^[a-z]+|(?!^)(?:[A-Z][a-z]*)/g, match => match.toLowerCase() + '-').slice(0, -1),
 
-    getEvalValue: codeStr => Function(`return (${ codeStr.trim() || undefined })`)(),
+    getEvalValue: codeStr => Function(`return ${ codeStr.trim() || undefined }`)(),
 
     clone: obj => {
         let cloned;
