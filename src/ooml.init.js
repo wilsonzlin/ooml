@@ -908,7 +908,7 @@ OOML.Namespace = function(namespace, settings) {
                 propertiesGetterSetterFuncs[prop] = {
                     get: () => {
                         if (classProperties[prop].getter) {
-                            classProperties[prop].getter.call(instance, classes, prop);
+                            return classProperties[prop].getter.call(instance, classes, prop);
                         }
                         return instanceProperties[prop].value;
                     },
