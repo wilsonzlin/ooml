@@ -785,7 +785,7 @@ OOML.Namespace = function(namespace, settings) {
                 }))),
             };
             propertiesGetterSetterFuncs.detach = {
-                value: function() {
+                value: () => {
                     if (!instanceIsAttachedTo) {
                         throw new ReferenceError(`This instance is not in use`);
                     }
@@ -793,7 +793,7 @@ OOML.Namespace = function(namespace, settings) {
                     let parent = instanceIsAttachedTo.parent;
 
                     if (parent instanceof OOML.Array) {
-                        let indexOfThis = parent.indexOf(this);
+                        let indexOfThis = parent.indexOf(instance);
                         if (indexOfThis < 0) {
                             throw new Error(`This instance could not be found on its parent array`);
                         }
@@ -806,7 +806,7 @@ OOML.Namespace = function(namespace, settings) {
                         throw new Error(`Unrecognised parent`);
                     }
 
-                    return this;
+                    return instance;
                 },
             };
             propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_DOMELEM] = {
