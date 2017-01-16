@@ -138,6 +138,7 @@ let Utils = {
 
     preprocessClassDeclaration: (templateElem, strictPropertyNames) => {
         let className, classIsAbstract, classExtends;
+        // ooml-(abstract)?-class definitely exists as this function is only called via querySelectorAll
         Utils.iterate(templateElem.attributes, attribute => {
             switch (attribute.name) {
                 case 'ooml-class':
@@ -146,6 +147,7 @@ let Utils = {
                         throw new SyntaxError(`Duplicate class declaration attribute`);
                     }
 
+                    // Class may extend class name with dot (.) as imported classes' names may have dot
                     let classDeclarationParts = /^([a-zA-Z]+)(?: extends ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)))?$/.exec(attribute.value);
                     if (!classDeclarationParts) {
                         throw new SyntaxError(`Malformed attribute value for attribute "${ attribute.name }": "${ attribute.value }"`);
@@ -543,6 +545,23 @@ let Utils = {
                         fn: wrapperFunc,
                     };
 
+                    break;
+
+                case 'OOML-ABSTRACT-FACTORY':
+                    if (node.attributes.length) {
+                        throw new SyntaxError(`Unrecognised attribute "${ node.attributes[0] }" on ooml-abstract-factory tag`);
+                    }
+
+                    if (!classMetadata.isAbstract) {
+                        throw new SyntaxError(`Abstract factory functions are only allowed on abstract classes`);
+                    }
+
+                    let fn = Utils.getEvalValue(node.textContent.trim());
+                    if (typeof fn != 'function') {
+                        throw new TypeError(`Invalid abstract factory function`);
+                    }
+
+                    classMetadata.abstractFactory = fn;
                     break;
 
                 default:

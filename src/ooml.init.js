@@ -150,10 +150,10 @@ OOML.Namespace = function(namespace, settings) {
         // Used for:
         // 1) Checking if a property is predefined
         // 2) Extending a child class's predefined properties
-        var classPredefinedProperties = Utils.deepFreeze(Utils.concat(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS] || Utils.createCleanObject(), classMetadata.properties));
+        var classPredefinedProperties = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties));
 
         // Will be frozen later
-        var classProperties = classMetadata.properties;
+        var classProperties = Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties);
 
         // Just for quick reference, nothing more
         var classTextProperties = new StringSet();
@@ -169,7 +169,7 @@ OOML.Namespace = function(namespace, settings) {
             }
         });
 
-        var classAttributes = Utils.deepFreeze(Utils.concat(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDATTRS] || Utils.createCleanObject(), classMetadata.attributes));
+        var classAttributes = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDATTRS]) || Utils.createCleanObject(), classMetadata.attributes));
 
         var classMethods = classMetadata.methods;
 
@@ -534,8 +534,25 @@ OOML.Namespace = function(namespace, settings) {
         var classPropertyNames = Object.freeze(Object.keys(classProperties));
 
         classes[className] = function(initState) {
+            if (!(this instanceof classes[className])) {
+                throw new Error(`OOML instances need to be constructed`);
+            }
+
+            if (initState !== undefined && !Utils.isObjectLiteral(initState)) {
+                throw new TypeError(`Invalid OOML instance initial state`);
+            }
+
             if (classIsAbstract) {
-                throw new SyntaxError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
+                if (!classMetadata.abstractFactory) {
+                    throw new SyntaxError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
+                }
+
+                let ret = classMetadata.abstractFactory(initState, classes);
+                if (!(ret instanceof OOML.Element)) {
+                    throw new TypeError(`Abstract factory returned value is not an OOML instance`);
+                }
+
+                return ret;
             }
 
             let instance = this;
@@ -591,7 +608,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         if (instanceAttributes[attrName].types) {
                             if (!instanceAttributes[attrName].types.some(type => Utils.isType(type, newVal))) {
-                                throw new TypeError(`Cannot set new attribute value; expected type to be one of: ${ instanceAttributes[attrName].types.join(', ') }`);
+                                throw new TypeError(`Cannot set new attribute value for "${ attrName }"; expected type to be one of: ${ instanceAttributes[attrName].types.join(', ') }`);
                             }
                         }
 
@@ -880,12 +897,12 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         if (!Utils.isPrimitiveValue(newVal)) {
-                            throw new TypeError(`Cannot set new property value; unrecognised type`);
+                            throw new TypeError(`Cannot set new property value for "${ prop }"; unrecognised type`);
                         }
 
                         if (instanceProperties[prop].types) {
                             if (!instanceProperties[prop].types.some(type => Utils.isType(type, newVal))) {
-                                throw new TypeError(`Cannot set new property value; expected type to be one of: ${ instanceProperties[prop].types.join(', ') }`);
+                                throw new TypeError(`Cannot set new property value for "${ prop }"; expected type to be one of: ${ instanceProperties[prop].types.join(', ') }`);
                             }
                         }
 
