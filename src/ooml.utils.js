@@ -1,16 +1,16 @@
 let Utils = {
     DOM: {
-        find: function(rootElem, sel) {
-            return Utils.concat(rootElem.querySelectorAll(sel));
-        },
-        setData: function(domElem, key, value) {
+        find: (rootElem, sel) => Utils.concat(rootElem.querySelectorAll(sel)),
+
+        setData: (domElem, key, value) => {
             if (OOMLCompatDatasetExists) {
                 domElem.dataset[key] = value;
             } else {
                 domElem.setAttribute('data-' + Utils.toDashCase(key), value);
             }
         },
-        hasAncestorOrDescendantNamespace: function(rootElem) {
+
+        hasAncestorOrDescendantNamespace: rootElem => {
             let toCheck, current;
 
             toCheck = rootElem;
@@ -31,7 +31,8 @@ let Utils = {
 
             return false;
         },
-        writeValue: function(type, name, nodes, value) {
+
+        writeValue: (type, name, nodes, value) => {
             nodes.forEach(node => {
                 if (node instanceof Text) {
                     node.data = value;
@@ -54,12 +55,14 @@ let Utils = {
             OOMLWriteChanges();
         },
     },
-    iterate: function(iterable, iterator) {
+
+    iterate: (iterable, iterator) => {
         for (let i = 0; i < iterable.length; i++) {
             iterator(iterable[i], i, iterable);
         }
     },
-    getOOMLOutputValue: function(value) {
+
+    getOOMLOutputValue: value => {
         // Don't restrict to Date and Array instances, as attributes can hold any value
         if (value && typeof value.oomlOutputMethod == 'function') {
             value = value.oomlOutputMethod(value);
@@ -69,24 +72,24 @@ let Utils = {
         }
         return '' + value;
     },
-    parseTypeDeclaration: function(types) {
-        return types.split('|').filter((type, idx, types) => {
-            if (OOMLPropertyTypes.indexOf(type) == -1) {
-                throw new SyntaxError(`Invalid type declaration "${ type }"`);
-            }
-            if (types.indexOf(type) !== idx) {
-                throw new SyntaxError(`Duplicate type "${ type }" in type declaration`);
-            }
 
-            // There can only be one number type
-            // If current type is a number type and there exists another number type...
-            if (OOMLPropertyNumberTypes.indexOf(type) > -1 && types.some((t, i) => i != idx && OOMLPropertyNumberTypes.indexOf(t) > -1)) {
-                throw new SyntaxError(`Illegal type declaration "${ type }"`);
-            }
-            return true;
-        });
-    },
-    deepFreeze: function(obj) {
+    parseTypeDeclaration: types => types.split('|').filter((type, idx, types) => {
+        if (OOMLPropertyTypes.indexOf(type) == -1) {
+            throw new SyntaxError(`Invalid type declaration "${ type }"`);
+        }
+        if (types.indexOf(type) !== idx) {
+            throw new SyntaxError(`Duplicate type "${ type }" in type declaration`);
+        }
+
+        // There can only be one number type
+        // If current type is a number type and there exists another number type...
+        if (OOMLPropertyNumberTypes.indexOf(type) > -1 && types.some((t, i) => i != idx && OOMLPropertyNumberTypes.indexOf(t) > -1)) {
+            throw new SyntaxError(`Illegal type declaration "${ type }"`);
+        }
+        return true;
+    }),
+
+    deepFreeze: obj => {
         Object.freeze(obj);
         Object.keys(obj).forEach(key => {
             let val = obj[key];
@@ -96,7 +99,10 @@ let Utils = {
         });
         return obj;
     },
-    preprocessClassDeclaration: function(templateElem, strictPropertyNames) {
+
+    isEmptyString: str => typeof str != 'string' || !str.trim(),
+
+    preprocessClassDeclaration: (templateElem, strictPropertyNames) => {
         let className, classIsAbstract, classExtends;
         Utils.iterate(templateElem.attributes, attribute => {
             switch (attribute.name) {
@@ -172,7 +178,7 @@ let Utils = {
                                 break;
 
                             case 'type':
-                                if (!attrVal || !attrVal.trim()) {
+                                if (Utils.isEmptyString(attrVal)) {
                                     throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-attribute tag`);
                                 }
                                 attrTypes = attrVal;
@@ -213,6 +219,8 @@ let Utils = {
                     let propTypes;
                     let isSuppressed = false;
 
+                    let propGetter, propSetter;
+
                     Utils.iterate(node.attributes, attr => {
                         let attrVal = attr.value;
                         switch (attr.name) {
@@ -221,18 +229,40 @@ let Utils = {
                                 break;
 
                             case 'type':
-                                if (!attrVal || !attrVal.trim()) {
+                                if (Utils.isEmptyString(attrVal)) {
                                     throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-property tag`);
                                 }
                                 propTypes = attrVal;
                                 break;
 
                             case 'suppressed':
+                                /* attrVal could be (depending on browser intrepretation and user-supplied attribute value):
+                                 * - Boolean true or false
+                                 * - String "true" or "false"
+                                 * - Empty string or null
+                                 *
+                                 * Therefore attrValStr could be "", "true", "false" or "null"
+                                 */
                                 let attrValStr = '' + attrVal;
+
                                 if (attrVal && attrValStr != 'true' && attrValStr != 'false') {
                                     throw new SyntaxError(`Invalid suppressed value for attribute declared by ooml-property tag`);
                                 }
                                 isSuppressed = attrValStr != 'false';
+                                break;
+
+                            case 'get':
+                            case 'set':
+                                if (Utils.isEmptyString(attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ attr.name } function`);
+                                }
+
+                                let fn = Function('classes', attrVal.trim());
+                                if (attr.name == 'get') {
+                                    propGetter = fn;
+                                } else {
+                                    propSetter = fn;
+                                }
                                 break;
 
                             default:
@@ -261,6 +291,8 @@ let Utils = {
                         types: propTypes,
                         value: propValue,
                         isArray: false,
+                        getter: propGetter,
+                        setter: propSetter,
                         suppressed: isSuppressed,
                     };
 
@@ -310,12 +342,12 @@ let Utils = {
                     let methodMetadata = Utils.parseMethodFunction(node.textContent.trim(), methodName);
 
                     let argNames = [];
-                    methodMetadata.args.forEach(function(arg) {
+                    methodMetadata.args.forEach(arg => {
                         if (arg.destructure) {
                             if (arg.name) {
                                 argNames.push(arg.name);
                             }
-                            arg.properties.forEach(function(prop) {
+                            arg.properties.forEach(prop => {
                                 argNames.push(prop.name);
                             });
                         } else {
@@ -491,7 +523,8 @@ let Utils = {
 
         return classMetadata;
     },
-    parseMethodFunction: function(funcdef, methodName) {
+
+    parseMethodFunction: (funcdef, methodName) => {
         let regexpMatches = /^function *([a-zA-Z_][a-zA-Z0-9_]+)?\s*\(/.exec(funcdef);
         if (!regexpMatches) {
             throw new SyntaxError(`Invalid function declaration for method "${ methodName }"`);
@@ -551,14 +584,11 @@ let Utils = {
                 continue;
             }
 
-            let argmatches = /^([a-zA-Z.]+ )?(\?)?(\.\.\.)?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
+            let argmatches = /^([a-zA-Z.]+ )?(\?)?(\.{3})?([a-z_][a-zA-Z0-9_]*)( ?= ?)?( ?[\{\[]\s*)?/.exec(toProcess);
             if (!argmatches) {
                 throw new SyntaxError(`Unrecognised function argument declaration`);
             }
-            argmatches = argmatches.map(function(val) {
-                let trimmed = val ? val.trim() : null;
-                return trimmed || null; // In case string was originally only whitespace
-            });
+            argmatches = argmatches.map(val => (val && val.trim()) || null);
             toProcess = toProcess.slice(argmatches[0].length).trim();
 
             let matchedType = argmatches[1] || undefined;
@@ -736,31 +766,25 @@ let Utils = {
             body: funcBody,
         };
     },
-    isValidAttributeName: function(name) {
-        return /^[a-z]+([A-Z][a-z]*)*$/.test(name);
-    },
-    isValidPropertyName: function(name, strictMode) {
-        return typeof name == 'string' &&
-            !!name.length &&
-            name[0] != '$' &&
-            // Double underscore prefix
-            !(name[0] == '_' && name[1] == '_') &&
-            // Starting or trailing whitespace
-            !/^\s|\s$/.test(name) &&
-            OOMLReservedPropertyNames.indexOf(name) == -1 &&
-            (!strictMode || /^[a-z][a-zA-Z0-9_]*$/.test(name))
-        ;
-    },
-    toDashCase: function(str) {
-        return str.replace(/^[a-z]+|(?!^)(?:[A-Z][a-z]*)/g, function(match) {
-            return match.toLowerCase() + '-';
-        }).slice(0, -1);
-    },
-    getEvalValue: function(codeStr) {
-        codeStr = codeStr.trim() || undefined;
-        return Function('return ' + codeStr)();
-    },
-    clone: function(obj) {
+
+    isValidAttributeName: name => /^[a-z]+([A-Z][a-z]*)*$/.test(name),
+
+    isValidPropertyName: (name, strictMode) =>
+        typeof name == 'string' &&
+        !!name.length &&
+        name[0] != '$' &&
+        // Double underscore prefix
+        !(name[0] == '_' && name[1] == '_') &&
+        // Starting or trailing whitespace
+        !/^\s|\s$/.test(name) &&
+        OOMLReservedPropertyNames.indexOf(name) == -1 &&
+        (!strictMode || /^[a-z][a-zA-Z0-9_]*$/.test(name)),
+
+    toDashCase: str => str.replace(/^[a-z]+|(?!^)(?:[A-Z][a-z]*)/g, match => match.toLowerCase() + '-').slice(0, -1),
+
+    getEvalValue: codeStr => Function(`return (${ codeStr.trim() || undefined })`)(),
+
+    clone: obj => {
         let cloned;
         if (Utils.isObjectLiteral(obj)) {
             cloned = Utils.createCleanObject();
@@ -774,6 +798,8 @@ let Utils = {
         }
         return cloned;
     },
+
+    // Use full function declaration for "arguments" object
     concat: function() {
         let ret;
 
@@ -799,25 +825,25 @@ let Utils = {
         }
         return ret;
     },
+
+    // Use full function declaration for "arguments" object
     pushAll: function() {
         let arr = arguments[0];
         for (let i = 1; i < arguments.length; i++) {
             Array.prototype.push.apply(arr, arguments[i]);
         }
     },
-    isOOMLClass: function(c) {
-        return c.prototype instanceof OOML.Element;
-    },
-    isPrimitiveValue: function(val) {
-        return OOMLPrimitiveTypes.some(type => Utils.isType(type, val));
-    },
-    isObjectLiteral: function(obj) {
-        // typeof null == 'object'
-        // Use typeof as .getPrototypeOf can't be used with non-objects
-        // Object.create(null) is NOT instanceof Object, so don't use instanceof
-        return !!obj && typeof obj == 'object' && (obj.constructor == Object || Object.getPrototypeOf(obj) === null);
-    },
-    isType: function(type, value) {
+
+    isOOMLClass: c => typeof c == 'function' && c.prototype instanceof OOML.Element,
+
+    isPrimitiveValue: val => OOMLPrimitiveTypes.some(type => Utils.isType(type, val)),
+
+    // typeof null == 'object'
+    // Use typeof as .getPrototypeOf can't be used with non-objects
+    // Object.create(null) is NOT instanceof Object, so don't use instanceof
+    isObjectLiteral: (obj) => !!obj && typeof obj == 'object' && (obj.constructor == Object || Object.getPrototypeOf(obj) === null),
+
+    isType: (type, value) => {
         switch (type) {
             case 'Date':
                 return value instanceof Date;
@@ -859,10 +885,10 @@ let Utils = {
                 throw new Error(`Unrecognised type for checking against`);
         }
     },
-    createCleanObject: function() {
-        return Object.create(null);
-    },
-    constructElement: function(elemConstructor, obj) {
+
+    createCleanObject: Object.create.bind(undefined, null),
+
+    constructElement: (elemConstructor, obj) => {
         if (obj instanceof elemConstructor) {
             return obj;
         } else if (elemConstructor == OOML.Element || elemConstructor == HTMLElement) {
