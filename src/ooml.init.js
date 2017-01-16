@@ -126,6 +126,12 @@ OOML.Namespace = function(namespace, settings) {
         */
         let classMetadata = Utils.preprocessClassDeclaration(classTemplateElem, settingStrictPropertyNames);
 
+        Utils.iterate(classMetadata.attributes, attr => {
+            if (/^data-/.test(attr.name)) {
+                throw new SyntaxError(`Data attributes are not allowed on the root element`);
+            }
+        });
+
         let className = classMetadata.name;
         if (classes[className]) {
             throw new SyntaxError(`The class "${ className }" already exists`);

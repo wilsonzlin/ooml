@@ -9,13 +9,7 @@
 </head>
 <body>
     <template ooml-class="App">
-        <ooml-property name="markdown" type="string" suppressed set="
-            console.log('arguments', arguments);
-            console.log('this', this);
-            console.log('classes', classes);
-            console.log('property', property);
-            console.log('newValue', newValue);
-
+        <ooml-property name="markdown" type="string" set="
             return {
                 HTML: marked('' + newValue),
             };
