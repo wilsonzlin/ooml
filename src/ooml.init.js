@@ -856,7 +856,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     // Element substitution
                     setter = newVal => {
-                        if (newVal !== null && !Utils.isObjectLiteral(newVal) && !(newVal instanceof OOML.Element)) {
+                        if (newVal !== null && !Utils.isObjectLiteral(newVal) && !(newVal instanceof OOML.Element) && !(newVal instanceof HTMLElement)) {
                             throw new TypeError(`Invalid value provided to element property`);
                         }
 
@@ -865,12 +865,24 @@ OOML.Namespace = function(namespace, settings) {
                         // Attach first to ensure that element is attachable
                         if (newVal !== null) {
                             newVal = Utils.constructElement(elemDetails.types[0], newVal);
-                            newVal[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: elemDetails.insertAfter, parent: instance, property: prop });
+                            if (newVal instanceof HTMLElement) {
+                                elemDetails.insertAfter.parentNode.insertBefore(newVal, elemDetails.insertAfter.nextSibling);
+                            } else {
+                                newVal[OOML_INSTANCE_PROPNAME_ATTACH]({
+                                    insertAfter: elemDetails.insertAfter,
+                                    parent: instance,
+                                    property: prop
+                                });
+                            }
                         }
 
+                        let currentValue = instanceProperties[prop].value;
+
                         // Current element may not be OOML.Element (or may be null) and therefore may not need detaching
-                        if (instanceProperties[prop].value instanceof OOML.Element) {
-                            instanceProperties[prop].value[OOML_INSTANCE_PROPNAME_DETACH]();
+                        if (currentValue instanceof OOML.Element) {
+                            currentValue[OOML_INSTANCE_PROPNAME_DETACH]();
+                        } else if (currentValue instanceof HTMLElement) {
+                            currentValue.parentNode.removeChild(currentValue);
                         }
 
                         instanceProperties[prop].value = newVal;
@@ -880,9 +892,10 @@ OOML.Namespace = function(namespace, settings) {
 
                     setter = newVal => {
                         let customHtml;
+                        let oldVal = instanceProperties[prop].value;
 
                         if (classProperties[prop].setter) {
-                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, newVal);
+                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, oldVal, newVal);
                             if (!Utils.isObjectLiteral(setterReturnVal)) {
                                 throw new TypeError(`Invalid setter return value`);
                             }
@@ -910,7 +923,6 @@ OOML.Namespace = function(namespace, settings) {
 
                         Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, outputText, customHtml);
 
-                        let oldVal = instanceProperties[prop].value;
                         instanceProperties[prop].value = newVal;
 
                         if (oldVal !== newVal && instanceEventHandlers.mutation.propertyvaluechange) {
@@ -930,10 +942,11 @@ OOML.Namespace = function(namespace, settings) {
 
                 propertiesGetterSetterFuncs[prop] = {
                     get: () => {
+                        let currentValue = instanceProperties[prop].value;
                         if (classProperties[prop].getter) {
-                            return classProperties[prop].getter.call(instance, classes, prop);
+                            return classProperties[prop].getter.call(instance, classes, prop, currentValue);
                         }
-                        return instanceProperties[prop].value;
+                        return currentValue;
                     },
                     set: setter,
                     enumerable: true,

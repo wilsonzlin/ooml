@@ -51,6 +51,7 @@ let Utils = {
                     if (useCustomHtml) {
 
                         if (node.nextSibling && node.nextSibling[OOML_DOM_PROPNAME_ISCUSTOMHTML]) {
+                            delete node.nextSibling[OOML_DOM_PROPNAME_ISCUSTOMHTML];
                             node.parentNode.removeChild(node.nextSibling);
                         }
 
@@ -299,7 +300,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                propGetter = Function('classes', 'property', _attrVal.trim());
+                                propGetter = Function('classes', 'property', 'currentValue', _attrVal.trim());
                                 break;
 
                             case 'set':
@@ -307,7 +308,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                propSetter = Function('classes', 'property', 'newValue', _attrVal.trim());
+                                propSetter = Function('classes', 'property', 'currentValue', 'newValue', _attrVal.trim());
                                 break;
 
                             default:
