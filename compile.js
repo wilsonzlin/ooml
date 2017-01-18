@@ -96,8 +96,8 @@ if (!DEBUG) {
 }
 
 zc({
-    src: SRC_DIR,
-    dst: DST_DIR,
+    source: SRC_DIR,
+    destination: DST_DIR,
 
     minifyJS: DEBUG ? false : {
         harmony: HARMONY_ARG,
@@ -105,7 +105,7 @@ zc({
     },
     files: ['ooml.js'],
 
-    onloadfile: (code) => {
+    onloadjs: (code) => {
         if (!HARMONY_ARG) {
             code = babel.transform(code, {
                 plugins: [
