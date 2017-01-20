@@ -1,3 +1,10 @@
+var TYPEOF_FUNCTION = 'function';
+var TYPEOF_OBJECT = 'object';
+var TYPEOF_STRING = 'string';
+var TYPEOF_BOOLEAN = 'boolean';
+var TYPEOF_NUMBER = 'number';
+var TYPEOF_UNDEFINED = 'undefined';
+
 <ZC-IMPORT[utils]>
 
 var OOMLCompatSymbolExists = !!window.Symbol;
@@ -72,7 +79,7 @@ OOML.import = function() {
     if (arguments.length == 2) {
         var importName = arguments[0];
         var importClass = arguments[1];
-        if (typeof importName != 'string') {
+        if (!Utils.typeOf(importName, TYPEOF_STRING)) {
             throw new TypeError(`Invalid import name`);
         }
         if (!Utils.isOOMLClass(importClass)) {
@@ -104,7 +111,7 @@ OOML.import = function() {
 <ZC-IMPORT[element]>
 <ZC-IMPORT[init]>
 
-if (typeof exports == "object") {
+if (Utils.typeOf(exports, TYPEOF_OBJECT)) {
     module.exports = OOML;
 } else {
     window.OOML = OOML;

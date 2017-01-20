@@ -21,8 +21,12 @@ OOMLElementProto.toObject = function() {
             // WARNING: Element properties may have an HTMLElement object as its value,
             //          so don't rely on it being a serialisable OOML.Element instance
             //          just because its an element substitution property
-            if (typeof value.serialise == 'function') {
-                obj[propName] = value.serialise();
+            if (Utils.typeOf(value.serialise, TYPEOF_FUNCTION)) {
+                let serialised = value.serialise();
+                if (!Utils.isPrimitiveValue(serialised)) {
+                    throw new TypeError(`Value returned from serialise function is not primitive`);
+                }
+                obj[propName] = serialised;
             } else {
                 obj[propName] = value.toObject();
             }

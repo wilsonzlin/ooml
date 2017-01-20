@@ -6,7 +6,7 @@ OOML.Namespace = function(namespace, settings) {
 
     if (namespace === undefined) {
         namespace = document.body;
-    } else if (typeof namespace == 'string') {
+    } else if (Utils.typeOf(namespace, TYPEOF_STRING)) {
         namespace = namespace.trim();
         if (namespace[0] == '<') {
             let domParser = document.createElement('div');
@@ -60,7 +60,7 @@ OOML.Namespace = function(namespace, settings) {
 
             case 'strictPropertyNames':
 
-                if (typeof settingValue != 'boolean') {
+                if (!Utils.typeOf(settingValue, TYPEOF_BOOLEAN)) {
                     throw new TypeError(`Invalid setting value for "strictPropertyNames"`);
                 }
 
@@ -539,7 +539,7 @@ OOML.Namespace = function(namespace, settings) {
             }
 
             if (initState !== undefined && !Utils.isObjectLiteral(initState)) {
-                if (typeof this.unserialise != 'function') {
+                if (!Utils.typeOf(this.unserialise, TYPEOF_FUNCTION) || !Utils.isPrimitiveValue(initState)) {
                     throw new TypeError(`Invalid OOML instance initial state`);
                 }
 
@@ -550,7 +550,7 @@ OOML.Namespace = function(namespace, settings) {
             }
 
             if (classIsAbstract) {
-                if (typeof this.abstractFactory != 'function') {
+                if (!Utils.typeOf(this.abstractFactory, TYPEOF_FUNCTION)) {
                     throw new TypeError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
                 }
 
@@ -774,7 +774,7 @@ OOML.Namespace = function(namespace, settings) {
                 value: Object.freeze(Utils.concat.apply(undefined, Object.keys(instanceEventHandlers).map(eventType => {
                     let ret = Utils.createCleanObject();
                     ret[eventType] = (eventName, handler) => {
-                        if (typeof handler != 'function') {
+                        if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
                             throw new TypeError(`The handler for the event "${ eventName }" of type "${ eventType }" is not a function`);
                         }
 

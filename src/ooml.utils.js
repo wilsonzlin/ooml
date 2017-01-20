@@ -34,7 +34,7 @@ let Utils = {
 
         writeValue: (type, name, nodes, value, customHtml) => {
             let customDom;
-            let useCustomHtml = typeof customHtml == 'string';
+            let useCustomHtml = Utils.typeOf(customHtml, TYPEOF_STRING);
 
             // customHtml may be empty, which means that custom HTML is still wanted (i.e. don't write text value), but remove any current custom HTML
             if (useCustomHtml) {
@@ -89,6 +89,10 @@ let Utils = {
         },
     },
 
+    typeOf: (value, type) => {
+        return typeof value == type;
+    },
+
     iterate: (iterable, iterator) => {
         for (let i = 0; i < iterable.length; i++) {
             iterator(iterable[i], i, iterable);
@@ -124,7 +128,7 @@ let Utils = {
         return obj;
     },
 
-    isEmptyString: str => typeof str != 'string' || !str.trim(),
+    isEmptyString: str => !Utils.typeOf(str, TYPEOF_STRING) || !str.trim(),
 
     preprocessClassDeclaration: (templateElem, strictPropertyNames) => {
         let className, classIsAbstract, classExtends;
@@ -356,7 +360,7 @@ let Utils = {
                         }
 
                         classMetadata.constructor = Utils.getEvalValue(node.textContent.trim());
-                        if (typeof classMetadata.constructor != 'function') {
+                        if (!Utils.typeOf(classMetadata.constructor, TYPEOF_FUNCTION)) {
                             throw new TypeError(`The constructor method for the class "${ classMetadata.name }" is not a function`);
                         }
 
@@ -436,7 +440,7 @@ let Utils = {
                                 }
 
                                 // This will be undefined if there is no default value
-                                providedArgument = typeof arg.defaultValue == 'function' ? arg.defaultValue() : arg.defaultValue;
+                                providedArgument = Utils.typeOf(arg.defaultValue, TYPEOF_FUNCTION) ? arg.defaultValue() : arg.defaultValue;
 
                                 if (!argumentProvided) {
                                     // The only way an element in providedArguments isn't defined
@@ -481,7 +485,7 @@ let Utils = {
                                             throw new TypeError(`Property "${ propKey }" in the ${ arg.type } provided as argument ${ argIdx } must be provided`);
                                         }
                                         // This will be undefined if there is no default value
-                                        providedProperty = typeof prop.defaultValue == 'function' ? prop.defaultValue() : prop.defaultValue;
+                                        providedProperty = Utils.typeOf(prop.defaultValue, TYPEOF_FUNCTION) ? prop.defaultValue() : prop.defaultValue;
                                     } else if (prop.type && !Utils.isType(prop.type, providedProperty)) {
                                         throw new TypeError(`Property "${ propKey }" in the ${ arg.type } provided as argument ${ argIdx } should be of type "${ prop.type }"`);
                                     }
@@ -788,7 +792,7 @@ let Utils = {
     isValidAttributeName: name => (/^[a-z]+([A-Z][a-z]*)*$/.test(name)),
 
     isValidPropertyName: (name, strictMode) =>
-        typeof name == 'string' &&
+        Utils.typeOf(name, TYPEOF_STRING) &&
         !!name.length &&
         name[0] != '$' &&
         // Double underscore prefix
@@ -844,14 +848,14 @@ let Utils = {
         return ret;
     },
 
-    isOOMLClass: c => typeof c == 'function' && c.prototype instanceof OOML.Element,
+    isOOMLClass: c => Utils.typeOf(c, TYPEOF_FUNCTION) && c.prototype instanceof OOML.Element,
 
     isPrimitiveValue: val => OOMLPrimitiveTypes.some(type => Utils.isType(type, val)),
 
     // typeof null == 'object'
     // Use typeof as .getPrototypeOf can't be used with non-objects
     // Object.create(null) is NOT instanceof Object, so don't use instanceof
-    isObjectLiteral: (obj) => !!obj && typeof obj == 'object' && (obj.constructor == Object || Object.getPrototypeOf(obj) === null),
+    isObjectLiteral: (obj) => !!obj && Utils.typeOf(obj, TYPEOF_OBJECT) && (obj.constructor == Object || Object.getPrototypeOf(obj) === null),
 
     isType: (type, value) => {
         switch (type) {
@@ -869,14 +873,14 @@ let Utils = {
 
             case 'natural':
             case 'integer':
-                return typeof value == 'number' &&
+                return Utils.typeOf(value, TYPEOF_NUMBER) &&
                     isFinite(value) &&
                     Math.floor(value) === value &&
                     (type != 'natural' || value >= 0);
 
             case 'float':
                 // Floats can have zero remainder, as there is no real difference between int and float in JS
-                return typeof value == 'number' &&
+                return Utils.typeOf(value, TYPEOF_NUMBER) &&
                     isFinite(value); // Returns false on NaN and +/-Infinity
 
             case 'Object':
