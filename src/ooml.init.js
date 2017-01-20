@@ -539,15 +539,22 @@ OOML.Namespace = function(namespace, settings) {
             }
 
             if (initState !== undefined && !Utils.isObjectLiteral(initState)) {
-                throw new TypeError(`Invalid OOML instance initial state`);
+                if (typeof this.unserialise != 'function') {
+                    throw new TypeError(`Invalid OOML instance initial state`);
+                }
+
+                initState = this.unserialise(initState);
+                if (!Utils.isObjectLiteral(initState)) {
+                    throw new TypeError(`Unserialised initial state is not an object`);
+                }
             }
 
             if (classIsAbstract) {
-                if (!classMetadata.abstractFactory) {
+                if (typeof this.abstractFactory != 'function') {
                     throw new TypeError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
                 }
 
-                let ret = classMetadata.abstractFactory(initState, classes);
+                let ret = this.abstractFactory(initState, classes);
                 if (!(ret instanceof OOML.Element)) {
                     throw new TypeError(`Abstract factory returned value is not an OOML instance`);
                 }
@@ -612,12 +619,10 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
-                        let outputText = Utils.getOOMLOutputValue(newVal);
-
-                        Utils.DOM.writeValue('attribute', attrName, instanceAttributes[attrName].nodes, outputText);
+                        Utils.DOM.writeValue('attribute', attrName, instanceAttributes[attrName].nodes, newVal);
 
                         instanceAttributes[attrName].value = newVal;
-                        Utils.DOM.setData(instanceDom, attrName, outputText);
+                        Utils.DOM.setData(instanceDom, attrName, newVal);
                     },
                     enumerable: true,
                 });
@@ -919,9 +924,7 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
-                        let outputText = Utils.getOOMLOutputValue(newVal);
-
-                        Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, outputText, customHtml);
+                        Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, newVal, customHtml);
 
                         instanceProperties[prop].value = newVal;
 
@@ -985,7 +988,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     let types = instanceProperties[propName].types || ['null'];
 
-                    if (classElementProperties.has(propName) || ~types.indexOf('null') || ~types.indexOf('Date')) {
+                    if (classElementProperties.has(propName) || ~types.indexOf('null')) {
                         instance[propName] = null;
                     } else if (~types.indexOf('Array')) {
                         instance[propName] = [];

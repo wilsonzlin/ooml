@@ -97,17 +97,6 @@ let Utils = {
 
     hasOwnProperty: (obj, propName) => Object.prototype.hasOwnProperty.call(obj, propName),
 
-    getOOMLOutputValue: value => {
-        // Don't restrict to Date and Array instances, as attributes can hold any value
-        if (value && typeof value.oomlOutputMethod == 'function') {
-            value = value.oomlOutputMethod(value);
-            if (typeof value != 'string') {
-                throw new TypeError(`An oomlOutputMethod function returned a non-string value`);
-            }
-        }
-        return '' + value;
-    },
-
     parseTypeDeclaration: types => types.split('|').filter((type, idx, types) => {
         if (OOMLPropertyTypes.indexOf(type) == -1) {
             throw new SyntaxError(`Invalid type declaration "${ type }"`);
@@ -360,6 +349,7 @@ let Utils = {
                         }
                     });
 
+                    // Abstract methods can also have constructors, as descendant classes can call it
                     if (methodName == 'constructor') {
                         if (classMetadata.constructor) {
                             throw new ReferenceError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
@@ -478,17 +468,9 @@ let Utils = {
                                     } else if (arg.type == 'Object') {
                                         providedProperty = providedArgument[prop.name];
                                         propKey = prop.name;
-                                    } else { // arg.type is 'Array' or 'OOML.Array'
+                                    } else { // arg.type is 'Array'
                                         propKey = propIdx;
-                                        // NOTE: Don't need to check if type matches defined array type,
-                                        // as previous Utils.isType call already did
-                                        if (providedArgument instanceof OOML.Array) {
-                                            providedProperty = providedArgument.get(propIdx);
-                                        } else if (Array.isArray(providedArgument)) {
-                                            providedProperty = providedArgument[propIdx];
-                                        } else {
-                                            throw new TypeError(`Unrecognised array argument provided`)
-                                        }
+                                        providedProperty = providedArgument[propIdx];
                                     }
 
                                     if (providedProperty === undefined) {
@@ -514,7 +496,7 @@ let Utils = {
 
                         if (collectArg) {
                             let collectedVals = [];
-                            providedArguments.forEach(function(providedArgument, offset) {
+                            providedArguments.forEach((providedArgument, offset) => {
                                 let argIdx = collectArgIdx + offset;
 
                                 if (collectArg.type && !Utils.isType(collectArg.type, providedArgument)) {
@@ -548,23 +530,6 @@ let Utils = {
                         fn: wrapperFunc,
                     };
 
-                    break;
-
-                case 'OOML-ABSTRACT-FACTORY':
-                    if (node.attributes.length) {
-                        throw new ReferenceError(`Unrecognised attribute "${ node.attributes[0] }" on ooml-abstract-factory tag`);
-                    }
-
-                    if (!classMetadata.isAbstract) {
-                        throw new TypeError(`Abstract factory functions are only allowed on abstract classes`);
-                    }
-
-                    let fn = Utils.getEvalValue(node.textContent.trim());
-                    if (typeof fn != 'function') {
-                        throw new TypeError(`Invalid abstract factory function`);
-                    }
-
-                    classMetadata.abstractFactory = fn;
                     break;
 
                 default:
@@ -679,7 +644,7 @@ let Utils = {
                 }
                 if (matchedType) {
                     if ((matchedOpenBrace == '{' && matchedType != 'Object') ||
-                        (matchedOpenBrace == '[' && ['OOML.Array', 'Array'].indexOf(matchedType) == -1)
+                        (matchedOpenBrace == '[' && matchedType == 'Array')
                     ) {
                         throw new TypeError(`Destructuring argument type provided is not recognised`);
                     }
@@ -704,7 +669,7 @@ let Utils = {
             if (matchedEqualsSign && (matchedCollectOperator || matchedOptionalOperator)) {
                 throw new SyntaxError(`Argument with a default value has an operator`);
             }
-            if (matchedEqualsSign && ['function', 'OOML.Element'].indexOf(matchedType) > -1) {
+            if (matchedEqualsSign && matchedType == 'function') {
                 throw new TypeError(`An argument with type "${ matchedType }" cannot have a default argument`);
             }
             if (destructuringMode && matchedCollectOperator) {
@@ -720,7 +685,6 @@ let Utils = {
             let defaultValue = undefined;
             if (matchedEqualsSign) {
                 let booleanMatch;
-                let dateConstructorMatch;
                 let digitsMatch;
 
                 if (/^null/.test(toProcess)) {
@@ -740,10 +704,8 @@ let Utils = {
                 else if (matchedOpenBrace == '[' && toProcess[0] == ']') {
                     toProcess = toProcess.slice(1);
                     // Need to bind as matchedType is not scoped and will mutate
-                    defaultValue = function (type) {
-                        return type == 'OOML.Array' ? new OOML.Array : []
-                    }.bind(matchedType);
-                } else if (['Array', 'OOML.Array'].indexOf(matchedType) > -1) {
+                    defaultValue = Array;
+                } else if (matchedType == 'Array') {
                     throw new TypeError(`An array argument has an invalid default value`);
                 }
 
@@ -752,13 +714,6 @@ let Utils = {
                     defaultValue = booleanMatch[0] == 'true';
                 } else if (matchedType == 'boolean') {
                     throw new TypeError(`A boolean argument has an invalid default value`);
-                }
-
-                else if (dateConstructorMatch = /^new Date\(\s*(?:[0-9]+,\s*)*(?:[0-9]+)?\s*\)/.exec(toProcess)) {
-                    toProcess = toProcess.slice(dateConstructorMatch[0].length);
-                    defaultValue = Function('return ' + dateConstructorMatch);
-                } else if (matchedType == 'Date') {
-                    throw new TypeError(`A Date argument has an invalid default value`);
                 }
 
                 else if (toProcess[0] == '"' || toProcess[0] == "'") {
@@ -799,7 +754,7 @@ let Utils = {
                     if (!Utils.isType(matchedType, defaultValue)) { // Will check for NaN if necessary
                         throw new TypeError(`A number argument has an invalid default value`);
                     }
-                } else if (['number', 'natural', 'integer', 'float'].indexOf(matchedType) > -1) {
+                } else if (OOMLPropertyNumberTypes.indexOf(matchedType) > -1) {
                     throw new TypeError(`A number argument has an invalid default value`);
                 } else {
                     throw new TypeError(`Unrecognised default value`);
@@ -900,9 +855,6 @@ let Utils = {
 
     isType: (type, value) => {
         switch (type) {
-            case 'Date':
-                return value instanceof Date;
-
             case 'null':
                 return value === null;
 
@@ -929,12 +881,6 @@ let Utils = {
 
             case 'Object':
                 return Utils.isObjectLiteral(value);
-
-            case 'OOML.Array':
-                return value instanceof OOML.Array;
-
-            case 'OOML.Element':
-                return value instanceof OOML.Element;
 
             default:
                 throw new Error(`Unrecognised type for checking against`);

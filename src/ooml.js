@@ -40,10 +40,10 @@ var OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf
 // NOTE: Obviously list not complete, but hopefully the rest should be obvious...
 var OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'class'];
 
-var OOMLPrimitiveTypes = ['Date', 'null', 'Array', 'number', 'boolean', 'string'];
+var OOMLPrimitiveTypes = ['null', 'number', 'boolean', 'string'];
 var OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
-var OOMLPropertyTypes = Utils.concat(['Date', 'null', 'Array', 'boolean', 'string'], OOMLPropertyNumberTypes);
-var OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['Object', 'function', 'OOML.Array', 'OOML.Element']);
+var OOMLPropertyTypes = Utils.concat(OOMLPrimitiveTypes, OOMLPropertyNumberTypes).slice(0, -1); // Remove duplicate entry "number"
+var OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['Object', 'Array', 'function']);
 
 var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',

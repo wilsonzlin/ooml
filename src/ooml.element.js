@@ -21,17 +21,13 @@ OOMLElementProto.toObject = function() {
             // WARNING: Element properties may have an HTMLElement object as its value,
             //          so don't rely on it being a serialisable OOML.Element instance
             //          just because its an element substitution property
-            obj[propName] = value.toObject();
-        } else {
-            let serialisedValue;
-
-            if (value && typeof value.oomlSerialisationMethod == 'function') {
-                serialisedValue = value.oomlSerialisationMethod(value);
+            if (typeof value.serialise == 'function') {
+                obj[propName] = value.serialise();
             } else {
-                serialisedValue = value;
+                obj[propName] = value.toObject();
             }
-
-            obj[propName] = serialisedValue;
+        } else {
+            obj[propName] = value;
         }
     });
 
