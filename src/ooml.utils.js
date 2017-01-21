@@ -121,7 +121,7 @@ let Utils = {
         Object.freeze(obj);
         Object.keys(obj).forEach(key => {
             let val = obj[key];
-            if (Utils.isObjectLiteral(val)) {
+            if (Utils.isObjectLiteral(val) || Array.isArray(val)) {
                 Utils.deepFreeze(val);
             }
         });
@@ -237,7 +237,7 @@ let Utils = {
                     }
 
                     let attrValue = Utils.getEvalValue(node.textContent);
-                    if (attrValue === undefined) {
+                    if (attrValue === undefined || (attrTypes && !Utils.isType(attrTypes, attrValue))) {
                         throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
                     }
 
@@ -322,7 +322,7 @@ let Utils = {
                     }
 
                     let propValue = Utils.getEvalValue(node.textContent);
-                    if (!Utils.isPrimitiveValue(propValue)) {
+                    if (!Utils.isPrimitiveValue(propValue) || (propTypes && !Utils.isType(propTypes, propValue))) {
                         throw new TypeError(`The value for the property "${ propName }" is invalid`);
                     }
 
@@ -395,7 +395,7 @@ let Utils = {
                         }
                     });
 
-                    let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', `"use strict"; ${ methodMetadata.body }`]));
+                    let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', `"use strict";${ methodMetadata.body }`]));
 
                     let wrapperFunc = function self() {
                         // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
@@ -850,7 +850,7 @@ let Utils = {
 
     isOOMLClass: c => Utils.typeOf(c, TYPEOF_FUNCTION) && c.prototype instanceof OOML.Element,
 
-    isPrimitiveValue: val => OOMLPrimitiveTypes.some(type => Utils.isType(type, val)),
+    isPrimitiveValue: val => Utils.isType(OOMLPrimitiveTypes, val),
 
     // typeof null == 'object'
     // Use typeof as .getPrototypeOf can't be used with non-objects
@@ -858,12 +858,12 @@ let Utils = {
     isObjectLiteral: (obj) => !!obj && Utils.typeOf(obj, TYPEOF_OBJECT) && (obj.constructor == Object || Object.getPrototypeOf(obj) === null),
 
     isType: (type, value) => {
+        if (Array.isArray(type)) {
+            return type.some(t => Utils.isType(t, value));
+        }
         switch (type) {
             case 'null':
                 return value === null;
-
-            case 'Array':
-                return Array.isArray(value);
 
             case 'number':
             case 'boolean':
@@ -885,6 +885,9 @@ let Utils = {
 
             case 'Object':
                 return Utils.isObjectLiteral(value);
+
+            case 'Array':
+                return Array.isArray(value);
 
             default:
                 throw new Error(`Unrecognised type for checking against`);

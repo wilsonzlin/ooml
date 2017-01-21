@@ -90,7 +90,7 @@ OOML.Namespace = function(namespace, settings) {
         return ret;
     }
 
-    Utils.DOM.find(namespace, 'template[ooml-class], template[ooml-abstract-class]').forEach(classTemplateElem => {
+    Utils.DOM.find(namespace, 'template[ooml-class],template[ooml-abstract-class]').forEach(classTemplateElem => {
 
         /*
             This is an object literal:
@@ -147,16 +147,13 @@ OOML.Namespace = function(namespace, settings) {
             classExtends = OOML.Element;
         }
 
-        // Used for:
-        // 1) Checking if a property is predefined
-        // 2) Extending a child class's predefined properties
+        // Used for applying default values on construction and extending a child class's predefined properties
         var classPredefinedProperties = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties));
 
         // Will be frozen later
         var classProperties = Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties);
 
         // Just for quick reference, nothing more
-        var classTextProperties = new StringSet();
         var classArrayProperties = new StringSet();
         var classElementProperties = new StringSet();
 
@@ -184,7 +181,8 @@ OOML.Namespace = function(namespace, settings) {
         function parseClassDomTextSubstitution(code) {
             let regexpMatches = /^(?: ((?:(?:[a-zA-Z.]+)\|)*[a-zA-Z.]+))? (@)?this\.(attributes\.)?(.+?) $/.exec(code);
             if (!regexpMatches || !regexpMatches[4]) {
-                throw new SyntaxError(`Invalid property declaration at "${ code }"`);
+                // .slice to prevent super-long messages
+                throw new SyntaxError(`Invalid property declaration at "${ code.slice(0, 200) }"`);
             }
 
             let types = regexpMatches[1] || undefined;
@@ -223,16 +221,11 @@ OOML.Namespace = function(namespace, settings) {
 
                 let propAlreadyExists = !!classProperties[propName];
 
-                // Do this regardless of whether it already exists or not
-                // as predefined properties "exist" but do not count as a text property
-                classTextProperties.add(propName);
-
                 if (propAlreadyExists) {
                     if (isSuppressed && !classProperties[propName].suppressed) {
                         classProperties[propName].suppressed = true;
                         classSuppressedProperties.add(propName);
                     }
-                    isSuppressed = classProperties[propName].suppressed;
 
                     if (types) {
                         if (classProperties[propName].types) {
@@ -302,7 +295,7 @@ OOML.Namespace = function(namespace, settings) {
                             throw new ReferenceError(`Another child "${ eventName }" event handler already exists`);
                         }
 
-                        ret.childEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'data', `"use strict"; ${ attr.value.trim() }`);
+                        ret.childEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'data', `"use strict";${ attr.value.trim() }`);
 
                     } else if (/^domon/.test(attrName)) {
 
@@ -312,7 +305,7 @@ OOML.Namespace = function(namespace, settings) {
                             throw new ReferenceError(`Another DOM "${ eventName }" event handler already exists`);
                         }
 
-                        ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'event', `"use strict"; event.preventDefault(); ${ attr.value.trim() }`);
+                        ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'event', `"use strict";${ attr.value.trim() }`);
 
                     } else if (/^on/.test(attrName)) {
 
@@ -400,30 +393,17 @@ OOML.Namespace = function(namespace, settings) {
                         let propAlreadyExists = !!classProperties[propName];
 
                         if (propAlreadyExists) {
-                            // NOTE: It's not possible for more than one element substitution of the same property
-                            if (classTextProperties.has(propName)) {
-                                throw new ReferenceError(`The property "${ propName }" is already defined`);
-                            }
-                            if (isSuppressed && !classProperties[propName].suppressed) {
-                                classProperties[propName].suppressed = true;
-                                classSuppressedProperties.add(propName);
-                            }
-                            isSuppressed = classProperties[propName].suppressed;
-                        } else {
-                            if (isSuppressed) {
-                                classSuppressedProperties.add(propName);
-                            }
+                            // Cannot be predefined
+                            throw new ReferenceError(`The property "${ propName }" is already defined`);
+                        }
+
+                        if (isSuppressed) {
+                            classSuppressedProperties.add(propName);
                         }
 
                         if (isArraySubstitution) {
-                            if (classArrayProperties.has(propName)) {
-                                throw new ReferenceError(`The property "${ propName }" is already defined`);
-                            }
                             classArrayProperties.add(propName);
                         } else {
-                            if (classElementProperties.has(propName)) {
-                                throw new ReferenceError(`The property "${ propName }" is already defined`);
-                            }
                             classElementProperties.add(propName);
                         }
 
@@ -436,7 +416,7 @@ OOML.Namespace = function(namespace, settings) {
                         classProperties[propName] = {
                             types: [elemConstructor],
                             isArray: isArraySubstitution,
-                            value: propAlreadyExists ? classPredefinedProperties[propName].value : undefined,
+                            value: undefined, // Cannot be predefined
                             suppressed: isSuppressed,
                         };
 
@@ -614,7 +594,7 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         if (instanceAttributes[attrName].types) {
-                            if (!instanceAttributes[attrName].types.some(type => Utils.isType(type, newVal))) {
+                            if (!Utils.isType(instanceAttributes[attrName].types, newVal)) {
                                 throw new TypeError(`Cannot set new attribute value for "${ attrName }"; expected type to be one of: ${ instanceAttributes[attrName].types.join(', ') }`);
                             }
                         }
@@ -919,7 +899,7 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         if (instanceProperties[prop].types) {
-                            if (!instanceProperties[prop].types.some(type => Utils.isType(type, newVal))) {
+                            if (!Utils.isType(instanceProperties[prop].types, newVal)) {
                                 throw new TypeError(`Cannot set new property value for "${ prop }"; expected type to be one of: ${ instanceProperties[prop].types.join(', ') }`);
                             }
                         }

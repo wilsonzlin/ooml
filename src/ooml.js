@@ -111,7 +111,7 @@ OOML.import = function() {
 <ZC-IMPORT[element]>
 <ZC-IMPORT[init]>
 
-if (Utils.typeOf(exports, TYPEOF_OBJECT)) {
+if (typeof exports == TYPEOF_OBJECT) {
     module.exports = OOML;
 } else {
     window.OOML = OOML;
