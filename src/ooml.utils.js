@@ -789,6 +789,7 @@ let Utils = {
         };
     },
 
+    // Put brackets around as harmony minifier doesn't work without them
     isValidAttributeName: name => (/^[a-z]+([A-Z][a-z]*)*$/.test(name)),
 
     isValidPropertyName: (name, strictMode) =>

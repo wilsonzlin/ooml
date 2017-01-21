@@ -263,6 +263,13 @@ OOML.Namespace = function(namespace, settings) {
             if (current instanceof Element) {
 
                 let elemName = current.nodeName.toLocaleLowerCase();
+
+                if (elemName == 'ooml-substitution') {
+                    let elemConstructorName;
+                    let propName;
+
+                }
+
                 if (/^ooml-(table|thead|tbody|tfoot|tr|th|td)$/.test(elemName)) {
                     elemName = elemName.slice(5);
                 }
