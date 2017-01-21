@@ -43,7 +43,7 @@
     </div>
     <main>
         <template ooml-class="Friend">
-            <li><a href="{{ this.userId }}" domonclick="dispatch('click', { friendName: this.name })">{{ this.name }}</a></li>
+            <li><a href="{{ this.userId }}" domonclick="dispatch('click', { friendName: this.name }); return false;">{{ this.name }}</a></li>
         </template>
 
         <template ooml-class="PerformanceEntry">
@@ -111,13 +111,13 @@
                 <button>Delete my account</button>
 
                 <h2>Recently contacted friends</h2>
-                <ul childonclick="this.postMessage.value = data.friendName">
-                    { for Friend of this.contactedFriends }
+                <ul>
+                    <ooml-substitution class="Friend" property="contactedFriends" array dispatchonclick="this.postMessage.value = data.friendName"></ooml-substitution>
                 </ul>
                 <span>Send a message</span>
                 Hint: You are awesome!
-                { TextEditor this.postMessage }
-                { TextEditor @this.postMessageHidden }
+                <ooml-substitution class="TextEditor" property="postMessage"></ooml-substitution>
+                <ooml-substitution class="TextEditor" property="postMessageHidden" suppressed></ooml-substitution>
 
                 <h2>Performance</h2>
                 <ooml-table>
@@ -127,7 +127,7 @@
                         <ooml-th>Score</ooml-th>
                     </ooml-thead>
                     <ooml-tbody>
-                        { for PerformanceEntry of this.performanceData }
+                        <ooml-substitution class="PerformanceEntry" property="performanceData" array></ooml-substitution>
                     </ooml-tbody>
                 </ooml-table>
             </article>

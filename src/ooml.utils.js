@@ -293,7 +293,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                propGetter = Function('classes', 'property', 'currentValue', _attrVal.trim());
+                                propGetter = Function('classes', 'property', 'currentValue', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'set':
@@ -301,7 +301,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                propSetter = Function('classes', 'property', 'currentValue', 'newValue', _attrVal.trim());
+                                propSetter = Function('classes', 'property', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
@@ -359,7 +359,7 @@ let Utils = {
                             throw new ReferenceError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
                         }
 
-                        classMetadata.constructor = Utils.getEvalValue(node.textContent.trim());
+                        classMetadata.constructor = Utils.getEvalValue(node.textContent);
                         if (!Utils.typeOf(classMetadata.constructor, TYPEOF_FUNCTION)) {
                             throw new TypeError(`The constructor method for the class "${ classMetadata.name }" is not a function`);
                         }
@@ -620,6 +620,8 @@ let Utils = {
             if (!argmatches) {
                 throw new SyntaxError(`Unrecognised function argument declaration`);
             }
+            // WARNING: Not the same as (val ? val.trim() : null); more like
+            // (val ? (val.trim() || null) : null)
             argmatches = argmatches.map(val => (val && val.trim()) || null);
             toProcess = toProcess.slice(argmatches[0].length).trim();
 
@@ -805,7 +807,8 @@ let Utils = {
 
     toDashCase: str => str.replace(/^[a-z]+|(?!^)(?:[A-Z][a-z]*)/g, match => match.toLowerCase() + '-').slice(0, -1),
 
-    getEvalValue: codeStr => Function(`return ${ codeStr.trim() || undefined }`)(),
+    // Must be used only with strings (usually .textContent)
+    getEvalValue: codeStr => Function(`"use strict";return ${ codeStr.trim() || undefined }`)(),
 
     clone: obj => {
         let cloned;

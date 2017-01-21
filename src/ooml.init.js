@@ -267,7 +267,102 @@ OOML.Namespace = function(namespace, settings) {
                 if (elemName == 'ooml-substitution') {
                     let elemConstructorName;
                     let propName;
+                    let isArraySubstitution = false;
+                    let isSuppressed = false;
 
+                    let dispatchEventHandlers = Utils.createCleanObject();
+
+                    Utils.iterate(current.attributes, _attr => {
+                        let _attrName = _attr.name.toLocaleLowerCase();
+                        let _attrVal = _attr.value;
+
+                        switch (_attrName) {
+                            case 'property':
+                                propName = _attrVal;
+                                break;
+
+                            case 'class':
+                                elemConstructorName = _attrVal;
+                                break;
+
+                            case 'suppressed':
+                                if (_attrVal !== '') {
+                                    throw new SyntaxError(`Invalid "suppressed" attribute value for element substitution property`);
+                                }
+                                isSuppressed = true;
+                                break;
+
+                            case 'array':
+                                if (_attrVal !== '') {
+                                    throw new SyntaxError(`Invalid "array" attribute value for element substitution property`);
+                                }
+                                isArraySubstitution = true;
+                                break;
+
+                            default:
+                                if (/^dispatchon/.test(_attrName)) {
+
+                                    // Don't need to lowercase -- it already is
+                                    let eventName = _attrName.slice(10);
+
+                                    if (dispatchEventHandlers[eventName]) {
+                                        throw new ReferenceError(`Another child "${ eventName }" event handler already exists`);
+                                    }
+
+                                    dispatchEventHandlers[eventName] = Function('dispatch', 'classes', 'data', `"use strict";${ _attrVal }`);
+
+                                } else {
+                                    throw new SyntaxError(`Unknown attribute "${ _attrName }" on element substitution property declaration`);
+                                }
+                        }
+                    });
+
+                    if (Utils.isEmptyString(elemConstructorName)) {
+                        throw new SyntaxError(`"${ elemConstructorName }" is not a valid class`);
+                    }
+
+                    if (!Utils.isValidPropertyName(propName)) {
+                        throw new SyntaxError(`"${ propName }" is not a valid property name`);
+                    }
+
+                    if (classMethods[propName]) {
+                        throw new ReferenceError(`"${ propName }" already exists as a method`);
+                    }
+
+                    if (classProperties[propName]) {
+                        // Cannot be predefined, or be some other substitution
+                        throw new ReferenceError(`The property "${ propName }" is already defined`);
+                    }
+
+                    if (isSuppressed) {
+                        classSuppressedProperties.add(propName);
+                    }
+
+                    if (isArraySubstitution) {
+                        classArrayProperties.add(propName);
+                    } else {
+                        classElementProperties.add(propName);
+                    }
+
+                    let elemConstructor =
+                        elemConstructorName == 'OOML.Element' ? OOML.Element :
+                            getClassFromString(elemConstructorName);
+
+
+                    classProperties[propName] = {
+                        types: [elemConstructor],
+                        isArray: isArraySubstitution,
+                        value: undefined, // Cannot be predefined
+                        suppressed: isSuppressed,
+                        dispatchEventHandlers: dispatchEventHandlers,
+                    };
+
+                    // WARNING: Code returns here -- DOES NOT PROCEED
+                    return {
+                        type: 'comment',
+                        value: '',
+                        bindedProperty: propName,
+                    };
                 }
 
                 if (/^ooml-(table|thead|tbody|tfoot|tr|th|td)$/.test(elemName)) {
@@ -278,7 +373,6 @@ OOML.Namespace = function(namespace, settings) {
                     type: 'element',
                     name: elemName,
                     domEventHandlers: Utils.createCleanObject(),
-                    childEventHandlers: Utils.createCleanObject(),
                     attributes: [],
                     childNodes: [],
                 };
@@ -294,25 +388,16 @@ OOML.Namespace = function(namespace, settings) {
                     }
                     attrNames.add(attrName);
 
-                    if (/^childon/.test(attrName)) {
+                    if (/^domon/.test(attrName)) {
 
-                        let eventName = attrName.slice(7).toLocaleLowerCase();
-
-                        if (ret.childEventHandlers[eventName]) {
-                            throw new ReferenceError(`Another child "${ eventName }" event handler already exists`);
-                        }
-
-                        ret.childEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'data', `"use strict";${ attr.value.trim() }`);
-
-                    } else if (/^domon/.test(attrName)) {
-
-                        let eventName = attrName.slice(5).toLocaleLowerCase();
+                        // Don't need to lowercase -- it already is
+                        let eventName = attrName.slice(5);
 
                         if (ret.domEventHandlers[eventName]) {
                             throw new ReferenceError(`Another DOM "${ eventName }" event handler already exists`);
                         }
 
-                        ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'event', `"use strict";${ attr.value.trim() }`);
+                        ret.domEventHandlers[eventName] = Function('$self', 'dispatch', 'classes', 'event', `"use strict";${ attr.value }`);
 
                     } else if (/^on/.test(attrName)) {
 
@@ -341,7 +426,7 @@ OOML.Namespace = function(namespace, settings) {
                 let nodeValue = current.data;
                 let indexOfOpeningBrace;
 
-                while ((indexOfOpeningBrace = nodeValue.indexOf('{')) > -1) {
+                while ((indexOfOpeningBrace = nodeValue.indexOf('{{')) > -1) {
 
                     let textBeforeParam = nodeValue.slice(0, indexOfOpeningBrace);
                     if (textBeforeParam) {
@@ -353,85 +438,27 @@ OOML.Namespace = function(namespace, settings) {
 
                     nodeValue = nodeValue.slice(indexOfOpeningBrace);
 
-                    // currentNode.nodeValue is now one of:
+                    // currentNode.nodeValue is now:
                     // "{{ this.propName }}"
-                    // "{ for ClassName of this.propName }"
-                    // "{ ClassName this.propName }"
-                    // Therefore the index of the closing brace can't be less than 3
-                    let indexOfClosingBrace = nodeValue.indexOf('}');
-                    if (indexOfClosingBrace < 3) {
+                    // Therefore the index of the closing brace can't be less than 10
+                    let indexOfClosingBrace = nodeValue.indexOf('}}');
+                    if (indexOfClosingBrace < 10) {
                         throw new SyntaxError(`Matching closing brace not found`);
                     }
-                    // Remove first opening and all closing braces:
-                    // "{{ this.propName }}"         becomes "{ this.propName "
-                    // "{ ClassName this.propName }" becomes " ClassName this.propName "
-                    let code = nodeValue.slice(1, indexOfClosingBrace);
+                    // Remove opening and closing braces:
+                    // "{{ this.propName }}"         becomes " this.propName "
+                    let code = nodeValue.slice(2, indexOfClosingBrace);
 
-                    let regexpMatches;
-                    if (code[0] == '{') {
-                        let textSubstitutionConfig = parseClassDomTextSubstitution(code.slice(1));
+                    let textSubstitutionConfig = parseClassDomTextSubstitution(code);
 
-                        ret.push({
-                            type: 'text',
-                            value: '',
-                            bindedProperty: textSubstitutionConfig.isAttribute ? undefined : textSubstitutionConfig.name,
-                            bindedAttribute: !textSubstitutionConfig.isAttribute ? undefined : textSubstitutionConfig.name,
-                        });
+                    ret.push({
+                        type: 'text',
+                        value: '',
+                        bindedProperty: textSubstitutionConfig.isAttribute ? undefined : textSubstitutionConfig.name,
+                        bindedAttribute: !textSubstitutionConfig.isAttribute ? undefined : textSubstitutionConfig.name,
+                    });
 
-                        nodeValue = nodeValue.slice(indexOfClosingBrace + 2);
-
-                    } else {
-                        regexpMatches = /^ (?:for ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)) of|((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+))) (@)?this\.([a-zA-Z0-9_]+) $/.exec(code);
-                        if (!regexpMatches || !regexpMatches[4] || (!regexpMatches[1] && !regexpMatches[2])) {
-                            throw new SyntaxError(`Invalid element substitution at "${ code }"`);
-                        }
-
-                        nodeValue = nodeValue.slice(indexOfClosingBrace + 1);
-
-                        let elemConstructorName = regexpMatches[1] || regexpMatches[2];
-                        let propName = regexpMatches[4];
-                        let isArraySubstitution = !!regexpMatches[1];
-                        let isSuppressed = !!regexpMatches[3];
-
-                        if (classMethods[propName]) {
-                            throw new ReferenceError(`"${ propName }" already exists as a method`);
-                        }
-
-                        let propAlreadyExists = !!classProperties[propName];
-
-                        if (propAlreadyExists) {
-                            // Cannot be predefined
-                            throw new ReferenceError(`The property "${ propName }" is already defined`);
-                        }
-
-                        if (isSuppressed) {
-                            classSuppressedProperties.add(propName);
-                        }
-
-                        if (isArraySubstitution) {
-                            classArrayProperties.add(propName);
-                        } else {
-                            classElementProperties.add(propName);
-                        }
-
-                        let elemConstructor =
-                            elemConstructorName == 'OOML.Element' ? OOML.Element :
-                                getClassFromString(elemConstructorName);
-
-
-                        classProperties[propName] = {
-                            types: [elemConstructor],
-                            isArray: isArraySubstitution,
-                            value: undefined, // Cannot be predefined
-                            suppressed: isSuppressed,
-                        };
-
-                        ret.push({
-                            type: 'comment',
-                            value: '',
-                            bindedProperty: propName,
-                        });
-                    }
+                    nodeValue = nodeValue.slice(indexOfClosingBrace + 2);
                 }
 
                 // Push any remaining text
@@ -553,6 +580,10 @@ OOML.Namespace = function(namespace, settings) {
 
             function dispatchEventToParent(eventName, eventData) {
 
+                if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
+                    throw new TypeError(`Event name isn't a string`);
+                }
+
                 let prevented = false;
                 eventName = eventName.toLocaleLowerCase();
 
@@ -571,8 +602,8 @@ OOML.Namespace = function(namespace, settings) {
                     });
                 }
 
-                if (!prevented && instanceDom.parentNode && instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] && instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName]) {
-                    instanceDom.parentNode[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName](eventData);
+                if (!prevented && instanceIsAttachedTo) {
+                    instanceIsAttachedTo.parent[OOML_INSTANCE_PROPNAME_DISPATCH](instanceIsAttachedTo.property, eventName, eventData);
                 }
 
             }
@@ -634,16 +665,6 @@ OOML.Namespace = function(namespace, settings) {
 
                             // Event object will be provided when called by browser
                             cloned['on' + eventName] = node.domEventHandlers[eventName].bind(instance, cloned, dispatchEventToParent, classes);
-
-                        });
-
-                        Object.keys(node.childEventHandlers).forEach(eventName => {
-
-                            if (!cloned[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED]) {
-                                cloned[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED] = Utils.createCleanObject();
-                            }
-                            // Event data will be provided when called by child OOML element
-                            cloned[OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED][eventName] = node.childEventHandlers[eventName].bind(instance, cloned, dispatchEventToParent, classes);
 
                         });
 
@@ -710,7 +731,7 @@ OOML.Namespace = function(namespace, settings) {
 
                             instanceProperties[propertyName].insertAfter = cloned;
                             if (instanceProperties[propertyName].isArray) {
-                                instanceProperties[propertyName].value = new OOML.Array(instanceProperties[propertyName].types[0], cloned);
+                                instanceProperties[propertyName].value = new OOML.Array(instanceProperties[propertyName].types[0], cloned, instance, propertyName);
                             }
 
                         }
@@ -762,6 +783,10 @@ OOML.Namespace = function(namespace, settings) {
                     ret[eventType] = (eventName, handler) => {
                         if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
                             throw new TypeError(`The handler for the event "${ eventName }" of type "${ eventType }" is not a function`);
+                        }
+
+                        if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
+                            throw new TypeError(`Event name is not a string`);
                         }
 
                         eventName = eventName.toLocaleLowerCase();
@@ -826,6 +851,13 @@ OOML.Namespace = function(namespace, settings) {
                     instanceIsAttachedTo = undefined;
 
                     instanceDom.parentNode.removeChild(instanceDom);
+                },
+            };
+            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_DISPATCH] = {
+                value: (propName, eventName, data) => {
+                    if (classProperties[propName].dispatchEventHandlers[eventName]) {
+                        classProperties[propName].dispatchEventHandlers[eventName].call(instance, dispatchEventToParent, classes, data);
+                    }
                 },
             };
 

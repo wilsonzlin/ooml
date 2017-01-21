@@ -65,6 +65,7 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_INSTANCE_PROPNAME_DOMELEM = '__oomlDomElem',
     OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach',
     OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach',
+    OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch',
 
     OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
     OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties',
