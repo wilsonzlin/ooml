@@ -15,12 +15,10 @@ OOMLElementProto.toObject = function() {
         }
 
         let value = instance[propName];
+        // Use instanceof; don't read from classArrayProperties or whatever
         if (value instanceof OOML.Array) {
             obj[propName] = value.toArray();
         } else if (value instanceof OOML.Element) {
-            // WARNING: Element properties may have an HTMLElement object as its value,
-            //          so don't rely on it being a serialisable OOML.Element instance
-            //          just because its an element substitution property
             if (Utils.typeOf(value.serialise, TYPEOF_FUNCTION)) {
                 let serialised = value.serialise();
                 if (!Utils.isPrimitiveValue(serialised)) {
