@@ -273,19 +273,10 @@ let Utils = {
                                 break;
 
                             case 'suppressed':
-                                /* Valid _attrVal values could be (depending on browser intrepretation):
-                                 * - Boolean true or false
-                                 * - String "true" or "false"
-                                 * - Empty string or null
-                                 *
-                                 * Therefore _attrValStr could be "", "true", "false" or "null"
-                                 */
-                                let _attrValStr = '' + _attrVal;
-
-                                if (_attrVal && _attrValStr != 'true' && _attrValStr != 'false') {
+                                if (_attrVal !== '') {
                                     throw new SyntaxError(`Invalid suppressed value for attribute declared by ooml-property tag`);
                                 }
-                                isSuppressed = _attrValStr != 'false';
+                                isSuppressed = true;
                                 break;
 
                             case 'get':
