@@ -127,7 +127,7 @@ OOML.Namespace = function(namespace, settings) {
         let classMetadata = Utils.preprocessClassDeclaration(classTemplateElem, settingStrictPropertyNames);
 
         Utils.iterate(classMetadata.attributes, attr => {
-            if (/^data-/.test(attr.name)) {
+            if (/^data-/i.test(attr.name)) {
                 throw new SyntaxError(`Data attributes are not allowed on the root element`);
             }
         });
@@ -151,7 +151,7 @@ OOML.Namespace = function(namespace, settings) {
         var classPredefinedProperties = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties));
 
         // Will be frozen later
-        var classProperties = Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties);
+        var classProperties = Utils.clone(classPredefinedProperties);
 
         // Just for quick reference, nothing more
         var classArrayProperties = new StringSet();
@@ -547,36 +547,36 @@ OOML.Namespace = function(namespace, settings) {
         var classPropertyNames = Object.freeze(Object.keys(classProperties));
 
         classes[className] = function(initState) {
-            if (!(this instanceof classes[className])) {
+            let instance = this;
+            let instanceIsAttachedTo;
+
+            if (!(instance instanceof classes[className])) {
                 throw new ReferenceError(`OOML instances need to be constructed`);
             }
 
             if (initState !== undefined && !Utils.isObjectLiteral(initState)) {
-                if (!Utils.typeOf(this.unserialise, TYPEOF_FUNCTION) || !Utils.isPrimitiveValue(initState)) {
+                if (!Utils.typeOf(instance.unserialise, TYPEOF_FUNCTION) || !Utils.isPrimitiveValue(initState)) {
                     throw new TypeError(`Invalid OOML instance initial state`);
                 }
 
-                initState = this.unserialise(initState);
+                initState = instance.unserialise(initState);
                 if (!Utils.isObjectLiteral(initState)) {
                     throw new TypeError(`Unserialised initial state is not an object`);
                 }
             }
 
             if (classIsAbstract) {
-                if (!Utils.typeOf(this.abstractFactory, TYPEOF_FUNCTION)) {
+                if (!Utils.typeOf(instance.abstractFactory, TYPEOF_FUNCTION)) {
                     throw new TypeError(`Unable to construct new instance; "${ classMetadata.name }" is an abstract class`);
                 }
 
-                let ret = this.abstractFactory(initState, classes);
+                let ret = instance.abstractFactory(initState, classes);
                 if (!(ret instanceof OOML.Element)) {
                     throw new TypeError(`Abstract factory returned value is not an OOML instance`);
                 }
 
                 return ret;
             }
-
-            let instance = this;
-            let instanceIsAttachedTo;
 
             function dispatchEventToParent(eventName, eventData) {
 
