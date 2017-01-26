@@ -141,8 +141,7 @@ let Utils = {
                         throw new ReferenceError(`Duplicate class declaration attribute`);
                     }
 
-                    // Class may extend class name with dot (.) as imported classes' names may have dot
-                    let classDeclarationParts = /^([a-zA-Z]+)(?: extends ((?:[a-zA-Z]+\.)*(?:[a-zA-Z]+)))?$/.exec(attribute.value);
+                    let classDeclarationParts = /^([a-zA-Z][a-zA-Z.0-9]*)(?: extends ([a-zA-Z][a-zA-Z.0-9]*))?$/.exec(attribute.value);
                     if (!classDeclarationParts) {
                         throw new SyntaxError(`Malformed attribute value for attribute "${ attribute.name }": "${ attribute.value }"`);
                     }
