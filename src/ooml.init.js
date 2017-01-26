@@ -156,6 +156,7 @@ OOML.Namespace = function(namespace, settings) {
         // Just for quick reference, nothing more
         var classArrayProperties = new StringSet();
         var classElementProperties = new StringSet();
+        var classSubstitutionDefaultValues = Utils.createCleanObject();
 
         // For .toObject
         var classSuppressedProperties = new StringSet();
@@ -334,6 +335,15 @@ OOML.Namespace = function(namespace, settings) {
                         throw new ReferenceError(`The property "${ propName }" is already defined`);
                     }
 
+                    if (current.textContent.trim()) {
+                        let defaultValue = Utils.getEvalValue(current.textContent);
+                        if (!Utils.isObjectLiteral(defaultValue) && !Array.isArray(defaultValue)) {
+                            throw new TypeError(`Invalid default value for element substitution "${ propName }"`);
+                        }
+
+                        classSubstitutionDefaultValues[propName] = defaultValue;
+                    }
+
                     if (isSuppressed) {
                         classSuppressedProperties.add(propName);
                     }
@@ -352,7 +362,7 @@ OOML.Namespace = function(namespace, settings) {
                     classProperties[propName] = {
                         types: [elemConstructor],
                         isArray: isArraySubstitution,
-                        value: undefined, // Cannot be predefined
+                        value: undefined,
                         suppressed: isSuppressed,
                         dispatchEventHandlers: dispatchEventHandlers,
                     };
@@ -982,6 +992,9 @@ OOML.Namespace = function(namespace, settings) {
             // Apply predefined property values
             for (let propName in classPredefinedProperties) {
                 instance[propName] = classPredefinedProperties[propName].value;
+            }
+            for (let propName in classSubstitutionDefaultValues) {
+                instance[propName] = classSubstitutionDefaultValues[propName];
             }
 
             classConstructor.call(instance);

@@ -63,18 +63,6 @@
                     return this.name.length;
                 }
             </ooml-method>
-            <ooml-method name="constructor">
-                function() {
-                    this.performanceData = [
-                        { id: 234908, jobTitle: 'Head of no-scoping', score: 420 },
-                        { id: 543255, jobTitle: 'Noob pawning', score: 6969 },
-                        { id: 727224, jobTitle: 'Master String Reverser', score: 321 },
-                        { id: 123467, jobTitle: 'Bureau of bureaucracy', score: 9001 },
-                        { id: 578546, jobTitle: 'Console Pleb Tears Collection', score: 1337 },
-                        { id: 248968, jobTitle: 'Government worker (Beneficiary)', score: 99 },
-                    ];
-                }
-            </ooml-method>
 
             <article class="user">
                 <h1 class="title">Welcome {{ this.name }} (@{{ string|null this.username }})</h1>
@@ -127,7 +115,14 @@
                         <ooml-th>Score</ooml-th>
                     </ooml-thead>
                     <ooml-tbody>
-                        <ooml-substitution class="PerformanceEntry" property="performanceData" array></ooml-substitution>
+                        <ooml-substitution class="PerformanceEntry" property="performanceData" array>[
+                            { id: 234908, jobTitle: 'Head of no-scoping', score: 420 },
+                            { id: 543255, jobTitle: 'Noob pawning', score: 6969 },
+                            { id: 727224, jobTitle: 'Master String Reverser', score: 321 },
+                            { id: 123467, jobTitle: 'Bureau of bureaucracy', score: 9001 },
+                            { id: 578546, jobTitle: 'Console Pleb Tears Collection', score: 1337 },
+                            { id: 248968, jobTitle: 'Government worker (Beneficiary)', score: 99 },
+                        ];</ooml-substitution>
                     </ooml-tbody>
                 </ooml-table>
             </article>
