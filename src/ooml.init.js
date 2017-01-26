@@ -889,9 +889,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     // Element substitution
                     setter = newVal => {
-                        if (newVal !== null && !Utils.isObjectLiteral(newVal) && !(newVal instanceof OOML.Element)) {
-                            throw new TypeError(`Invalid value provided to element property`);
-                        }
+                        // Let constructors handle newVal's type
 
                         let elemDetails = instanceProperties[prop];
 
@@ -907,7 +905,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         let currentValue = instanceProperties[prop].value;
 
-                        // Current element may not be OOML.Element (or may be null) and therefore may not need detaching
+                        // Current element may be null and therefore does not need detaching
                         if (currentValue instanceof OOML.Element) {
                             currentValue[OOML_INSTANCE_PROPNAME_DETACH]();
                         }

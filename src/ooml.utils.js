@@ -893,11 +893,8 @@ let Utils = {
     constructElement: (elemConstructor, obj) => {
         if (obj instanceof elemConstructor) {
             return obj;
-        } else if (elemConstructor == OOML.Element) {
-            throw new TypeError(`Unable to construct new instance; the type is an abstract class`);
-        } else if (!Utils.isObjectLiteral(obj)) {
-            throw new TypeError(`Unable to construct new instance; the provided object is not of the correct type`);
         }
+        // Don't check obj's type or if elemConstructor is OOML.Element; this will be handled by the constructor
 
         return new elemConstructor(obj);
     },
