@@ -890,6 +890,9 @@ OOML.Namespace = function(namespace, settings) {
                     // Element substitution
                     setter = newVal => {
                         // Let constructors handle newVal's type
+                        if (newVal === undefined) {
+                            throw new TypeError(`Undefined provided as element substitution property value`);
+                        }
 
                         let elemDetails = instanceProperties[prop];
 
