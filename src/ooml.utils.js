@@ -128,7 +128,7 @@ let Utils = {
         return obj;
     },
 
-    isEmptyString: str => !Utils.typeOf(str, TYPEOF_STRING) || !str.trim(),
+    isNotOrBlankString: str => !Utils.typeOf(str, TYPEOF_STRING) || !str.trim(),
 
     preprocessClassDeclaration: (templateElem, strictPropertyNames) => {
         let className, classIsAbstract, classExtends;
@@ -212,7 +212,7 @@ let Utils = {
                                 break;
 
                             case 'type':
-                                if (Utils.isEmptyString(_attrVal)) {
+                                if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-attribute tag`);
                                 }
                                 attrTypes = _attrVal;
@@ -265,7 +265,7 @@ let Utils = {
                                 break;
 
                             case 'type':
-                                if (Utils.isEmptyString(_attrVal)) {
+                                if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-property tag`);
                                 }
                                 propTypes = _attrVal;
@@ -279,7 +279,7 @@ let Utils = {
                                 break;
 
                             case 'get':
-                                if (Utils.isEmptyString(_attrVal)) {
+                                if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
@@ -287,7 +287,7 @@ let Utils = {
                                 break;
 
                             case 'set':
-                                if (Utils.isEmptyString(_attrVal)) {
+                                if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 

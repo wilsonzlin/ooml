@@ -271,6 +271,8 @@ OOML.Namespace = function(namespace, settings) {
                     let isArraySubstitution = false;
                     let isSuppressed = false;
 
+                    let getter, setter;
+
                     let dispatchEventHandlers = Utils.createCleanObject();
 
                     Utils.iterate(current.attributes, _attr => {
@@ -300,6 +302,22 @@ OOML.Namespace = function(namespace, settings) {
                                 isArraySubstitution = true;
                                 break;
 
+                            case 'get':
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                getter = Function('classes', 'property', 'currentValue', `"use strict";${ _attrVal }`);
+                                break;
+
+                            case 'set':
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                setter = Function('classes', 'property', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
+                                break;
+
                             default:
                                 if (/^dispatchon/.test(_attrName)) {
 
@@ -318,7 +336,7 @@ OOML.Namespace = function(namespace, settings) {
                         }
                     });
 
-                    if (Utils.isEmptyString(elemConstructorName)) {
+                    if (Utils.isNotOrBlankString(elemConstructorName)) {
                         throw new SyntaxError(`"${ elemConstructorName }" is not a valid class`);
                     }
 
@@ -365,6 +383,8 @@ OOML.Namespace = function(namespace, settings) {
                         value: undefined,
                         suppressed: isSuppressed,
                         dispatchEventHandlers: dispatchEventHandlers,
+                        getter: getter,
+                        setter: setter,
                     };
 
                     // WARNING: Code returns here -- DOES NOT PROCEED
@@ -896,6 +916,25 @@ OOML.Namespace = function(namespace, settings) {
 
                         let elemDetails = instanceProperties[prop];
 
+                        let currentValue = instanceProperties[prop].value;
+
+                        if (classProperties[prop].setter) {
+                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal);
+                            if (setterReturnVal === false) {
+                                return;
+                            }
+
+                            if (setterReturnVal !== undefined) {
+                                if (!Utils.isObjectLiteral(setterReturnVal)) {
+                                    throw new TypeError(`Invalid setter return value`);
+                                }
+
+                                if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
+                                    newVal = setterReturnVal.value;
+                                }
+                            }
+                        }
+
                         // Attach first to ensure that element is attachable
                         if (newVal !== null) {
                             newVal = Utils.constructElement(elemDetails.types[0], newVal);
@@ -905,8 +944,6 @@ OOML.Namespace = function(namespace, settings) {
                                 property: prop
                             });
                         }
-
-                        let currentValue = instanceProperties[prop].value;
 
                         // Current element may be null and therefore does not need detaching
                         if (currentValue instanceof OOML.Element) {
@@ -924,16 +961,22 @@ OOML.Namespace = function(namespace, settings) {
 
                         if (classProperties[prop].setter) {
                             let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, oldVal, newVal);
-                            if (!Utils.isObjectLiteral(setterReturnVal)) {
-                                throw new TypeError(`Invalid setter return value`);
+                            if (setterReturnVal === false) {
+                                return;
                             }
 
-                            if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
-                                newVal = setterReturnVal.value;
-                            }
+                            if (setterReturnVal !== undefined) {
+                                if (!Utils.isObjectLiteral(setterReturnVal)) {
+                                    throw new TypeError(`Invalid setter return value`);
+                                }
 
-                            if (Utils.hasOwnProperty(setterReturnVal, 'HTML')) {
-                                customHtml = setterReturnVal.HTML;
+                                if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
+                                    newVal = setterReturnVal.value;
+                                }
+
+                                if (Utils.hasOwnProperty(setterReturnVal, 'HTML')) {
+                                    customHtml = setterReturnVal.HTML;
+                                }
                             }
                         }
 
@@ -995,13 +1038,12 @@ OOML.Namespace = function(namespace, settings) {
                 instance[propName] = classPredefinedProperties[propName].value;
             }
             for (let propName in classSubstitutionDefaultValues) {
-                instance[propName] = classSubstitutionDefaultValues[propName];
+                instance[propName] = Utils.clone(classSubstitutionDefaultValues[propName]);
             }
 
             classConstructor.call(instance);
 
             // Apply given object argument to this new instance's properties
-            // NOTE: .assign is available at this point, as instances are constructed AFTER classes are initialised (including prototypes)
             if (initState) {
                 instance.assign(initState);
             }
