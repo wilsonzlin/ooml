@@ -956,6 +956,10 @@ OOML.Namespace = function(namespace, settings) {
                 } else {
 
                     setter = newVal => {
+                        if (newVal === undefined) {
+                            throw new TypeError(`Undefined provided as property value`);
+                        }
+
                         let customHtml;
                         let oldVal = instanceProperties[prop].value;
 
