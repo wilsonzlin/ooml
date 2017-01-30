@@ -1045,8 +1045,6 @@ OOML.Namespace = function(namespace, settings) {
                 instance[propName] = Utils.clone(classSubstitutionDefaultValues[propName]);
             }
 
-            classConstructor.call(instance);
-
             // Apply given object argument to this new instance's properties
             if (initState) {
                 instance.assign(initState);
@@ -1077,6 +1075,8 @@ OOML.Namespace = function(namespace, settings) {
                 }
 
             });
+
+            classConstructor.call(instance);
 
             // Update attribute nodes with parameter handlebars that have just been changed
             OOMLWriteChanges();
