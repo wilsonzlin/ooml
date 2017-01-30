@@ -797,7 +797,7 @@ OOML.Namespace = function(namespace, settings) {
                     // are set and some aren't
                     newObjKeys.forEach(attrName => {
                         if (!instanceAttributes[attrName]) {
-                            throw new ReferenceError(`New attributes object provided has an unrecognised attribute "${ propName }"`);
+                            throw new ReferenceError(`New attributes object provided has an unrecognised attribute "${ attrName }"`);
                         }
                     });
 
