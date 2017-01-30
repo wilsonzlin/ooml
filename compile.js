@@ -25,7 +25,7 @@ fs.writeFileSync(
     '(function(Object, TypeError, SyntaxError, ReferenceError, RangeError, Error, undefined) {' +
         '"use strict";' +
         fs.readFileSync(SRC_DIR + 'ooml.js', 'utf8') +
-    '})(Object, TypeError, SyntaxError, ReferenceError, RangeError, Error)'
+    '})(Object, TypeError, SyntaxError, ReferenceError, RangeError, Error);'
 );
 
 /*
