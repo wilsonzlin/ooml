@@ -257,7 +257,9 @@ OOML.Namespace = function(namespace, settings) {
             };
         }
 
-        var classRootElem = (function parseClassDom(current) {
+        var classExtensionPointPath;
+
+        var classRootElem = (function parseClassDom(current, currentPath) {
 
             let ret;
 
@@ -395,6 +397,21 @@ OOML.Namespace = function(namespace, settings) {
                     };
                 }
 
+                if (elemName == 'ooml-extension-point') {
+                    if (classExtensionPointPath) {
+                        throw new ReferenceError(`An extension point already exists`);
+                    }
+                    if (!currentPath) {
+                        throw new SyntaxError(`The extension point cannot be the root`);
+                    }
+                    classExtensionPointPath = currentPath;
+
+                    // WARNING: Code returns here -- DOES NOT PROCEED
+                    return {
+                        type: 'extensionPoint',
+                    }
+                }
+
                 if (/^ooml-(table|thead|tbody|tfoot|tr|th|td)$/.test(elemName)) {
                     elemName = elemName.slice(5);
                 }
@@ -441,7 +458,8 @@ OOML.Namespace = function(namespace, settings) {
                 });
 
                 Utils.iterate(current.childNodes, childNode => {
-                    let parsedChildNodes = parseClassDom(childNode);
+                    // Paths are only used for elements, so the next part can only be the next index
+                    let parsedChildNodes = parseClassDom(childNode, currentPath + '.' + ret.childNodes.length);
                     if (Array.isArray(parsedChildNodes)) {
                         Array.prototype.push.apply(ret.childNodes, parsedChildNodes);
                     } else {
@@ -571,7 +589,13 @@ OOML.Namespace = function(namespace, settings) {
             }
 
             return ret;
-        })(classMetadata.rootElem);
+        })(classMetadata.rootElem, '');
+
+        if (classExtensionPointPath) {
+            classExtensionPointPath = classExtensionPointPath.slice(1);
+            console.log(classExtensionPointPath, classRootElem);
+            throw 1;
+        }
 
         Utils.deepFreeze(classProperties);
         var classPropertyNames = Object.freeze(Object.keys(classProperties));
@@ -1088,6 +1112,10 @@ OOML.Namespace = function(namespace, settings) {
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDATTRS] = classAttributes; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = classPredefinedProperties; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = classConstructor;
+        classes[className][OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classExtensionPointPath && {
+            path: classExtensionPointPath,
+            rootElem: classRootElem,
+        };
 
         // Make class inherit from parent class
         classes[className].prototype = Object.create(classExtends.prototype);

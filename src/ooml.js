@@ -3,7 +3,9 @@ var TYPEOF_OBJECT = 'object';
 var TYPEOF_STRING = 'string';
 var TYPEOF_BOOLEAN = 'boolean';
 var TYPEOF_NUMBER = 'number';
+/* OVERRIDE: UNUSED
 var TYPEOF_UNDEFINED = 'undefined';
+*/
 
 <ZC-IMPORT[utils]>
 
@@ -57,8 +59,6 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
     OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners',
 
-    OOML_ELEMENTNODE_PROPNAME_CHILDEVENTHANDLERS_BINDED = '__oomlChildEventHandlersBinded',
-
     OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace',
     OOML_DOM_PROPNAME_ISCUSTOMHTML = '__oomlIsCustomHtml',
 
@@ -71,7 +71,8 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties',
     OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes',
     OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
-    OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
+    OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor',
+    OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint';
 
 var OOML = {};
 

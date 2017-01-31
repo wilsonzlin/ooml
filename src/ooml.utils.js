@@ -48,12 +48,14 @@ let Utils = {
 
             nodes.forEach(node => {
                 if (node instanceof Text) {
-                    if (useCustomHtml) {
 
-                        if (node.nextSibling && node.nextSibling[OOML_DOM_PROPNAME_ISCUSTOMHTML]) {
-                            delete node.nextSibling[OOML_DOM_PROPNAME_ISCUSTOMHTML];
-                            node.parentNode.removeChild(node.nextSibling);
-                        }
+                    // Delete any custom HTML, regardless if using or not
+                    if (node.nextSibling && node.nextSibling[OOML_DOM_PROPNAME_ISCUSTOMHTML]) {
+                        delete node.nextSibling[OOML_DOM_PROPNAME_ISCUSTOMHTML];
+                        node.parentNode.removeChild(node.nextSibling);
+                    }
+
+                    if (useCustomHtml) {
 
                         if (customDom) {
                             let customDomDuplicated = customDom.cloneNode(true);
