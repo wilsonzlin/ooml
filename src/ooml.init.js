@@ -1079,9 +1079,9 @@ OOML.Namespace = function(namespace, settings) {
 
                 if (instance[propName] === undefined) {
 
-                    let types = instanceProperties[propName].types || ['null'];
+                    let types = instanceProperties[propName].types;
 
-                    if (classElementProperties.has(propName) || ~types.indexOf('null')) {
+                    if (classElementProperties.has(propName) || !types || ~types.indexOf('null')) {
                         instance[propName] = null;
                     } else if (~types.indexOf('Array')) {
                         instance[propName] = [];
@@ -1114,6 +1114,7 @@ OOML.Namespace = function(namespace, settings) {
         classes[className][OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classExtensionPointPath && {
             path: classExtensionPointPath,
             rootElem: classRootElem,
+            properties: classProperties,
         };
 
         // Make class inherit from parent class
