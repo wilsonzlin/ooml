@@ -401,7 +401,7 @@ OOML.Namespace = function(namespace, settings) {
                     if (classExtensionPointPath) {
                         throw new ReferenceError(`An extension point already exists`);
                     }
-                    if (!currentPath) {
+                    if (!currentPath.length) {
                         throw new SyntaxError(`The extension point cannot be the root`);
                     }
                     classExtensionPointPath = currentPath;
@@ -459,7 +459,7 @@ OOML.Namespace = function(namespace, settings) {
 
                 Utils.iterate(current.childNodes, childNode => {
                     // Paths are only used for elements, so the next part can only be the next index
-                    let parsedChildNodes = parseClassDom(childNode, currentPath + '.' + ret.childNodes.length);
+                    let parsedChildNodes = parseClassDom(childNode, currentPath.concat(ret.childNodes.length));
                     if (Array.isArray(parsedChildNodes)) {
                         Array.prototype.push.apply(ret.childNodes, parsedChildNodes);
                     } else {
@@ -589,10 +589,9 @@ OOML.Namespace = function(namespace, settings) {
             }
 
             return ret;
-        })(classMetadata.rootElem, '');
+        })(classMetadata.rootElem, []);
 
         if (classExtensionPointPath) {
-            classExtensionPointPath = classExtensionPointPath.slice(1);
             console.log(classExtensionPointPath, classRootElem);
             throw 1;
         }
