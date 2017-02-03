@@ -257,9 +257,21 @@ OOML.Namespace = function(namespace, settings) {
             };
         }
 
-        var classExtensionPointPath;
+        var classHasExtensionPoint;
 
-        var classRootElem = (function parseClassDom(current, currentPath) {
+        var classRawDom = classMetadata.rootElem;
+        if (classExtends[OOML_CLASS_PROPNAME_EXTENSIONPOINT]) {
+            let parentClassRawDom = classExtends[OOML_CLASS_PROPNAME_EXTENSIONPOINT];
+            let _extendedRawDom = parentClassRawDom.cloneNode(true);
+            let extensionPoint = _extendedRawDom.querySelector('ooml-extension-point');
+            if (!extensionPoint) {
+                throw new Error(`Extension point element node not found on parent class`);
+            }
+            extensionPoint.parentNode.replaceChild(classRawDom, extensionPoint);
+            classRawDom = _extendedRawDom;
+        }
+
+        var classRootElem = (function parseClassDom(current) {
 
             let ret;
 
@@ -398,13 +410,13 @@ OOML.Namespace = function(namespace, settings) {
                 }
 
                 if (elemName == 'ooml-extension-point') {
-                    if (classExtensionPointPath) {
+                    if (classHasExtensionPoint) {
                         throw new ReferenceError(`An extension point already exists`);
                     }
-                    if (!currentPath.length) {
+                    if (current == classMetadata.rootElem) {
                         throw new SyntaxError(`The extension point cannot be the root`);
                     }
-                    classExtensionPointPath = currentPath;
+                    classHasExtensionPoint = true;
 
                     // WARNING: Code returns here -- DOES NOT PROCEED
                     return {
@@ -458,8 +470,7 @@ OOML.Namespace = function(namespace, settings) {
                 });
 
                 Utils.iterate(current.childNodes, childNode => {
-                    // Paths are only used for elements, so the next part can only be the next index
-                    let parsedChildNodes = parseClassDom(childNode, currentPath.concat(ret.childNodes.length));
+                    let parsedChildNodes = parseClassDom(childNode);
                     if (Array.isArray(parsedChildNodes)) {
                         Array.prototype.push.apply(ret.childNodes, parsedChildNodes);
                     } else {
@@ -589,12 +600,7 @@ OOML.Namespace = function(namespace, settings) {
             }
 
             return ret;
-        })(classMetadata.rootElem, []);
-
-        if (classExtensionPointPath) {
-            console.log(classExtensionPointPath, classRootElem);
-            throw 1;
-        }
+        })(classRawDom);
 
         Utils.deepFreeze(classProperties);
         var classPropertyNames = Object.freeze(Object.keys(classProperties));
@@ -1111,11 +1117,7 @@ OOML.Namespace = function(namespace, settings) {
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDATTRS] = classAttributes; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = classPredefinedProperties; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = classConstructor;
-        classes[className][OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classExtensionPointPath && {
-            path: classExtensionPointPath,
-            rootElem: classRootElem,
-            properties: classProperties,
-        };
+        classes[className][OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classHasExtensionPoint && classRawDom;
 
         // Make class inherit from parent class
         classes[className].prototype = Object.create(classExtends.prototype);
@@ -1148,8 +1150,12 @@ OOML.Namespace = function(namespace, settings) {
 
         // Copy attributes on instantiation element to new instance's root element
         Utils.iterate(instanceInstantiationElem.attributes, attr => {
-            if (attr.name != 'ooml-instantiate') {
-                instance[OOML_INSTANCE_PROPNAME_DOMELEM].setAttribute(attr.name, attr.value);
+            let _attrName = attr.name.toLocaleLowerCase();
+            if (_attrName != 'ooml-instantiate') {
+                if (/^(data-|(mutation|dispatch|dom)?on)/.test(_attrName)) {
+                    throw new SyntaxError(`Illegal attribute "${ _attrName }" on ooml-instantiate element`);
+                }
+                instance[OOML_INSTANCE_PROPNAME_DOMELEM].setAttribute(_attrName, attr.value);
             }
         });
 
