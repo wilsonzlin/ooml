@@ -419,9 +419,7 @@ OOML.Namespace = function(namespace, settings) {
                     classHasExtensionPoint = true;
 
                     // WARNING: Code returns here -- DOES NOT PROCEED
-                    return {
-                        type: 'extensionPoint',
-                    }
+                    return;
                 }
 
                 if (/^ooml-(table|thead|tbody|tfoot|tr|th|td)$/.test(elemName)) {
@@ -473,7 +471,7 @@ OOML.Namespace = function(namespace, settings) {
                     let parsedChildNodes = parseClassDom(childNode);
                     if (Array.isArray(parsedChildNodes)) {
                         Array.prototype.push.apply(ret.childNodes, parsedChildNodes);
-                    } else {
+                    } else if (parsedChildNodes) {
                         ret.childNodes.push(parsedChildNodes);
                     }
                 });
