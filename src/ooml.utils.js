@@ -537,9 +537,6 @@ let Utils = {
             throw new SyntaxError(`The class "${ classMetadata.name }" does not have a root element`);
         }
 
-        if (classMetadata.rootElem && classMetadata.isAbstract) {
-            throw new SyntaxError(`The abstract class "${ classMetadata.name }" has a root element`);
-        }
 
         if (templateElem.parentNode) {
             templateElem.parentNode.removeChild(templateElem);
