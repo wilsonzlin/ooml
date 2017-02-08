@@ -927,7 +927,7 @@ OOML.Namespace = function(namespace, settings) {
                     // Element array substitution
                     setter = newVal => {
                         if (!Array.isArray(newVal)) {
-                            throw new TypeError(`Non-array provided to element array substitution property`);
+                            throw new TypeError(`Non-array provided to element array substitution property "${prop}"`);
                         }
                         instanceProperties[prop].value.initialize(newVal);
                     };
@@ -938,7 +938,7 @@ OOML.Namespace = function(namespace, settings) {
                     setter = newVal => {
                         // Let constructors handle newVal's type
                         if (newVal === undefined) {
-                            throw new TypeError(`Undefined provided as element substitution property value`);
+                            throw new TypeError(`Undefined provided as element substitution property value for "${prop}"`);
                         }
 
                         let elemDetails = instanceProperties[prop];
@@ -984,7 +984,7 @@ OOML.Namespace = function(namespace, settings) {
 
                     setter = newVal => {
                         if (newVal === undefined) {
-                            throw new TypeError(`Undefined provided as property value`);
+                            throw new TypeError(`Undefined provided as property value for "${prop}"`);
                         }
 
                         let customHtml;
