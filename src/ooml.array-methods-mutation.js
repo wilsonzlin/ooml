@@ -101,10 +101,13 @@ OOMLArrayProtoMutation.sort = function(propName, ascending) {
 
 OOMLArrayProtoMutation.splice = function(start, deleteCount) {
     let arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
-        elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
+        elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR],
+        insertAfter = this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM],
+        toAppend = [];
 
     for (let i = 2; i < arguments.length; i++) {
         arguments[i] = Utils.constructElement(elemConstructor, arguments[i]);
+        toAppend.push(arguments[i]);
     }
 
     let spliced = Array.prototype.splice.apply(arr, arguments);
@@ -113,6 +116,12 @@ OOMLArrayProtoMutation.splice = function(start, deleteCount) {
             elem[OOML_INSTANCE_PROPNAME_DETACH]();
         }
     });
+
+    let appendFrom = start ? arr[start - 1] : insertAfter;
+    toAppend.reduce((previousElem, elem) => {
+        previousElem.parentNode.insertBefore(elem[OOML_INSTANCE_PROPNAME_DOMELEM], previousElem.nextSibling);
+        return elem[OOML_INSTANCE_PROPNAME_DOMELEM];
+    }, appendFrom);
 
     return spliced;
 };
