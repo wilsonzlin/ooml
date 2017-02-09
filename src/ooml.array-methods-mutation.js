@@ -121,7 +121,7 @@ OOMLArrayProtoMutation.splice = function(start, deleteCount) {
         }
     });
 
-    let appendFrom = start ? arr[start - 1] : insertAfter;
+    let appendFrom = start ? arr[start - 1][OOML_INSTANCE_PROPNAME_DOMELEM] : insertAfter;
     toAppend.reduce((previousElem, elem) => {
         elem[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: previousElem, parent: _this });
         return elem[OOML_INSTANCE_PROPNAME_DOMELEM];
