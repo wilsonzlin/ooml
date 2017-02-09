@@ -100,6 +100,9 @@ OOMLArrayProtoMutation.sort = function(propName, ascending) {
 };
 
 OOMLArrayProtoMutation.splice = function(start, deleteCount) {
+    if (!Utils.isType('natural', start) || !Utils.isType('natural', deleteCount)) {
+        throw new TypeError(`Invalid arguments provided to .splice`);
+    }
     let _this = this,
         arr = _this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
         elemConstructor = _this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR],

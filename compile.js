@@ -72,7 +72,7 @@ if (!DEBUG) {
         OPTIMISATION: Make internal property names shorter
     */
     propname_autoincrement = -1;
-    js_propname_constants_minified = fs.readFileSync(SRC_DIR + 'ooml.js', 'utf8').replace(/^([\t ]+(?:var )?OOML_[A-Z]+_PROPNAME_[A-Z_]+) = '__[a-zA-Z]+'([,;])$/gm, (line, prefix, suffix) => {
+    js_propname_constants_minified = fs.readFileSync(SRC_DIR + 'ooml.js', 'utf8').replace(/^((?:[\t ]+|var )?OOML_[A-Z]+_PROPNAME_[A-Z_]+) = '__[a-zA-Z]+'([,;])$/gm, (line, prefix, suffix) => {
         return `${prefix} = '__${++propname_autoincrement}'${suffix}`;
     });
     fs.writeFileSync(SRC_DIR + 'ooml.js', js_propname_constants_minified);
