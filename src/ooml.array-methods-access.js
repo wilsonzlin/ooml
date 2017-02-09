@@ -13,6 +13,9 @@ OOMLArrayProto.includes = function(elem, fromIdx) {
         return this[OOML_ARRAY_PROPNAME_INTERNALARRAY][methodName](elem, fromIdx);
     };
 });
+OOMLArrayProto.slice = function() {
+    return Array.prototype.slice.apply(this[OOML_ARRAY_PROPNAME_INTERNALARRAY], arguments);
+};
 OOMLArrayProto.toString = function() {
     return this.toJSON();
 };
