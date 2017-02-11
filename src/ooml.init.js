@@ -176,7 +176,7 @@ OOML.Namespace = function(namespace, settings) {
         if (classExtendsDefault) {
             classConstructor = classMetadata.constructor || function() {};
         } else {
-            classConstructor = classMetadata.constructor ? classMetadata.constructor.bind(undefined, parentClassConstructor) : parentClassConstructor;
+            classConstructor = classMetadata.constructor || parentClassConstructor;
         }
 
         function parseClassDomTextSubstitution(code) {
@@ -1103,7 +1103,7 @@ OOML.Namespace = function(namespace, settings) {
 
             });
 
-            classConstructor.call(instance);
+            classConstructor.call(instance, parentClassConstructor);
 
             // Update attribute nodes with parameter handlebars that have just been changed
             OOMLWriteChanges();
