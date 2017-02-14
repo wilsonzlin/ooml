@@ -1050,16 +1050,22 @@ OOML.Namespace = function(namespace, settings) {
 
                         instanceProperties[prop].value = newVal;
 
-                        if (oldVal !== newVal && instanceEventHandlers.mutation.propertyvaluechange) {
-                            instanceEventHandlers.mutation.propertyvaluechange.forEach(handler => {
-                                let eventObject = {
-                                    property: prop,
-                                    oldValue: oldVal,
-                                    newValue: newVal,
-                                };
+                        if (oldVal !== newVal) {
+                            if (classProperties[prop].onchange) {
+                                classProperties[prop].onchange.call(instance, classes, prop, newVal);
+                            }
 
-                                handler.call(instance, eventObject);
-                            });
+                            if (instanceEventHandlers.mutation.propertyvaluechange) {
+                                instanceEventHandlers.mutation.propertyvaluechange.forEach(handler => {
+                                    let eventObject = {
+                                        property: prop,
+                                        oldValue: oldVal,
+                                        newValue: newVal,
+                                    };
+
+                                    handler.call(instance, eventObject);
+                                });
+                            }
                         }
                     };
 

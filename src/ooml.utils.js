@@ -255,7 +255,7 @@ let Utils = {
                     let propTypes;
                     let isSuppressed = false;
 
-                    let propGetter, propSetter;
+                    let propGetter, propSetter, onchangeListener;
 
                     Utils.iterate(node.attributes, attr => {
                         let _attrName = attr.name;
@@ -296,6 +296,14 @@ let Utils = {
                                 propSetter = Function('classes', 'property', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
                                 break;
 
+                            case 'change':
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                onchangeListener = Function('classes', 'property', 'value', `"use strict";${ _attrVal }`);
+                                break;
+
                             default:
                                 throw new ReferenceError(`Unrecognised attribute "${ _attrName }" on ooml-property tag`);
                         }
@@ -322,6 +330,7 @@ let Utils = {
                         types: propTypes,
                         value: propValue,
                         isArray: false,
+                        onchange: onchangeListener,
                         getter: propGetter,
                         setter: propSetter,
                         suppressed: isSuppressed,
