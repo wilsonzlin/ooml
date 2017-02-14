@@ -21,10 +21,12 @@ OOMLElementProto.toObject = function() {
         } else if (value instanceof OOML.Element) {
             if (Utils.typeOf(value.serialise, TYPEOF_FUNCTION)) {
                 let serialised = value.serialise();
-                if (!Utils.isPrimitiveValue(serialised)) {
-                    throw new TypeError(`Value returned from serialise function is not primitive`);
+                if (serialised !== undefined) {
+                    if (!Utils.isPrimitiveValue(serialised)) {
+                        throw new TypeError(`Value returned from serialise function is not primitive`);
+                    }
+                    obj[propName] = serialised;
                 }
-                obj[propName] = serialised;
             } else {
                 obj[propName] = value.toObject();
             }
