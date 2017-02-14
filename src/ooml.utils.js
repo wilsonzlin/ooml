@@ -203,6 +203,8 @@ let Utils = {
                     let attrName;
                     let attrTypes;
 
+                    let attrGetter, attrSetter, attrChangeListener;
+
                     Utils.iterate(node.attributes, attr => {
                         // DOM attribute, not OOML attribute!!
                         let _attrName = attr.name;
@@ -218,6 +220,30 @@ let Utils = {
                                     throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-attribute tag`);
                                 }
                                 attrTypes = _attrVal;
+                                break;
+
+                            case 'get':
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                attrGetter = Function('classes', 'attribute', 'currentValue', `"use strict";${ _attrVal }`);
+                                break;
+
+                            case 'set':
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                attrSetter = Function('classes', 'attribute', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
+                                break;
+
+                            case 'change':
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                attrChangeListener = Function('classes', 'attribute', 'value', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
@@ -245,6 +271,9 @@ let Utils = {
                     classMetadata.attributes[attrName] = {
                         types: attrTypes,
                         value: attrValue,
+                        getter: attrGetter,
+                        setter: attrSetter,
+                        onchange: attrChangeListener,
                     };
 
                     break;

@@ -699,10 +699,35 @@ OOML.Namespace = function(namespace, settings) {
 
                 // Set up attributes interface object
                 Object.defineProperty(instanceAttributesInterface, attrName, {
-                    get: () => instanceAttributes[attrName].value,
+                    get: () => {
+                        let currentValue = instanceAttributes[attrName].value;
+                        if (classAttributes[attrName].getter) {
+                            return classAttributes[attrName].getter.call(instance, classes, attrName, currentValue)
+                        }
+                        return currentValue;
+                    },
                     set: newVal => {
                         if (newVal === undefined) {
                             throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
+                        }
+
+                        let oldVal = instanceAttributes[attrName].value;
+
+                        if (classAttributes[attrName].setter) {
+                            let setterReturnVal = classAttributes[attrName].setter.call(instance, classes, attrName, oldVal, newVal);
+                            if (setterReturnVal === false) {
+                                return;
+                            }
+
+                            if (setterReturnVal !== undefined) {
+                                if (!Utils.isObjectLiteral(setterReturnVal)) {
+                                    throw new TypeError(`Invalid setter return value`);
+                                }
+
+                                if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
+                                    newVal = setterReturnVal.value;
+                                }
+                            }
                         }
 
                         if (instanceAttributes[attrName].types) {
@@ -715,6 +740,12 @@ OOML.Namespace = function(namespace, settings) {
 
                         instanceAttributes[attrName].value = newVal;
                         Utils.DOM.setData(instanceDom, attrName, newVal);
+
+                        if (oldVal !== newVal) {
+                            if (classAttributes[attrName].onchange) {
+                                classAttributes[attrName].onchange.call(instance, classes, attrName, newVal);
+                            }
+                        }
                     },
                     enumerable: true,
                 });
