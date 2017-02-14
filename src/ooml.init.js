@@ -853,12 +853,6 @@ OOML.Namespace = function(namespace, settings) {
                 return cloned;
             })(classRootElem);
 
-            // Must be done after instanceDom and instanceAttributesInterface is initialised
-            Object.keys(instanceAttributes).forEach(attrName => {
-                // Set initial attribute value
-                instanceAttributesInterface[attrName] = instanceAttributes[attrName].value;
-            });
-
             let propertiesGetterSetterFuncs = Utils.createCleanObject();
             propertiesGetterSetterFuncs.attributes = {
                 set: newObj => {
@@ -1126,13 +1120,20 @@ OOML.Namespace = function(namespace, settings) {
             Object.defineProperties(instance, propertiesGetterSetterFuncs);
             Object.preventExtensions(instance);
 
-            if (Utils.hasOwnProperty(initState, 'attributes')) {
-                instance.attributes = initState.attributes;
-            }
+            let initStateAttributes = Utils.hasOwnProperty(initState, 'attributes') && initState.attributes;
+            Object.keys(instanceAttributes).forEach(attrName => {
+                // Set initial attribute value
+                if (Utils.hasOwnProperty(initStateAttributes, attrName)) {
+                    instanceAttributesInterface[attrName] = initStateAttributes[attrName];
+                } else {
+                    instanceAttributesInterface[attrName] = instanceAttributes[attrName].value;
+                }
+            });
 
             classPropertyNames.forEach(propName => {
 
                 if (Utils.hasOwnProperty(initState, propName)) {
+                    // If passthrough, instance needs to initialised first
                     if (classElementPassthroughProperties.has(propName)) {
                         if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
                             // WARNING: Unknown if should clone first
