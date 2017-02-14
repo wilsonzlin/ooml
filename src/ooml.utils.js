@@ -101,7 +101,7 @@ let Utils = {
         }
     },
 
-    hasOwnProperty: (obj, propName) => Object.prototype.hasOwnProperty.call(obj, propName),
+    hasOwnProperty: (obj, propName) => !!obj && Utils.typeOf(obj, TYPEOF_OBJECT) && Object.prototype.hasOwnProperty.call(obj, propName),
 
     parseTypeDeclaration: types => types.split('|').filter((type, idx, types) => {
         if (OOMLPropertyTypes.indexOf(type) == -1) {

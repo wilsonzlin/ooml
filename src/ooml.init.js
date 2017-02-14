@@ -405,7 +405,7 @@ OOML.Namespace = function(namespace, settings) {
                         if (elemConstructor == OOML.Element || elemConstructor[OOML_CLASS_PROPNAME_PROPNAMES].indexOf(passthroughPropName) == -1) {
                             throw new ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
                         }
-                        classElementPassthroughProperties.add(passthroughPropName);
+                        classElementPassthroughProperties.add(propName);
                     }
 
                     classProperties[propName] = {
@@ -1126,33 +1126,35 @@ OOML.Namespace = function(namespace, settings) {
             Object.defineProperties(instance, propertiesGetterSetterFuncs);
             Object.preventExtensions(instance);
 
-            // Apply predefined property values
-            for (let propName in classPredefinedProperties) {
-                instance[propName] = classPredefinedProperties[propName].value;
-            }
-            for (let propName in classSubstitutionDefaultValues) {
-                instance[propName] = Utils.clone(classSubstitutionDefaultValues[propName]);
+            if (Utils.hasOwnProperty(initState, 'attributes')) {
+                instance.attributes = initState.attributes;
             }
 
-            // Apply given object argument to this new instance's properties
-            if (initState) {
-                instance.assign(initState);
-            }
-
-            // Remove any remaining parameter handlebars and set any undefined values
-            // to the default type values
             classPropertyNames.forEach(propName => {
 
-                if (instance[propName] === undefined) {
-
+                if (Utils.hasOwnProperty(initState, propName)) {
+                    if (classElementPassthroughProperties.has(propName)) {
+                        if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
+                            // WARNING: Unknown if should clone first
+                            instance[propName] = classSubstitutionDefaultValues[propName];
+                        } else {
+                            instance[propName] = {};
+                        }
+                    }
+                    instance[propName] = initState[propName];
+                } else if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
+                    // WARNING: Unknown if should clone first
+                    instance[propName] = classSubstitutionDefaultValues[propName];
+                } else if (Utils.hasOwnProperty(classPredefinedProperties, propName)) {
+                    instance[propName] = classPredefinedProperties[propName].value;
+                } else if (instance[propName] === undefined) { // WARNING: Must check as array substitution properties have value already set
+                    // Set any undefined values to their default type values
                     let types = instanceProperties[propName].types;
 
                     if (classElementProperties.has(propName)) {
                         instance[propName] = classElementPassthroughProperties.has(propName) ? {} : null;
                     } else if (!types || ~types.indexOf('null')) {
                         instance[propName] = null;
-                    } else if (~types.indexOf('Array')) {
-                        instance[propName] = [];
                     } else if (~types.indexOf('natural') || ~types.indexOf('integer') || ~types.indexOf('float') || ~types.indexOf('number')) {
                         instance[propName] = 0;
                     } else if (~types.indexOf('boolean')) {
@@ -1160,11 +1162,9 @@ OOML.Namespace = function(namespace, settings) {
                     } else if (~types.indexOf('string')) {
                         instance[propName] = '';
                     } else {
-                        throw new Error(`Unknown type for property`);
+                        throw new Error(`Unknown type "${types}" for property "${propName}"`);
                     }
-
                 }
-
             });
 
             classConstructor.call(instance, parentClassConstructor);
