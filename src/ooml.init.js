@@ -1013,7 +1013,7 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
-                        if (classElementPassthroughProperties.has(prop) && !currentlyInitialised) {
+                        if (classElementPassthroughProperties.has(prop) && currentlyInitialised) {
                             currentValue[elemDetails.passthrough] = newVal;
                             return;
                         }
@@ -1029,7 +1029,7 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         // Current element may be null and therefore does not need detaching
-                        if (!currentlyInitialised) {
+                        if (currentlyInitialised) {
                             currentValue[OOML_INSTANCE_PROPNAME_DETACH]();
                         }
 
