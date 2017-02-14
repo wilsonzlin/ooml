@@ -157,7 +157,6 @@ OOML.Namespace = function(namespace, settings) {
         var classArrayProperties = new StringSet();
         var classElementProperties = new StringSet();
         var classSubstitutionDefaultValues = Utils.createCleanObject();
-        var classElementPassthroughProperties = new StringSet();
 
         // For .toObject
         var classSuppressedProperties = new StringSet();
@@ -405,7 +404,6 @@ OOML.Namespace = function(namespace, settings) {
                         if (elemConstructor == OOML.Element || elemConstructor[OOML_CLASS_PROPNAME_PROPNAMES].indexOf(passthroughPropName) == -1) {
                             throw new ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
                         }
-                        classElementPassthroughProperties.add(propName);
                     }
 
                     classProperties[propName] = {
@@ -1007,7 +1005,7 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
-                        if (classElementPassthroughProperties.has(prop) && currentlyInitialised) {
+                        if (classProperties[prop].passthrough != undefined && currentlyInitialised) {
                             currentValue[elemDetails.passthrough] = newVal;
                             return;
                         }
@@ -1134,7 +1132,7 @@ OOML.Namespace = function(namespace, settings) {
 
                 if (Utils.hasOwnProperty(initState, propName)) {
                     // If passthrough, instance needs to initialised first
-                    if (classElementPassthroughProperties.has(propName)) {
+                    if (classProperties[propName].passthrough != undefined) {
                         if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
                             // WARNING: Unknown if should clone first
                             instance[propName] = classSubstitutionDefaultValues[propName];
@@ -1153,7 +1151,7 @@ OOML.Namespace = function(namespace, settings) {
                     let types = instanceProperties[propName].types;
 
                     if (classElementProperties.has(propName)) {
-                        instance[propName] = classElementPassthroughProperties.has(propName) ? {} : null;
+                        instance[propName] = classProperties[propName].passthrough != undefined ? {} : null;
                     } else if (!types || ~types.indexOf('null')) {
                         instance[propName] = null;
                     } else if (~types.indexOf('natural') || ~types.indexOf('integer') || ~types.indexOf('float') || ~types.indexOf('number')) {
