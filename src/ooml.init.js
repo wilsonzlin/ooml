@@ -157,6 +157,7 @@ OOML.Namespace = function(namespace, settings) {
         var classArrayProperties = new StringSet();
         var classElementProperties = new StringSet();
         var classSubstitutionDefaultValues = Utils.createCleanObject();
+        var classElementPassthroughProperties = new StringSet();
 
         // For .toObject
         var classSuppressedProperties = new StringSet();
@@ -281,7 +282,7 @@ OOML.Namespace = function(namespace, settings) {
 
                 if (elemName == 'ooml-substitution') {
                     let elemConstructorName;
-                    let propName;
+                    let propName, passthroughPropName;
                     let isArraySubstitution = false;
                     let isSuppressed = false;
 
@@ -313,6 +314,9 @@ OOML.Namespace = function(namespace, settings) {
                                 if (_attrVal !== '') {
                                     throw new SyntaxError(`Invalid "array" attribute value for element substitution property`);
                                 }
+                                if (passthroughPropName != undefined) {
+                                    throw new SyntaxError(`Array substitutions cannot be passed through`);
+                                }
                                 isArraySubstitution = true;
                                 break;
 
@@ -330,6 +334,13 @@ OOML.Namespace = function(namespace, settings) {
                                 }
 
                                 setter = Function('classes', 'property', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
+                                break;
+
+                            case 'passthrough':
+                                if (isArraySubstitution) {
+                                    throw new SyntaxError(`Array substitutions cannot be passed through`);
+                                }
+                                passthroughPropName = _attrVal;
                                 break;
 
                             default:
@@ -390,12 +401,19 @@ OOML.Namespace = function(namespace, settings) {
                         elemConstructorName == 'OOML.Element' ? OOML.Element :
                             getClassFromString(elemConstructorName);
 
+                    if (passthroughPropName != undefined) {
+                        if (elemConstructor == OOML.Element || elemConstructor[OOML_CLASS_PROPNAME_PROPNAMES].indexOf(passthroughPropName) == -1) {
+                            throw new ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
+                        }
+                        classElementPassthroughProperties.add(passthroughPropName);
+                    }
 
                     classProperties[propName] = {
                         types: [elemConstructor],
                         isArray: isArraySubstitution,
                         value: undefined,
                         suppressed: isSuppressed,
+                        passthrough: passthroughPropName,
                         dispatchEventHandlers: dispatchEventHandlers,
                         getter: getter,
                         setter: setter,
@@ -944,6 +962,8 @@ OOML.Namespace = function(namespace, settings) {
                         let elemDetails = instanceProperties[prop];
 
                         let currentValue = instanceProperties[prop].value;
+                        // This setter could be called WHILE property value are being normalised (i.e. set to not undefined)
+                        let currentlyInitialised = currentValue != undefined;
 
                         if (classProperties[prop].setter) {
                             let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal);
@@ -962,6 +982,11 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
+                        if (classElementPassthroughProperties.has(prop) && !currentlyInitialised) {
+                            currentValue[elemDetails.passthrough] = newVal;
+                            return;
+                        }
+
                         // Attach first to ensure that element is attachable
                         if (newVal !== null) {
                             newVal = Utils.constructElement(elemDetails.types[0], newVal);
@@ -973,7 +998,7 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         // Current element may be null and therefore does not need detaching
-                        if (currentValue instanceof OOML.Element) {
+                        if (!currentlyInitialised) {
                             currentValue[OOML_INSTANCE_PROPNAME_DETACH]();
                         }
 
@@ -1085,7 +1110,9 @@ OOML.Namespace = function(namespace, settings) {
 
                     let types = instanceProperties[propName].types;
 
-                    if (classElementProperties.has(propName) || !types || ~types.indexOf('null')) {
+                    if (classElementProperties.has(propName)) {
+                        instance[propName] = classElementPassthroughProperties.has(propName) ? {} : null;
+                    } else if (!types || ~types.indexOf('null')) {
                         instance[propName] = null;
                     } else if (~types.indexOf('Array')) {
                         instance[propName] = [];
