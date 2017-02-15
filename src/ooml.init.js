@@ -1080,12 +1080,10 @@ OOML.Namespace = function(namespace, settings) {
 
                         if (!instanceProperties[prop].initialised) {
                             instanceProperties[prop].initialised = true;
-                            console.log('init ' + prop);
                             return;
                         }
 
                         if (oldVal !== newVal) {
-                            console.log('change ' + prop);
                             if (classProperties[prop].onchange) {
                                 classProperties[prop].onchange.call(instance, classes, prop, newVal, dispatchEventToParent);
                             }
