@@ -739,6 +739,11 @@ OOML.Namespace = function(namespace, settings) {
                         instanceAttributes[attrName].value = newVal;
                         Utils.DOM.setData(instanceDom, attrName, newVal);
 
+                        if (!instanceAttributes[attrName]) {
+                            instanceAttributes[attrName] = true;
+                            return;
+                        }
+
                         if (oldVal !== newVal) {
                             if (classAttributes[attrName].onchange) {
                                 classAttributes[attrName].onchange.call(instance, classes, attrName, newVal, dispatchEventToParent);
@@ -1072,6 +1077,11 @@ OOML.Namespace = function(namespace, settings) {
                         Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, newVal, customHtml);
 
                         instanceProperties[prop].value = newVal;
+
+                        if (!instanceProperties[prop].initialised) {
+                            instanceProperties[prop].initialised = true;
+                            return;
+                        }
 
                         if (oldVal !== newVal) {
                             if (classProperties[prop].onchange) {
