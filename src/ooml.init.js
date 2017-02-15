@@ -1080,10 +1080,12 @@ OOML.Namespace = function(namespace, settings) {
 
                         if (!instanceProperties[prop].initialised) {
                             instanceProperties[prop].initialised = true;
+                            console.log('init ' + prop);
                             return;
                         }
 
                         if (oldVal !== newVal) {
+                            console.log('change ' + prop);
                             if (classProperties[prop].onchange) {
                                 classProperties[prop].onchange.call(instance, classes, prop, newVal, dispatchEventToParent);
                             }
@@ -1141,16 +1143,19 @@ OOML.Namespace = function(namespace, settings) {
             classPropertyNames.forEach(propName => {
 
                 if (Utils.hasOwnProperty(initState, propName)) {
-                    // If passthrough, instance needs to initialised first
+                    // If passthrough, initialise instance with initState built-in (to prevent it counting as a change, and to increase efficiency)
                     if (classProperties[propName].passthrough != undefined) {
+                        let initStateUnserialised = Utils.createCleanObject();
+                        initStateUnserialised[classProperties[propName].passthrough] = initState[propName];
                         if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
-                            // WARNING: Unknown if should clone first
-                            instance[propName] = classSubstitutionDefaultValues[propName];
+                            // WARNING: Unknown if should clone classSubstitutionDefaultValues value first
+                            instance[propName] = Utils.concat(classSubstitutionDefaultValues[propName], initStateUnserialised);
                         } else {
-                            instance[propName] = {};
+                            instance[propName] = initStateUnserialised;
                         }
+                    } else {
+                        instance[propName] = initState[propName];
                     }
-                    instance[propName] = initState[propName];
                 } else if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
                     // WARNING: Unknown if should clone first
                     instance[propName] = classSubstitutionDefaultValues[propName];
