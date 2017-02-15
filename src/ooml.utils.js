@@ -243,7 +243,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                attrChangeListener = Function('classes', 'attribute', 'value', 'dispatch', `"use strict";${ _attrVal }`);
+                                attrChangeListener = Function('classes', 'attribute', 'value', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
@@ -330,7 +330,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                onchangeListener = Function('classes', 'property', 'value', 'dispatch', `"use strict";${ _attrVal }`);
+                                onchangeListener = Function('classes', 'property', 'value', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
