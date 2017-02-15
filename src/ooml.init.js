@@ -700,7 +700,7 @@ OOML.Namespace = function(namespace, settings) {
                     get: () => {
                         let currentValue = instanceAttributes[attrName].value;
                         if (classAttributes[attrName].getter) {
-                            return classAttributes[attrName].getter.call(instance, classes, attrName, currentValue)
+                            return classAttributes[attrName].getter.call(instance, classes, attrName, currentValue, dispatchEventToParent)
                         }
                         return currentValue;
                     },
@@ -712,7 +712,7 @@ OOML.Namespace = function(namespace, settings) {
                         let oldVal = instanceAttributes[attrName].value;
 
                         if (classAttributes[attrName].setter) {
-                            let setterReturnVal = classAttributes[attrName].setter.call(instance, classes, attrName, oldVal, newVal);
+                            let setterReturnVal = classAttributes[attrName].setter.call(instance, classes, attrName, oldVal, newVal, dispatchEventToParent);
                             if (setterReturnVal === false) {
                                 return;
                             }
@@ -741,7 +741,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         if (oldVal !== newVal) {
                             if (classAttributes[attrName].onchange) {
-                                classAttributes[attrName].onchange.call(instance, classes, attrName, newVal);
+                                classAttributes[attrName].onchange.call(instance, classes, attrName, newVal, dispatchEventToParent);
                             }
                         }
                     },
@@ -1039,7 +1039,7 @@ OOML.Namespace = function(namespace, settings) {
                         let oldVal = instanceProperties[prop].value;
 
                         if (classProperties[prop].setter) {
-                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, oldVal, newVal);
+                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, oldVal, newVal, dispatchEventToParent);
                             if (setterReturnVal === false) {
                                 return;
                             }
@@ -1075,7 +1075,7 @@ OOML.Namespace = function(namespace, settings) {
 
                         if (oldVal !== newVal) {
                             if (classProperties[prop].onchange) {
-                                classProperties[prop].onchange.call(instance, classes, prop, newVal);
+                                classProperties[prop].onchange.call(instance, classes, prop, newVal, dispatchEventToParent);
                             }
 
                             if (instanceEventHandlers.mutation.propertyvaluechange) {
@@ -1098,7 +1098,7 @@ OOML.Namespace = function(namespace, settings) {
                     get: () => {
                         let currentValue = instanceProperties[prop].value;
                         if (classProperties[prop].getter) {
-                            return classProperties[prop].getter.call(instance, classes, prop, currentValue);
+                            return classProperties[prop].getter.call(instance, classes, prop, currentValue, dispatchEventToParent);
                         }
                         return currentValue;
                     },

@@ -227,7 +227,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                attrGetter = Function('classes', 'attribute', 'currentValue', `"use strict";${ _attrVal }`);
+                                attrGetter = Function('classes', 'attribute', 'currentValue', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'set':
@@ -235,7 +235,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                attrSetter = Function('classes', 'attribute', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
+                                attrSetter = Function('classes', 'attribute', 'currentValue', 'newValue', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'change':
@@ -243,7 +243,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                attrChangeListener = Function('classes', 'attribute', 'value', `"use strict";${ _attrVal }`);
+                                attrChangeListener = Function('classes', 'attribute', 'value', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
@@ -314,7 +314,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                propGetter = Function('classes', 'property', 'currentValue', `"use strict";${ _attrVal }`);
+                                propGetter = Function('classes', 'property', 'currentValue', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'set':
@@ -322,7 +322,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                propSetter = Function('classes', 'property', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
+                                propSetter = Function('classes', 'property', 'currentValue', 'newValue', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'change':
@@ -330,7 +330,7 @@ let Utils = {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
 
-                                onchangeListener = Function('classes', 'property', 'value', `"use strict";${ _attrVal }`);
+                                onchangeListener = Function('classes', 'property', 'value', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
