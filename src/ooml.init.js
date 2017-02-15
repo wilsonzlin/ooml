@@ -739,8 +739,8 @@ OOML.Namespace = function(namespace, settings) {
                         instanceAttributes[attrName].value = newVal;
                         Utils.DOM.setData(instanceDom, attrName, newVal);
 
-                        if (!instanceAttributes[attrName]) {
-                            instanceAttributes[attrName] = true;
+                        if (!instanceAttributes[attrName].initialised) {
+                            instanceAttributes[attrName].initialised = true;
                             return;
                         }
 
