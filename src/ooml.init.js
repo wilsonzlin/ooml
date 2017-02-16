@@ -721,7 +721,8 @@ OOML.Namespace = function(namespace, settings) {
                             throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
                         }
 
-                        let oldVal = instanceAttributes[attrName].value;
+                        let initial = !instanceAttributes[attrName].initialised;
+                        let oldVal = initial ? undefined : instanceAttributes[attrName].value;
 
                         if (classAttributes[attrName].setter) {
                             let setterReturnVal = classAttributes[attrName].setter.call(instance, classes, attrName, oldVal, newVal, dispatchEventToParent);
@@ -751,7 +752,6 @@ OOML.Namespace = function(namespace, settings) {
                         instanceAttributes[attrName].value = newVal;
                         Utils.DOM.setData(instanceDom, attrName, newVal);
 
-                        let initial = !instanceAttributes[attrName].initialised;
                         if (initial) {
                             instanceAttributes[attrName].initialised = true;
                         }
@@ -1001,9 +1001,9 @@ OOML.Namespace = function(namespace, settings) {
 
                         let elemDetails = instanceProperties[prop];
 
-                        let currentValue = instanceProperties[prop].value;
                         // This setter could be called WHILE property value are being normalised (i.e. set to not undefined)
                         let currentlyInitialised = currentValue != undefined;
+                        let currentValue = currentlyInitialised ? instanceProperties[prop].value : undefined;
 
                         if (classProperties[prop].setter) {
                             let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal, dispatchEventToParent);
@@ -1053,7 +1053,8 @@ OOML.Namespace = function(namespace, settings) {
                         }
 
                         let customHtml;
-                        let oldVal = instanceProperties[prop].value;
+                        let initial = !instanceProperties[prop].initialised;
+                        let oldVal = initial ? undefined : instanceProperties[prop].value;
 
                         if (classProperties[prop].setter) {
                             let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, oldVal, newVal, dispatchEventToParent);
@@ -1090,7 +1091,6 @@ OOML.Namespace = function(namespace, settings) {
 
                         instanceProperties[prop].value = newVal;
 
-                        let initial = !instanceProperties[prop].initialised;
                         if (initial) {
                             instanceProperties[prop].initialised = true;
                         }
