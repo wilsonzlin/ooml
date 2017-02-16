@@ -1193,6 +1193,7 @@ OOML.Namespace = function(namespace, settings) {
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = classPredefinedProperties; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = classConstructor;
         classes[className][OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classHasExtensionPoint && classRawDom;
+        classes[className][OOML_CLASS_PROPNAME_ROOTELEMTAGNAME] = classRootElem.name;
 
         // Make class inherit from parent class
         classes[className].prototype = Object.create(classExtends.prototype);
@@ -1210,7 +1211,7 @@ OOML.Namespace = function(namespace, settings) {
 
     Utils.DOM.find(namespace, '[ooml-instantiate]').forEach(instanceInstantiationElem => {
 
-        var instDetails  = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' '),
+        let instDetails  = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' '),
             className    = instDetails[0],
             instanceName = instDetails[1];
 
@@ -1218,8 +1219,18 @@ OOML.Namespace = function(namespace, settings) {
             throw new ReferenceError(`An object already exists with the name "${ instanceName }"`);
         }
 
-        var initState = Utils.getEvalValue(instanceInstantiationElem.textContent);
-        var instance = new classes[className](initState);
+        let initState = Utils.getEvalValue(instanceInstantiationElem.textContent);
+        let constructor = classes[className];
+        if (!constructor) {
+            throw new ReferenceError(`Unknown class "${ className }"`);
+        }
+
+        let classRootElemTagName = constructor[OOML_CLASS_PROPNAME_ROOTELEMTAGNAME];
+        let instantiateElemTagName = instanceInstantiationElem.nodeName.toLocaleLowerCase();
+        if (classRootElemTagName !== instantiateElemTagName) {
+            throw new ReferenceError(`Instantiating class "${ className }" requires tag "${ classRootElemTagName }", got "${ instantiateElemTagName }"`);
+        }
+        let instance = new constructor(initState);
 
         instanceInstantiationElem.parentNode.insertBefore(instance[OOML_INSTANCE_PROPNAME_DOMELEM], instanceInstantiationElem.nextSibling);
 

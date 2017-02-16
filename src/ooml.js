@@ -72,7 +72,8 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes',
     OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
     OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor',
-    OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint';
+    OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint',
+    OOML_CLASS_PROPNAME_ROOTELEMTAGNAME = '__oomlRootElemTagName';
 
 var OOML = {};
 
