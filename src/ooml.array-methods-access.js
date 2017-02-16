@@ -29,7 +29,17 @@ OOMLArrayProto.toArray = function(startIdx, endIdx) {
     let ret = [];
 
     for (let i = startIdx; i < endIdx; i++) {
-        ret.push(arr[i].toObject());
+        if (Utils.typeOf(arr[i].serialise, TYPEOF_FUNCTION)) {
+            let serialised = arr[i].serialise();
+            if (serialised !== undefined) {
+                if (!Utils.isPrimitiveValue(serialised)) {
+                    throw new TypeError(`Value returned from serialise function is not primitive`);
+                }
+                ret.push(serialised);
+            }
+        } else {
+            ret.push(arr[i].toObject());
+        }
     }
 
     return ret;
