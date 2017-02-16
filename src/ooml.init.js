@@ -316,6 +316,9 @@ OOML.Namespace = function(namespace, settings) {
                                 if (passthroughPropName != undefined) {
                                     throw new SyntaxError(`Array substitutions cannot be passed through`);
                                 }
+                                if (getter || setter) {
+                                    throw new SyntaxError(`Array substitutions cannot have getters or setters`);
+                                }
                                 isArraySubstitution = true;
                                 break;
 
@@ -323,21 +326,30 @@ OOML.Namespace = function(namespace, settings) {
                                 if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
+                                if (isArraySubstitution) {
+                                    throw new SyntaxError(`Array substitutions cannot have getters or setters`);
+                                }
 
-                                getter = Function('classes', 'property', 'currentValue', `"use strict";${ _attrVal }`);
+                                getter = Function('classes', 'property', 'currentValue', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'set':
                                 if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
                                 }
+                                if (isArraySubstitution) {
+                                    throw new SyntaxError(`Array substitutions cannot have getters or setters`);
+                                }
 
-                                setter = Function('classes', 'property', 'currentValue', 'newValue', `"use strict";${ _attrVal }`);
+                                setter = Function('classes', 'property', 'currentValue', 'newValue', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'passthrough':
                                 if (isArraySubstitution) {
                                     throw new SyntaxError(`Array substitutions cannot be passed through`);
+                                }
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid passthrough property name`);
                                 }
                                 passthroughPropName = _attrVal;
                                 break;
@@ -994,7 +1006,7 @@ OOML.Namespace = function(namespace, settings) {
                         let currentlyInitialised = currentValue != undefined;
 
                         if (classProperties[prop].setter) {
-                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal);
+                            let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal, dispatchEventToParent);
                             if (setterReturnVal === false) {
                                 return;
                             }
