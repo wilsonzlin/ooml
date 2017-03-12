@@ -44,6 +44,6 @@ OOMLArrayProto.toArray = function(startIdx, endIdx) {
 
     return ret;
 };
-OOMLArrayProto.toJSON = function(startIdx, endIdx) {
-    return JSON.stringify(this.toArray(startIdx, endIdx));
+OOMLArrayProto.toJSON = function(startIdx, endIdx, indentation) {
+    return JSON.stringify(this.toArray(startIdx, endIdx), undefined, indentation);
 };

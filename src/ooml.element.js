@@ -37,8 +37,8 @@ OOMLElementProto.toObject = function() {
 
     return obj;
 };
-OOMLElementProto.toJSON = function() {
-    return JSON.stringify(this.toObject());
+OOMLElementProto.toJSON = function(indentation) {
+    return JSON.stringify(this.toObject(), undefined, indentation);
 };
 OOMLElementProto.assign = function() {
     let oomlInstance = this;
