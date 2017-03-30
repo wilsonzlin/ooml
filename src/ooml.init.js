@@ -1001,9 +1001,9 @@ OOML.Namespace = function(namespace, settings) {
 
                         let elemDetails = instanceProperties[prop];
 
-                        // This setter could be called WHILE property value are being normalised (i.e. set to not undefined)
+                        // This setter could be called WHILE property value is being normalised (i.e. set to not undefined)
+                        let currentValue = instanceProperties[prop].value;
                         let currentlyInitialised = currentValue != undefined;
-                        let currentValue = currentlyInitialised ? instanceProperties[prop].value : undefined;
 
                         if (classProperties[prop].setter) {
                             let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal, dispatchEventToParent);
