@@ -1160,7 +1160,7 @@ OOML.Namespace = function(namespace, settings) {
 
             if (initState) {
                 Object.keys(initState).forEach(propName => {
-                    if (classPropertyNames.indexOf(propName) < 0) {
+                    if (propName != "attributes" && classPropertyNames.indexOf(propName) < 0) {
                         throw new ReferenceError(`The property "${propName}" provided in an element substitution's default value does not exist`);
                     }
                 });
