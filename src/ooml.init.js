@@ -1142,6 +1142,13 @@ OOML.Namespace = function(namespace, settings) {
             Object.preventExtensions(instance);
 
             let initStateAttributes = Utils.hasOwnProperty(initState, 'attributes') && initState.attributes;
+            if (initStateAttributes) {
+                Object.keys(initStateAttributes).forEach(attrName => {
+                    if (!instanceAttributes[attrName]) {
+                        throw new ReferenceError(`The attribute "${attrName}" provided in an element substitution's default value does not exist`);
+                    }
+                });
+            }
             Object.keys(instanceAttributes).forEach(attrName => {
                 // Set initial attribute value
                 if (Utils.hasOwnProperty(initStateAttributes, attrName)) {
@@ -1151,8 +1158,14 @@ OOML.Namespace = function(namespace, settings) {
                 }
             });
 
+            if (initState) {
+                Object.keys(initState).forEach(propName => {
+                    if (classPropertyNames.indexOf(propName) < 0) {
+                        throw new ReferenceError(`The property "${propName}" provided in an element substitution's default value does not exist`);
+                    }
+                });
+            }
             classPropertyNames.forEach(propName => {
-
                 if (Utils.hasOwnProperty(initState, propName)) {
                     // If passthrough, initialise instance with initState built-in (to prevent it counting as a change, and to increase efficiency)
                     if (classProperties[propName].passthrough != undefined) {
