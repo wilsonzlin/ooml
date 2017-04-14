@@ -1218,7 +1218,7 @@ OOML.Namespace = function(namespace, settings) {
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDPROPS] = classPredefinedProperties; // Already frozen
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = classConstructor;
         classes[className][OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classHasExtensionPoint && classRawDom;
-        classes[className][OOML_CLASS_PROPNAME_ROOTELEMTAGNAME] = classRootElem.name;
+        classes[className][OOML_CLASS_PROPNAME_ROOTELEMTAGNAME] = classRootElem && classRootElem.name;
 
         // Make class inherit from parent class
         classes[className].prototype = Object.create(classExtends.prototype);
