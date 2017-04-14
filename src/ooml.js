@@ -45,7 +45,7 @@ var OOMLNodesWithUnwrittenChanges = new NodeSet(),
     };
 
 // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
-var OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'attributes'];
+var OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes'];
 // NOTE: Obviously list not complete, but hopefully the rest should be obvious...
 var OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'class'];
 
