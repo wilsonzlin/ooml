@@ -171,13 +171,7 @@ OOML.Namespace = function(namespace, settings) {
 
         var classMethods = classMetadata.methods;
 
-        var parentClassConstructor = classExtends[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR];
-        var classConstructor;
-        if (classExtendsDefault) {
-            classConstructor = classMetadata.constructor || function() {};
-        } else {
-            classConstructor = classMetadata.constructor || parentClassConstructor;
-        }
+        var classConstructor = classMetadata.constructor;
 
         function parseClassDomTextSubstitution(code) {
             let regexpMatches = /^(?: ((?:(?:[a-zA-Z.]+)\|)*[a-zA-Z.]+))? (@)?this\.(attributes\.)?(.+?) $/.exec(code);
@@ -1205,7 +1199,20 @@ OOML.Namespace = function(namespace, settings) {
                 }
             });
 
-            classConstructor.call(instance, parentClassConstructor);
+            if (classConstructor) {
+                // Get all predefined attributes properties (including inherited ones)
+                let ancestorClasses = [];
+                let currentProto = Object.getPrototypeOf(this);
+
+                while (currentProto !== OOML.Element.prototype) {
+                    ancestorClasses.unshift(currentProto.constructor);
+                    currentProto = Object.getPrototypeOf(currentProto);
+                }
+
+                ancestorClasses.reduce((previous, ancestorClass) => {
+                    return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] && ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous);
+                }, undefined)();
+            }
 
             // Update attribute nodes with parameter handlebars that have just been changed
             OOMLWriteChanges();
