@@ -1199,19 +1199,20 @@ OOML.Namespace = function(namespace, settings) {
                 }
             });
 
-            if (classConstructor) {
-                // Get all predefined attributes properties (including inherited ones)
-                let ancestorClasses = [];
-                let currentProto = Object.getPrototypeOf(this);
+            // Get all predefined attributes properties (including inherited ones)
+            let ancestorClasses = [];
+            let currentProto = Object.getPrototypeOf(this);
 
-                while (currentProto !== OOML.Element.prototype) {
-                    ancestorClasses.unshift(currentProto.constructor);
-                    currentProto = Object.getPrototypeOf(currentProto);
-                }
+            while (currentProto !== OOML.Element.prototype) {
+                ancestorClasses.unshift(currentProto.constructor);
+                currentProto = Object.getPrototypeOf(currentProto);
+            }
 
-                ancestorClasses.reduce((previous, ancestorClass) => {
-                    return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] && ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous);
-                }, undefined)();
+            let builtConstructor = ancestorClasses.reduce((previous, ancestorClass) => {
+                return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] ? ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous) : previous;
+            }, undefined);
+            if (builtConstructor) {
+                builtConstructor();
             }
 
             // Update attribute nodes with parameter handlebars that have just been changed

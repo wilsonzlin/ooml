@@ -389,14 +389,14 @@ let Utils = {
                             throw new ReferenceError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
                         }
 
-                        classMetadata.constructor = Utils.getEvalValue(node.textContent);
-                        if (!Utils.typeOf(classMetadata.constructor, TYPEOF_FUNCTION)) {
-                            throw new TypeError(`The constructor method for the class "${ classMetadata.name }" is not a function`);
+                        let textContent = node.textContent.trim();
+                        if (!/^function *\(\)\s*\{/.test(textContent) || !/\}$/.test(textContent)) {
+                            throw new SyntaxError(`The constructor method for the class "${ classMetadata.name }" is invalid`);
                         }
 
-                        if (classMetadata.constructor.length > 1) {
-                            throw new TypeError(`The constructor method for the class "${ classMetadata.name }" has more than one argument`);
-                        }
+                        let fnBody = textContent.slice(textContent.indexOf('{') + 1, -1);
+
+                        classMetadata.constructor = Function("parent", fnBody);
 
                         break;
                     }
