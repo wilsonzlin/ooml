@@ -129,14 +129,19 @@ Now, lets quickly add some controls so the user can actually modify and save the
                 set="return { HTML: `<span>${ marked(newValue) }</span>` }"
             >""</ooml-property>
 
-            <li>{{ this.label }}</li>
+            <li>
+                <span>{{ this.label }}</span>
+                <button domonclick="dispatch('delete', { item: this })">Delete</button>
+            </li>
         </template>
 
         <template ooml-class="List">
             <div>
                 <h2>{{ string this.name }}</h2>
                 <ul>
-                    <ooml-substitution property="items" class="Item" array></ooml-substitution>
+                    <ooml-substitution property="items" class="Item" array
+                        dispatchondelete="data.item.detach()"
+                    ></ooml-substitution>
                 </ul>
 
                 <!-- Binding to DOM events is extremely simple -->
