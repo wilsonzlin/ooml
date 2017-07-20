@@ -32,13 +32,17 @@ Let's create a to-do list app. No long instructions, just observe the single HTM
     </head>
 
     <body>
-        <!-- In ooml, we have classes, and construct objects from them,
-             just like most object-orientated languages... -->
+        <!--
+            In ooml, we have classes, and construct objects from them,
+            just like most object-orientated languages...
+        -->
         <template ooml-class="Item">
             <ooml-property name="label">""</ooml-property>
 
-            <!-- ...but ooml classes also have HTML to represent
-                 the view of the class (this is web development after all) -->
+            <!--
+                ...but ooml classes also have HTML to represent
+                the view of the class (this is web development after all)
+            -->
             <li>{{ this.label }}</li>
         </template>
 
@@ -47,6 +51,7 @@ Let's create a to-do list app. No long instructions, just observe the single HTM
             <div>
                 <h2>{{ this.name }}</h2>
                 <ul>
+                    <!-- Note that we can also bind other instance objects or an array of them -->
                     <ooml-substitution property="items" class="Item" array></ooml-substitution>
                 </ul>
             </div>
@@ -58,10 +63,14 @@ Let's create a to-do list app. No long instructions, just observe the single HTM
             </div>
         </template>
 
-        <!-- Declaring a whole bunch of classes is nice,
-             but we still need to create something to show in the browser -->
-        <!-- In ooml, you can quickly bootstrap your app by declaring
-             a place to initially create an instance of a class -->
+        <!--
+            Declaring a whole bunch of classes is nice,
+            but we still need to create something to show in the browser
+        -->
+        <!--
+            In ooml, you can quickly bootstrap your app by declaring
+            a place to initially create an instance of a class
+        -->
         <div ooml-instantiate="App app"></div>
 
         <script>
@@ -115,6 +124,7 @@ Now, lets quickly add some controls so the user can actually modify and save the
     <body>
         <template ooml-class="Item">
             <!-- ooml properties can have type hinting, getters, setters, and change listeners -->
+            <!-- You can display rich HTML rather than just the value of a property -->
             <ooml-property name="label" type="string"
                 set="return { HTML: `<span>${ marked(newValue) }</span>` }"
             >""</ooml-property>
@@ -151,13 +161,17 @@ Now, lets quickly add some controls so the user can actually modify and save the
             <div id="app">
                 <!--
                     Normally, nested instance objects are not initialised
-                      when the main object is constructed.
+                    when the main object is constructed.
+                -->
+                <!--
                     However, if it will always have a familiar structure,
-                      or you need it to be immediately available, you can
-                      set a default state for the object, and it will be
-                      built alongside the main object.
+                    or you need it to be immediately available, you can
+                    set a default state for the object, and it will be
+                    built alongside the main object.
+                -->
+                <!--
                     Since everything in ooml is just JSON, we can very
-                      easily describe the default value of our app's list.
+                    easily describe the default value of our app's list.
                 -->
                 <ooml-substitution property="list" class="List">{
                     name: "My list"
