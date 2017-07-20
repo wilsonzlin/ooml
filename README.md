@@ -61,24 +61,27 @@ Let's create a to-do list app. No long instructions, just observe the single HTM
         <div ooml-instantiate="App app"></div>
 
         <script>
-            // Later on, you'll utilise the ability to have many namespaces
-            let namespace = new OOML.Namespace();
             // Our namespace object looks like this:
             // { objects: { app: [OOML.Element] }, classes: { Item: [OOML.Class], List: [OOML.Class], App: [OOML.Class] } }
+            let namespace = new OOML.Namespace();
+
             // Lets alias our app to make it easier to reference
             let app = namespace.objects.app;
-
-            // Examples
-            app.list.name = "My to-do list";
-            app.list.items.push({ name: "First item" });
-            app.list.items.push(new namespace.classes.Item({ name: "Second item" }));
-            app.list.items.sort("name");
-            let firstItem = app.list.items.shift();
-            app.list.items.unshift(firstItem);
-            app.list.items.get(0).name = "1st item";
         </script>
     </body>
 </html>
+```
+
+```javascript
+// Try these in your console
+app.list = { name: "My to-do list" };
+app.list.items.push({ name: "First item" });
+app.list.items.push(new namespace.classes.Item({ name: "Second item" }));
+app.list.items.sort("name");
+let firstItem = app.list.items.shift();
+firstItem.name = "No. 1";
+app.list.items.unshift(firstItem);
+app.list.items.get(0).name = "1st item";
 ```
 
 Open up your console, use the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays and more objects, which makes it extremely easy to traverse, manipulate and serialise at any level.
