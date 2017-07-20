@@ -21,7 +21,7 @@ Check out [ooml's guides](https://wilsonl.in/docs/ooml) to see the all the neat 
 
 ## Learn ooml in 10 minutes
 
-Let's create a to-do list app. No long instructions, just observe the single HTML file needed ([view it live](https://wilsonl.in/ooml/examples/to-do-1.html)):
+Let's create a to-do list app. No long instructions, just observe the single HTML file needed ([view it live](https://wilsonl.in/ooml/examples/to-do-list-1.html)):
 
 ```html
 <!DOCTYPE html>
@@ -32,11 +32,13 @@ Let's create a to-do list app. No long instructions, just observe the single HTM
     </head>
 
     <body>
-        <!-- In ooml, we have classes, and construct objects from them, just like most object-orientated languages... -->
+        <!-- In ooml, we have classes, and construct objects from them,
+             just like most object-orientated languages... -->
         <template ooml-class="Item">
             <ooml-property name="label">""</ooml-property>
 
-            <!-- ...but ooml classes also have HTML to represent the view of the class (this is web development after all) -->
+            <!-- ...but ooml classes also have HTML to represent
+                 the view of the class (this is web development after all) -->
             <li>{{ this.label }}</li>
         </template>
 
@@ -56,13 +58,26 @@ Let's create a to-do list app. No long instructions, just observe the single HTM
             </div>
         </template>
 
-        <!-- Declaring a whole bunch of classes is nice, but we still need to create something to show in the browser -->
-        <!-- In ooml, you can quickly bootstrap your app by declaring a place to initially create an instance of a class -->
+        <!-- Declaring a whole bunch of classes is nice,
+             but we still need to create something to show in the browser -->
+        <!-- In ooml, you can quickly bootstrap your app by declaring
+             a place to initially create an instance of a class -->
         <div ooml-instantiate="App app"></div>
 
         <script>
-            // Our namespace object looks like this:
-            // { objects: { app: [OOML.Element] }, classes: { Item: [OOML.Class], List: [OOML.Class], App: [OOML.Class] } }
+            /*
+                Our namespace object looks like this:
+                {
+                    objects: {
+                        app: [OOML.Element]
+                    },
+                    classes: {
+                        Item: [OOML.Class],
+                        List: [OOML.Class],
+                        App: [OOML.Class]
+                    }
+                }
+            */
             let namespace = new OOML.Namespace();
 
             // Lets alias our app to make it easier to reference
@@ -86,7 +101,7 @@ app.list.items.get(0).name = "1st item";
 
 Open up your console, use the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays and more objects, which makes it extremely easy to traverse, manipulate and serialise at any level.
 
-Now, lets quickly add some controls so the user can actually modify and save the list. As a bonus, we'll enable Markdown input, to show just how easy it is to use HTML and external libraries in ooml ([view it live](https://wilsonl.in/ooml/examples/to-do-2.html)):
+Now, lets quickly add some controls so the user can actually modify and save the list. As a bonus, we'll enable Markdown input, to show just how easy it is to use HTML and external libraries in ooml ([view it live](https://wilsonl.in/ooml/examples/to-do-list-2.html)):
 
 ```html
 <!DOCTYPE html>
@@ -120,6 +135,7 @@ Now, lets quickly add some controls so the user can actually modify and save the
                     this.items.push({ label: this.$newItemInput.value });
                     this.$newItemInput.value = '';
                 ">
+                    <!-- Sometimes, we actually want to expose the DOM -->
                     <input ooml-expose="newItemInput" placeholder="You can use Markdown!">
                     <button>Add new item</button>
                 </form>
@@ -133,10 +149,16 @@ Now, lets quickly add some controls so the user can actually modify and save the
 
         <template ooml-class="App">
             <div id="app">
-                <!-- Normally, nested instance objects are not initialised when the main object is constructed -->
-                <!-- However, if it will always have a familiar structure, or you need it to be immediately available, -->
-                <!-- you can set a default state for the object, and it will be built alongside the main object -->
-                <!-- Since everything in ooml is just JSON, we can very easily describe the default value of our app's list -->
+                <!--
+                    Normally, nested instance objects are not initialised
+                      when the main object is constructed.
+                    However, if it will always have a familiar structure,
+                      or you need it to be immediately available, you can
+                      set a default state for the object, and it will be
+                      built alongside the main object.
+                    Since everything in ooml is just JSON, we can very
+                      easily describe the default value of our app's list.
+                -->
                 <ooml-substitution property="list" class="List">{
                     name: "My list"
                 }</ooml-substitution>
