@@ -145,9 +145,10 @@ OOMLArrayProtoMutation.unshift = function(newVal) {
 for (let methodName in OOMLArrayProtoMutation) {
     OOMLArrayProto[methodName] = function() {
         let _this = this;
-        OOMLArrayProtoMutation[methodName].apply(_this, arguments);
+        let ret = OOMLArrayProtoMutation[methodName].apply(_this, arguments);
         _this[OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS].arraychange.forEach(handler => {
             handler.call(_this);
         });
+        return ret;
     };
 }
