@@ -59,6 +59,9 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
     OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners',
 
+    OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive',
+    OOML_HIVE_PROPNAME_KEYPATH = '__oomlHiveKeypath',
+
     OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace',
     OOML_DOM_PROPNAME_ISCUSTOMHTML = '__oomlIsCustomHtml',
 
@@ -66,6 +69,8 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach',
     OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach',
     OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch',
+    OOML_INSTANCE_PROPNAME_BINDING_ON_EXIST = '__oomlBindingOnExist',
+    OOML_INSTANCE_PROPNAME_BINDING_ON_MISSING = '__oomlBindingOnMissing',
 
     OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
     OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties',

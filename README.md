@@ -4,24 +4,23 @@ An object-orientated modern web UI anti-framework.
 ## Why use ooml
 
 ### Easy setup
-To use ooml, drop in the JS library... and you're done. There's no environment to set up, build systems to use, or dependencies to manage. Get all of the benefits of an advanced framework with none of the baggage.
+To use ooml, drop in the JS library... and you're done. There's no environment to set up, build systems to use, or dependencies to manage. Get all of the benefits of an advanced framework with none of the baggage. Also, being so independent, it has no opinions or limitations on the tools and environments you use, so you can reuse most existing common toolchains, or make your own perfect one.
 
 ### Incredibly simple
-Pre-requisites for learning ooml: JSON, and basic object orientation. That's it. There's no special language to learn, overly weird syntax to cover, or even a strong opinion to understand. Unlike most other frameworks, you can start creating scalable, super large apps with immediate knowledge picked up quickly, and learn the more advanced 10% when you need to.
+Pre-requisites for learning ooml: JSON, and basic object orientation. That's it. There's no special language to learn, overly weird syntax to cover, or even a strong opinion to understand. Unlike most other frameworks, you can start creating scalable, super-large apps with knowledge picked up quickly, and learn the more advanced 20% when you need to.
 
-### Very efficient
-ooml has no virtual DOM, because it is already the most efficient it can be. The performance of your app is directly proportional to your code. There's no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and it's performance linearly scales with its use. All of this comes in a tiny 11 KB gzipped [ooml.js](https://wilsonl.in/ooml.js) file.
+### Very fast
+ooml has no virtual DOM, because it is already the most efficient it can be. The performance of your app is directly proportional to your code. There are no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and it's performance linearly scales with its use. All of this comes in a tiny 11 KB gzipped CDN-delivered [ooml.js](https://wilsonl.in/ooml.js) file.
 
 ### Have it your way
-Want to use a global store? ooml's got you covered. Prefer to use events instead? No problem. Take advantage of abstract classes, type checking, inheritance, constructors, advanced methods syntax, getters, setters and change listeners, mutation observers, serialisers and unserialisers, and so much more, to create your perfect app or library, your way.
+Want to use a global store? ooml's got you covered. Prefer to use events instead? No problem. Pub/sub message brokering? You got it. Take advantage of abstract classes, type checking, inheritance, constructors, advanced methods syntax, getters, setters and change listeners, mutation observers, serialisers and unserialisers, and so much more, to create your perfect app or library, your way.
 
 ### So much more
-Check out [ooml's guides](https://wilsonl.in/docs/ooml) to see the all the neat stuff about ooml.
-
+Don't mistake ooml's simplicity for lack of features. Check out [ooml's guides](https://wilsonl.in/docs/ooml) to see the all the neat stuff about ooml.
 
 ## Learn ooml in 10 minutes
 
-Let's create a to-do list app. No long instructions, just observe the single HTML file needed ([view it live](https://wilsonl.in/ooml/examples/to-do-list-1.html)):
+Let's create a to-do list app. No long instructions, just quickly scan through the single and only HTML file needed ([view it live](https://wilsonl.in/ooml/examples/to-do-list-1.html)):
 
 ```html
 <!DOCTYPE html>
@@ -41,7 +40,7 @@ Let's create a to-do list app. No long instructions, just observe the single HTM
 
             <!--
                 ...but ooml classes also have HTML to represent
-                the view of the class (this is web development after all)
+                the view of the class (this is a web framework after all)
             -->
             <li>{{ this.label }}</li>
         </template>
@@ -108,7 +107,7 @@ app.list.items.unshift(firstItem);
 app.list.items.get(0).label = "1st item";
 ```
 
-Open up your console, use the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays and more objects, which makes it extremely easy to traverse, manipulate and serialise at any level.
+Open up your console, use the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays and more objects, which makes it extremely easy to traverse, manipulate and serialise at any level. Know who to use object and array literals? Congratulations, you can now make web apps.
 
 Now, lets quickly add some controls so the user can actually modify and save the list. As a bonus, we'll enable Markdown input, to show just how easy it is to use HTML and external libraries in ooml ([view it live](https://wilsonl.in/ooml/examples/to-do-list-2.html)):
 
@@ -193,3 +192,7 @@ Now, lets quickly add some controls so the user can actually modify and save the
     </body>
 </html>
 ```
+
+## Help improve ooml
+
+This project needs everyone's help to make ooml a great experience for everyone. Help out by reporting bugs, contributing code, improving documentation, pointing out annoyances (small or fundamental), and suggesting what you want to see in the future. You can direct these to this project by creating [issues](https://github.com/lerouche/ooml/issues) or [pull requests](https://github.com/lerouche/ooml/pulls).

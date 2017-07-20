@@ -202,6 +202,7 @@ let Utils = {
 
                     let attrName;
                     let attrTypes;
+                    let attrBindTo;
 
                     let attrGetter, attrSetter, attrChangeListener;
 
@@ -244,6 +245,18 @@ let Utils = {
                                 }
 
                                 attrChangeListener = Function('classes', 'attribute', 'value', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
+                                break;
+
+                            case 'bindto':
+                                // TODO
+                                break;
+
+                            case 'bindonexist':
+                                // TODO
+                                break;
+
+                            case 'bindonmissing':
+                                // TODO
                                 break;
 
                             default:
