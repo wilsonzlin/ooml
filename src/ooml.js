@@ -3,9 +3,10 @@ var TYPEOF_OBJECT = 'object';
 var TYPEOF_STRING = 'string';
 var TYPEOF_BOOLEAN = 'boolean';
 var TYPEOF_NUMBER = 'number';
-/* OVERRIDE: UNUSED
-var TYPEOF_UNDEFINED = 'undefined';
-*/
+
+var BINDING_STATE_INIT = 1;
+var BINDING_STATE_EXISTS = 2;
+var BINDING_STATE_MISSING = 3;
 
 <ZC-IMPORT[utils]>
 

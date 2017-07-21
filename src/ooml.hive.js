@@ -1,10 +1,12 @@
 let { hive, hiveBind, hiveUnbind } = (() => {
-    let isValidKey = key => Utils.typeOf(key, TYPEOF_STRING) && key.length > 0 && /^__/.test(key) && key.indexOf('.') == -1 && !OOMLReservedPropertyNames.indexOf(key) == -1;
+    let reservedKeys = new StringSet(["get", "set", "delete"]);
+
+    let isValidKey = key => Utils.typeOf(key, TYPEOF_STRING) && key.length > 0 && /^__/.test(key) && key.indexOf('.') == -1 && OOMLReservedPropertyNames.indexOf(key) == -1 && !reservedKeys.has(key);
     let assertValidKey = key => {
         if (!isValidKey(key)) {
             throw new SyntaxError(`Invalid hive key name "${key}"`);
         }
-    }
+    };
 
     let HiveObject = function(keypath, initialState) {
         // Internal only class, so don't need checks
@@ -36,15 +38,19 @@ let { hive, hiveBind, hiveUnbind } = (() => {
             internalHive[key] = HiveObject(propertyKeypath, value);
         } else if (Array.isArray(value)) {
             internalHive[key] = new HiveArray(propertyKeypath)
-        } else if (isPrimitiveValue(value)) {
+        } else if (Utils.isPrimitiveValue(value)) {
             let currentValue = internalHive[key];
             internalHive[key] = value;
             let bindings = bindingsByKeypath[propertyKeypath];
             if (bindings) {
                 bindings.forEach(binding => {
                     let {object, property} = binding;
-                    // This will handle assigning the value, so that the handler can optionally prevent it from happening
-                    object[OOML_INSTANCE_PROPNAME_BINDING_ON_EXIST](property, value);
+                    if (currentValue === undefined) {
+                        // This will handle assigning the value, so that the handler can optionally prevent it from happening
+                        object[OOML_INSTANCE_PROPNAME_BINDING_ON_EXIST](property, value);
+                    } else {
+                        object[property] = value;
+                    }
                 });
             }
         } else {
@@ -81,7 +87,7 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         Object.keys(internalHive).forEach(k => {
             _this.delete(k);
         });
-    }
+    };
     HiveObjectPrototype.toObject = function() {
         let _this = this;
         let internalHive = _this[OOML_HIVE_PROPNAME_INTERNALHIVE];
@@ -141,7 +147,7 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         let bindingKeypath = bindings[bindingId];
         delete bindings[bindingId];
         delete bindingsByKeypath[bindingKeypath][bindingId];
-    }
+    };
 
     return { hive, hiveBind, hiveUnbind };
 })();

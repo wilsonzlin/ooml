@@ -695,11 +695,20 @@ OOML.Namespace = function(namespace, settings) {
 
             let instanceAttributes = Utils.clone(classAttributes);
             let instanceAttributesInterface = Utils.createCleanObject();
+            let attributesToDynamicBoundProperties = Utils.createCleanObject();
+            // TODO
 
             // Must be before instanceDom initialisation as processClassDom uses instanceAttributes[attrName].nodes
             Object.keys(instanceAttributes).forEach(attrName => {
                 // Use set as one DOM attribute can refer to one attribute more than once
                 instanceAttributes[attrName].nodes = new NodeSet();
+                let bindingConfig = instanceAttributes[attrName].binding;
+                if (bindingConfig) {
+                    instanceAttributes[attrName].bindingState = BINDING_STATE_INIT;
+                    if (bindingConfig.isDynamic) {
+                        // TODO
+                    }
+                }
 
                 // Set up attributes interface object
                 Object.defineProperty(instanceAttributesInterface, attrName, {

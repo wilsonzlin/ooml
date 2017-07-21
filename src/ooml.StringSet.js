@@ -1,6 +1,6 @@
 var STRINGSET_PROPNAME_INTERNALARRAY = '__stringSetInternalArray';
 var STRINGSET_PROPNAME_INTERNALOBJECT = '__stringSetInternalObject';
-var StringSet = function() {
+var StringSet = function(initialValues) {
     var _this = this;
 
     _this[STRINGSET_PROPNAME_INTERNALARRAY] = [];
@@ -9,6 +9,10 @@ var StringSet = function() {
     Object.defineProperty(_this, 'size', {
         get: () => _this[STRINGSET_PROPNAME_INTERNALARRAY].length,
     });
+
+    if (initialValues) {
+        initialValues.forEach(v => _this.add(v));
+    }
 };
 var StringSetProto = StringSet.prototype;
 StringSetProto.add = function(str) {

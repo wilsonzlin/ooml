@@ -132,6 +132,50 @@ let Utils = {
 
     isNotOrBlankString: str => !Utils.typeOf(str, TYPEOF_STRING) || !str.trim(),
 
+    parseBindingDeclaration: declaration => {
+        let posOfLeftBrace;
+        let toProcess = declaration;
+        let dynamicParts = [];
+        let localPropertyToPartMap = Utils.createCleanObject();
+        while ((posOfLeftBrace = toProcess.indexOf('{')) > -1) {
+            let upToBrace = toProcess.slice(0, posOfLeftBrace);
+            dynamicParts.push(upToBrace);
+
+            toProcess = toProcess.slice(posOfLeftBrace);
+            let posOfRightBrace = toProcess.indexOf('}');
+            if (posOfRightBrace == -1) {
+                throw new SyntaxError(`Malformed binding syntax: "${ toProcess }"`);
+            }
+            // param = "{{ some.param }}"
+            let param = toProcess.slice(0, posOfRightBrace + 2);
+            let matches;
+            if (!(matches = /^{{ this\.((?:attributes)?\.[a-zA-Z0-9_]+) }}$/.exec(param))) {
+                throw new SyntaxError(`Malformed binding syntax: "${ declaration }"`);
+            }
+            let localProperty = matches[1];
+            localPropertyToPartMap[localProperty] = dynamicParts.push("") - 1;
+
+            toProcess = toProcess.slice(posOfRightBrace + 2);
+        }
+        if (toProcess.length) {
+            dynamicParts.push(toProcess);
+        }
+
+        let isDynamic = dynamicParts.length > 1;
+        if (isDynamic) {
+            return {
+                isDynamic: true,
+                parts: dynamicParts,
+                propertyToPartMap: localPropertyToPartMap,
+            };
+        } else {
+            return {
+                isDynamic: false,
+                keypath: dynamicParts[0],
+            };
+        }
+    },
+
     preprocessClassDeclaration: (templateElem, strictPropertyNames) => {
         let className, classIsAbstract, classExtends;
         // ooml-(abstract)?-class definitely exists as this function is only called via querySelectorAll
@@ -248,7 +292,11 @@ let Utils = {
                                 break;
 
                             case 'bindto':
-                                // TODO
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid binding`);
+                                }
+
+                                attrBindTo = Utils.parseBindingDeclaration(_attrVal.trim());
                                 break;
 
                             case 'bindonexist':
@@ -282,6 +330,7 @@ let Utils = {
                     }
 
                     classMetadata.attributes[attrName] = {
+                        binding: attrBindTo,
                         types: attrTypes,
                         value: attrValue,
                         getter: attrGetter,
@@ -296,6 +345,7 @@ let Utils = {
                     let propName;
                     let propTypes;
                     let isSuppressed = false;
+                    let propBindTo;
 
                     let propGetter, propSetter, onchangeListener;
 
@@ -346,6 +396,22 @@ let Utils = {
                                 onchangeListener = Function('classes', 'property', 'value', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
+                            case 'bindto':
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid binding`);
+                                }
+
+                                propBindTo = Utils.parseBindingDeclaration(_attrVal.trim());
+                                break;
+
+                            case 'bindonexist':
+                                // TODO
+                                break;
+
+                            case 'bindonmissing':
+                                // TODO
+                                break;
+
                             default:
                                 throw new ReferenceError(`Unrecognised attribute "${ _attrName }" on ooml-property tag`);
                         }
@@ -369,6 +435,7 @@ let Utils = {
                     }
 
                     classMetadata.properties[propName] = {
+                        binding: propBindTo,
                         types: propTypes,
                         value: propValue,
                         isArray: false,
