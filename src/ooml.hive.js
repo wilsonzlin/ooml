@@ -34,6 +34,11 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         let _this = this;
         let internalHive = _this[OOML_HIVE_PROPNAME_INTERNALHIVE];
         let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH] + "." + key;
+        let currentValue = internalHive[key];
+
+        if (currentValue instanceof HiveObject || currentValue instanceof HiveArray) {
+            _this.delete(key);
+        }
 
         if (Utils.isObjectLiteral(value)) {
             internalHive[key] = new HiveObject(propertyKeypath, value);
