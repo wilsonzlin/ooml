@@ -51,12 +51,12 @@ OOMLElementProto.assign = function() {
         Object.keys(source).forEach((prop) => oomlInstance[prop] = source[prop]); // Probably don't need to clone as not mutated
     }
 
-    return this;
+    return oomlInstance;
 };
 if (OOMLCompatSymbolExists) {
     OOMLElementProto[Symbol.iterator] = function() {
         let inst = this;
-        let propNamesIterator = this.constructor[OOML_CLASS_PROPNAME_PROPNAMES].values();
+        let propNamesIterator = inst.constructor[OOML_CLASS_PROPNAME_PROPNAMES].values();
 
         return {
             next: () => {
@@ -64,7 +64,8 @@ if (OOMLCompatSymbolExists) {
                 if (it.done) {
                     return it;
                 }
-                return { value: inst[it.value], done: false };
+                let itValue = it.value;
+                return { value: [itValue, inst[itValue]], done: false };
             }
         };
     };

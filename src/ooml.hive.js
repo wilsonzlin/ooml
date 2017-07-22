@@ -114,6 +114,37 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         }
         return JSON.stringify(this.toObject(), null, indentation);
     };
+    HiveObjectPrototype.assign = function() {
+        let hive = this;
+
+        for (let i = 0; i < arguments.length; i++) {
+            let source = arguments[i];
+
+            // Don't use Object.assign because 1) compatibility 2) it sets non-existent properties
+            // Don't need to clone, because values that are actually copied are all primitive
+            Object.keys(source).forEach((prop) => hive.set(prop, source[prop]));
+        }
+
+        return hive;
+    };
+    if (OOMLCompatSymbolExists) {
+        HiveObjectPrototype[Symbol.iterator] = function() {
+            let hive = this;
+            let propertyNames = Object.keys(hive[OOML_HIVE_PROPNAME_INTERNALHIVE]);
+            let currentIdx = -1;
+
+            return {
+                next: () => {
+                    let nextProperty = propertyNames[++currentIdx];
+                    if (currentIdx == propertyNames.length) {
+                        return { done: true };
+                    }
+                    return { value: [nextProperty, hive.get(nextProperty)], done: false };
+                }
+            };
+        };
+    }
+
 
     let HiveArray = function() {
 
