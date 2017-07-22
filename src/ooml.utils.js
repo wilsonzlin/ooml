@@ -137,6 +137,7 @@ let Utils = {
         let toProcess = declaration;
         let dynamicParts = [];
         let localPropertyToPartMap = Utils.createCleanObject();
+        localPropertyToPartMap.attributes = Utils.createCleanObject();
         while ((posOfLeftBrace = toProcess.indexOf('{')) > -1) {
             let upToBrace = toProcess.slice(0, posOfLeftBrace);
             dynamicParts.push(upToBrace);
@@ -146,14 +147,25 @@ let Utils = {
             if (posOfRightBrace == -1) {
                 throw new SyntaxError(`Malformed binding syntax: "${ toProcess }"`);
             }
-            // param = "{{ some.param }}"
+            // param === "{{ some.param }}"
             let param = toProcess.slice(0, posOfRightBrace + 2);
             let matches;
-            if (!(matches = /^{{ this\.((?:attributes)?\.[a-zA-Z0-9_]+) }}$/.exec(param))) {
+            if (!(matches = /^{{ this\.((?:attributes)?)\.([a-zA-Z0-9_]+) }}$/.exec(param))) {
                 throw new SyntaxError(`Malformed binding syntax: "${ declaration }"`);
             }
-            let localProperty = matches[1];
-            localPropertyToPartMap[localProperty] = dynamicParts.push("") - 1;
+            let isAttribute = !!matches[1];
+            let localProperty = matches[2];
+            let partId = dynamicParts.push("") - 1;
+            let partMap;
+            if (isAttribute) {
+                partMap = localPropertyToPartMap.attributes;
+            } else {
+                partMap = localPropertyToPartMap;
+            }
+            if (!partMap[localProperty]) {
+                partMap[localProperty] = [];
+            }
+            partMap[localProperty] = partId;
 
             toProcess = toProcess.slice(posOfRightBrace + 2);
         }
@@ -247,6 +259,8 @@ let Utils = {
                     let attrName;
                     let attrTypes;
                     let attrBindTo;
+                    let attrBindOnExist;
+                    let attrBindOnMissing;
 
                     let attrGetter, attrSetter, attrChangeListener;
 
@@ -300,11 +314,20 @@ let Utils = {
                                 break;
 
                             case 'bindonexist':
-                                // TODO
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                attrBindOnExist = Function('classes', 'attribute', 'storeValue', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'bindonmissing':
-                                // TODO
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                // storeValue needs to be available, even though it's always undefined
+                                attrBindOnMissing = Function('classes', 'attribute', 'storeValue', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
@@ -331,6 +354,8 @@ let Utils = {
 
                     classMetadata.attributes[attrName] = {
                         binding: attrBindTo,
+                        bindOnExist: attrBindOnExist,
+                        bindOnMissing: attrBindOnMissing,
                         types: attrTypes,
                         value: attrValue,
                         getter: attrGetter,
@@ -346,6 +371,8 @@ let Utils = {
                     let propTypes;
                     let isSuppressed = false;
                     let propBindTo;
+                    let propBindOnExist;
+                    let propBindOnMissing;
 
                     let propGetter, propSetter, onchangeListener;
 
@@ -405,11 +432,20 @@ let Utils = {
                                 break;
 
                             case 'bindonexist':
-                                // TODO
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                propBindOnExist = Function('classes', 'property', 'storeValue', 'initial', 'dispatch', 'event', `"use strict";${ _attrVal }`);
                                 break;
 
                             case 'bindonmissing':
-                                // TODO
+                                if (Utils.isNotOrBlankString(_attrVal)) {
+                                    throw new SyntaxError(`Invalid ${ _attrName } function`);
+                                }
+
+                                // storeValue needs to be available, even though it's always undefined
+                                propBindOnMissing = Function('classes', 'property', 'storeValue', 'initial', 'dispatch', 'event', `"use strict";${ _attrVal }`);
                                 break;
 
                             default:
@@ -436,6 +472,8 @@ let Utils = {
 
                     classMetadata.properties[propName] = {
                         binding: propBindTo,
+                        bindOnExist: propBindOnExist,
+                        bindOnMissing: propBindOnMissing,
                         types: propTypes,
                         value: propValue,
                         isArray: false,
@@ -916,6 +954,20 @@ let Utils = {
 
     // Must be used only with strings (usually .textContent)
     getEvalValue: codeStr => Function(`"use strict";return ${ codeStr.trim() || undefined }`)(),
+
+    getDefaultPrimitiveValueForTypes: types => {
+        if (!types || ~types.indexOf('null')) {
+            return null;
+        } else if (~types.indexOf('natural') || ~types.indexOf('integer') || ~types.indexOf('float') || ~types.indexOf('number')) {
+            return 0;
+        } else if (~types.indexOf('boolean')) {
+            return false;
+        } else if (~types.indexOf('string')) {
+            return '';
+        } else {
+            throw new Error(`Unknown type "${types}"`);
+        }
+    },
 
     clone: obj => {
         let cloned;

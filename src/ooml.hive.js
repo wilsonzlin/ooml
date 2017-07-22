@@ -1,7 +1,7 @@
 let { hive, hiveBind, hiveUnbind } = (() => {
     let reservedKeys = new StringSet(["get", "set", "delete"]);
 
-    let isValidKey = key => Utils.typeOf(key, TYPEOF_STRING) && key.length > 0 && /^__/.test(key) && key.indexOf('.') == -1 && OOMLReservedPropertyNames.indexOf(key) == -1 && !reservedKeys.has(key);
+    let isValidKey = key => Utils.typeOf(key, TYPEOF_STRING) && key.length > 0 && !/^__/.test(key) && key.indexOf('.') == -1 && OOMLReservedPropertyNames.indexOf(key) == -1 && !reservedKeys.has(key);
     let assertValidKey = key => {
         if (!isValidKey(key)) {
             throw new SyntaxError(`Invalid hive key name "${key}"`);
@@ -13,6 +13,7 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         let _this = this;
         _this[OOML_HIVE_PROPNAME_KEYPATH] = keypath;
         _this[OOML_HIVE_PROPNAME_INTERNALHIVE] = Utils.createCleanObject();
+        Object.freeze(_this);
 
         if (initialState) {
             Object.keys(initialState).forEach(k => {
@@ -35,22 +36,17 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH] + "." + key;
 
         if (Utils.isObjectLiteral(value)) {
-            internalHive[key] = HiveObject(propertyKeypath, value);
+            internalHive[key] = new HiveObject(propertyKeypath, value);
         } else if (Array.isArray(value)) {
             internalHive[key] = new HiveArray(propertyKeypath)
         } else if (Utils.isPrimitiveValue(value)) {
-            let currentValue = internalHive[key];
             internalHive[key] = value;
             let bindings = bindingsByKeypath[propertyKeypath];
             if (bindings) {
                 bindings.forEach(binding => {
                     let {object, property} = binding;
-                    if (currentValue === undefined) {
-                        // This will handle assigning the value, so that the handler can optionally prevent it from happening
-                        object[OOML_INSTANCE_PROPNAME_BINDING_ON_EXIST](property, value);
-                    } else {
-                        object[property] = value;
-                    }
+                    // This will handle assigning the value, so that the handler can optionally prevent it from happening
+                    object[OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE](property, value);
                 });
             }
         } else {
@@ -74,8 +70,8 @@ let { hive, hiveBind, hiveUnbind } = (() => {
             if (bindings) {
                 bindings.forEach(binding => {
                     let {object, property} = binding;
-                    // This should also handle resetting the property to the default value
-                    object[OOML_INSTANCE_PROPNAME_BINDING_ON_MISSING](property);
+                    // This should handle resetting the property to the default value
+                    object[OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE](property);
                 });
             }
         }
@@ -118,13 +114,15 @@ let { hive, hiveBind, hiveUnbind } = (() => {
 
     };
 
-    let hive = HiveObject("");
+    let hive = new HiveObject("");
 
     let bindingsByKeypath = Utils.createCleanObject();
-
     let bindings = [];
+
     let hiveBind = function(keypath, object, property) {
-        if (!Utils.typeOf(keypath, TYPEOF_STRING) || !keypath.split(".").every(k => isValidKey(k))) {
+        let splitKeypath;
+
+        if (!Utils.typeOf(keypath, TYPEOF_STRING) || !(splitKeypath = keypath.split(".")).every(k => isValidKey(k))) {
             throw new SyntaxError(`Invalid keypath "${keypath}"`);
         }
 
@@ -141,6 +139,9 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         }
         bindingsByKeypath[keypath][bindingId] = binding;
 
+        let currentValue = splitKeypath.reduce((prev, curr) => (prev instanceof HiveObject || prev instanceof HiveArray) ? prev.get(curr) : undefined, hive);
+        object[OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE](property, currentValue);
+
         return bindingId;
     };
     let hiveUnbind = function(bindingId) {
@@ -151,3 +152,4 @@ let { hive, hiveBind, hiveUnbind } = (() => {
 
     return { hive, hiveBind, hiveUnbind };
 })();
+OOML.hive = hive;

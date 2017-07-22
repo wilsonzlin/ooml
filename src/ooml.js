@@ -70,8 +70,7 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach',
     OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach',
     OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch',
-    OOML_INSTANCE_PROPNAME_BINDING_ON_EXIST = '__oomlBindingOnExist',
-    OOML_INSTANCE_PROPNAME_BINDING_ON_MISSING = '__oomlBindingOnMissing',
+    OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE = '__oomlBindingOnStateChange',
 
     OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
     OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties',
@@ -112,6 +111,7 @@ OOML.import = function() {
     }
 };
 
+<ZC-IMPORT[hive]>
 <ZC-IMPORT[array]>
 <ZC-IMPORT[array-methods-core]>
 <ZC-IMPORT[array-methods-mutation]>

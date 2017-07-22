@@ -57,7 +57,7 @@
         <template ooml-class="User">
             <ooml-attribute name="color">"red"</ooml-attribute>
             <ooml-property suppressed name="unusedProperty">42</ooml-property>
-            <ooml-property name="gender">"Undecided voter"</ooml-property>
+            <ooml-property name="gender" bindto="user.gender">"Undecided voter"</ooml-property>
             <ooml-method name="countLettersInName">
                 function() {
                     return this.name.length;

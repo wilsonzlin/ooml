@@ -695,19 +695,112 @@ OOML.Namespace = function(namespace, settings) {
 
             let instanceAttributes = Utils.clone(classAttributes);
             let instanceAttributesInterface = Utils.createCleanObject();
-            let attributesToDynamicBoundProperties = Utils.createCleanObject();
-            // TODO
+
+            let dependentByBindings = Object.assign(Utils.createCleanObject(), { attributes: Utils.createCleanObject() });
+            let propertiesToLoadBindingsAfterConstruction = { attributes: new StringSet(), properties: new StringSet() };
+            let rebindSetTimeouts = { attributes: Utils.createCleanObject(), properties: Utils.createCleanObject() };
+            function setUpBinding(property, attribute) {
+                let propOrAttrName = property || attribute;
+
+                let internalObject = (property ? instanceProperties : instanceAttributes)[propOrAttrName];
+                let currentBindingId = internalObject.bindingId;
+
+                if (internalObject.isDynamic) {
+                    internalObject.binding.keypath = internalObject.binding.parts.join("");
+                }
+
+                if (currentBindingId != undefined) {
+                    hiveUnbind(currentBindingId);
+                }
+
+                internalObject.bindingId = hiveBind(internalObject.binding.keypath, property ? instance : instance.attributes, propOrAttrName);
+            }
+            function rebindDynamicBinding(property, attribute) {
+                let propOrAttrName = property || attribute;
+
+                let stKey = property ? "properties" : "attributes";
+
+                clearTimeout(rebindSetTimeouts[stKey][propOrAttrName]);
+
+                rebindSetTimeouts[stKey][propOrAttrName] = setTimeout(() => {
+                    setUpBinding(property, attribute);
+                }, 50);
+            }
+            function handleBindingChangeEventFromStore(internalObject, externalObject, key, currentStoreValue) {
+                let currentBindingState = internalObject.bindingState;
+                let currentBindingStateIsInitial = currentBindingState == BINDING_STATE_INIT;
+
+                let preventChange;
+                let valueToApplyLocally;
+                let newState;
+                let stateChangeHandler;
+
+                if (currentStoreValue !== undefined) {
+                    valueToApplyLocally = currentStoreValue;
+                    newState = BINDING_STATE_EXISTS;
+                    stateChangeHandler = internalObject.bindOnExist;
+                } else {
+                    valueToApplyLocally = Utils.getDefaultPrimitiveValueForTypes(internalObject.types);
+                    newState = BINDING_STATE_MISSING;
+                    stateChangeHandler = internalObject.bindOnMissing;
+                }
+
+                if (internalObject.bindingState != newState) {
+                    internalObject.bindingState = newState;
+
+                    if (stateChangeHandler) {
+                        let eventObject = { preventDefault: () => preventChange = true };
+                        let returnValue = stateChangeHandler.call(instance, classes, key, currentStoreValue, currentBindingStateIsInitial, dispatchEventToParent, eventObject);
+                        if (returnValue === false) {
+                            preventChange = true;
+                        }
+                    }
+                }
+
+                if (!preventChange) {
+                    externalObject[key] = valueToApplyLocally;
+                }
+            }
+
+            Object.defineProperty(instanceAttributesInterface, OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE, {
+                value: (attrName, storeValue) => {
+                    handleBindingChangeEventFromStore(instanceAttributes, instanceAttributesInterface, attrName, storeValue);
+                },
+            });
 
             // Must be before instanceDom initialisation as processClassDom uses instanceAttributes[attrName].nodes
             Object.keys(instanceAttributes).forEach(attrName => {
                 // Use set as one DOM attribute can refer to one attribute more than once
                 instanceAttributes[attrName].nodes = new NodeSet();
+
+                // Set up the binding if it has one
                 let bindingConfig = instanceAttributes[attrName].binding;
                 if (bindingConfig) {
                     instanceAttributes[attrName].bindingState = BINDING_STATE_INIT;
                     if (bindingConfig.isDynamic) {
-                        // TODO
+                        let propertyToPartMap = bindingConfig.propertyToPartMap;
+                        Object.keys(propertyToPartMap).forEach(k => {
+                            if (k != "attributes") {
+                                if (!dependentByBindings[k]) {
+                                    dependentByBindings[k] = {
+                                        attributes: new StringSet(),
+                                        properties: new StringSet(),
+                                    };
+                                }
+                                dependentByBindings[k].attributes.add(attrName);
+                            }
+                        });
+                        Object.keys(propertyToPartMap.attributes).forEach(k => {
+                            if (!dependentByBindings.attributes[k]) {
+                                dependentByBindings.attributes[k] = {
+                                    attributes: new StringSet(),
+                                    properties: new StringSet(),
+                                };
+                            }
+                            dependentByBindings.attributes[k].attributes.add(attrName);
+                        });
                     }
+                    propertiesToLoadBindingsAfterConstruction.attributes.add(attrName);
                 }
 
                 // Set up attributes interface object
@@ -750,16 +843,35 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
-                        Utils.DOM.writeValue('attribute', attrName, instanceAttributes[attrName].nodes, newVal);
-
-                        instanceAttributes[attrName].value = newVal;
-                        Utils.DOM.setData(instanceDom, attrName, newVal);
-
-                        if (initial) {
-                            instanceAttributes[attrName].initialised = true;
-                        }
-
                         if (initial || oldVal !== newVal) {
+                            // Write changes only if value changed
+                            Utils.DOM.writeValue('attribute', attrName, instanceAttributes[attrName].nodes, newVal);
+
+                            instanceAttributes[attrName].value = newVal;
+                            Utils.DOM.setData(instanceDom, attrName, newVal);
+
+                            if (initial) {
+                                instanceAttributes[attrName].initialised = true;
+                            } else {
+                                let dependentBindings = dependentByBindings.attributes[attrName];
+                                if (dependentBindings) {
+                                    dependentBindings.attributes.forEach(a => {
+                                        let internalObject = instanceAttributes[a].binding;
+                                        internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
+                                            internalObject.parts[idx] = newVal;
+                                        });
+                                        rebindDynamicBinding(undefined, a);
+                                    });
+                                    dependentBindings.properties.forEach(propName => {
+                                        let internalObject = instanceProperties[propName].binding;
+                                        internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
+                                            internalObject.parts[idx] = newVal;
+                                        });
+                                        rebindDynamicBinding(propName);
+                                    });
+                                }
+                            }
+
                             if (classAttributes[attrName].onchange) {
                                 classAttributes[attrName].onchange.call(instance, classes, attrName, newVal, initial, dispatchEventToParent);
                             }
@@ -960,6 +1072,11 @@ OOML.Namespace = function(namespace, settings) {
                     settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
                 },
             };
+            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE] = {
+                value: (propName, storeValue) => {
+                    handleBindingChangeEventFromStore(instanceProperties, instance, propName, storeValue);
+                },
+            };
             propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_DETACH] = {
                 value: () => {
                     if (!instanceIsAttachedTo) {
@@ -1050,6 +1167,36 @@ OOML.Namespace = function(namespace, settings) {
 
                 } else {
 
+                    // Set up the binding if it has one
+                    let bindingConfig = instanceProperties[prop].binding;
+                    if (bindingConfig) {
+                        instanceProperties[prop].bindingState = BINDING_STATE_INIT;
+                        if (bindingConfig.isDynamic) {
+                            let propertyToPartMap = bindingConfig.propertyToPartMap;
+                            Object.keys(propertyToPartMap).forEach(k => {
+                                if (k != "attributes") {
+                                    if (!dependentByBindings[k]) {
+                                        dependentByBindings[k] = {
+                                            attributes: new StringSet(),
+                                            properties: new StringSet(),
+                                        };
+                                    }
+                                    dependentByBindings[k].properties.add(prop);
+                                }
+                            });
+                            Object.keys(propertyToPartMap.attributes).forEach(k => {
+                                if (!dependentByBindings.attributes[k]) {
+                                    dependentByBindings.attributes[k] = {
+                                        attributes: new StringSet(),
+                                        properties: new StringSet(),
+                                    };
+                                }
+                                dependentByBindings.attributes[k].properties.add(prop);
+                            });
+                        }
+                        propertiesToLoadBindingsAfterConstruction.properties.add(prop);
+                    }
+
                     setter = newVal => {
                         if (newVal === undefined) {
                             throw new TypeError(`Undefined provided as property value for "${prop}"`);
@@ -1090,15 +1237,34 @@ OOML.Namespace = function(namespace, settings) {
                             }
                         }
 
-                        Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, newVal, customHtml);
-
-                        instanceProperties[prop].value = newVal;
-
-                        if (initial) {
-                            instanceProperties[prop].initialised = true;
-                        }
-
                         if (initial || oldVal !== newVal) {
+                            // Write changes only if value changed
+                            Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, newVal, customHtml);
+
+                            instanceProperties[prop].value = newVal;
+
+                            if (initial) {
+                                instanceProperties[prop].initialised = true;
+                            } else {
+                                let dependentBindings = dependentByBindings[prop];
+                                if (dependentBindings) {
+                                    dependentBindings.attributes.forEach(attrName => {
+                                        let internalObject = instanceAttributes[attrName].binding;
+                                        internalObject[prop].propertyToPartMap.forEach(idx => {
+                                            internalObject.parts[idx] = newVal;
+                                        });
+                                        rebindDynamicBinding(undefined, attrName);
+                                    });
+                                    dependentBindings.properties.forEach(propName => {
+                                        let internalObject = instanceProperties[propName].binding;
+                                        internalObject[prop].propertyToPartMap.forEach(idx => {
+                                            internalObject.parts[idx] = newVal;
+                                        });
+                                        rebindDynamicBinding(propName);
+                                    });
+                                }
+                            }
+
                             if (classProperties[prop].onchange) {
                                 classProperties[prop].onchange.call(instance, classes, prop, newVal, initial, dispatchEventToParent);
                             }
@@ -1194,16 +1360,8 @@ OOML.Namespace = function(namespace, settings) {
 
                     if (classElementProperties.has(propName)) {
                         instance[propName] = classProperties[propName].passthrough != undefined ? {} : null;
-                    } else if (!types || ~types.indexOf('null')) {
-                        instance[propName] = null;
-                    } else if (~types.indexOf('natural') || ~types.indexOf('integer') || ~types.indexOf('float') || ~types.indexOf('number')) {
-                        instance[propName] = 0;
-                    } else if (~types.indexOf('boolean')) {
-                        instance[propName] = false;
-                    } else if (~types.indexOf('string')) {
-                        instance[propName] = '';
                     } else {
-                        throw new Error(`Unknown type "${types}" for property "${propName}"`);
+                        instance[propName] = Utils.getDefaultPrimitiveValueForTypes(types);
                     }
                 }
             });
@@ -1223,6 +1381,14 @@ OOML.Namespace = function(namespace, settings) {
             if (builtConstructor) {
                 builtConstructor();
             }
+
+            propertiesToLoadBindingsAfterConstruction.attributes.forEach(attrName => {
+                setUpBinding(undefined, attrName);
+            });
+
+            propertiesToLoadBindingsAfterConstruction.properties.forEach(propName => {
+                setUpBinding(propName);
+            });
 
             // Update attribute nodes with parameter handlebars that have just been changed
             OOMLWriteChanges();
