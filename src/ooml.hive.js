@@ -11,7 +11,8 @@ let { hive, hiveBind, hiveUnbind } = (() => {
     let HiveObject = function(keypath, initialState) {
         // Internal only class, so don't need checks
         let _this = this;
-        _this[OOML_HIVE_PROPNAME_KEYPATH] = keypath;
+        // Don't add dot suffix if first keypath ("")
+        _this[OOML_HIVE_PROPNAME_KEYPATH_PREFIX] = keypath && `${keypath}.`;
         _this[OOML_HIVE_PROPNAME_INTERNALHIVE] = Utils.createCleanObject();
         Object.freeze(_this);
 
@@ -33,7 +34,7 @@ let { hive, hiveBind, hiveUnbind } = (() => {
 
         let _this = this;
         let internalHive = _this[OOML_HIVE_PROPNAME_INTERNALHIVE];
-        let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH] + "." + key;
+        let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH_PREFIX] + key;
         let currentValue = internalHive[key];
 
         let newValueIsObjectLiteral = Utils.isObjectLiteral(value);
@@ -73,7 +74,7 @@ let { hive, hiveBind, hiveUnbind } = (() => {
 
         let _this = this;
         let internalHive = _this[OOML_HIVE_PROPNAME_INTERNALHIVE];
-        let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH] + "." + key;
+        let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH_PREFIX] + key;
 
         let value = internalHive[key];
         delete internalHive[key];
@@ -171,8 +172,6 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         if (!Utils.typeOf(keypath, TYPEOF_STRING) || !(splitKeypath = keypath.split(".")).every(k => isValidKey(k))) {
             throw new SyntaxError(`Invalid keypath "${keypath}"`);
         }
-
-        keypath = `.${keypath}`; // Because keypath is chained with dot and initial keypath is empty string
 
         let bindingId = bindings.length;
         bindings[bindingId] = keypath; // This works beautifully

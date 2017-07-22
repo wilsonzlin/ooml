@@ -61,7 +61,7 @@ var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
     OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners',
 
     OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive',
-    OOML_HIVE_PROPNAME_KEYPATH = '__oomlHiveKeypath',
+    OOML_HIVE_PROPNAME_KEYPATH_PREFIX = '__oomlHiveKeypath',
 
     OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace',
     OOML_DOM_PROPNAME_ISCUSTOMHTML = '__oomlIsCustomHtml',
