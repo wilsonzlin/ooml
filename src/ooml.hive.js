@@ -36,23 +36,33 @@ let { hive, hiveBind, hiveUnbind } = (() => {
         let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH] + "." + key;
         let currentValue = internalHive[key];
 
-        if (currentValue instanceof HiveObject || currentValue instanceof HiveArray) {
+        let newValueIsObjectLiteral = Utils.isObjectLiteral(value);
+        let newValueIsArray = Array.isArray(value);
+
+        // If new value is object/array, need to delete current value,
+        // because primitive -> object/array is basically primitive -> undefined
+        // as you can't bind to objects/arrays
+        if (currentValue instanceof HiveObject || currentValue instanceof HiveArray ||
+            newValueIsObjectLiteral || newValueIsArray) {
             _this.delete(key);
         }
 
-        if (Utils.isObjectLiteral(value)) {
+        if (newValueIsObjectLiteral) {
             internalHive[key] = new HiveObject(propertyKeypath, value);
-        } else if (Array.isArray(value)) {
+        } else if (newValueIsArray) {
             internalHive[key] = new HiveArray(propertyKeypath)
         } else if (Utils.isPrimitiveValue(value)) {
-            internalHive[key] = value;
-            let bindings = bindingsByKeypath[propertyKeypath];
-            if (bindings) {
-                bindings.forEach(binding => {
-                    let {object, property} = binding;
-                    // This will handle assigning the value, so that the handler can optionally prevent it from happening
-                    object[OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE](property, value);
-                });
+            if (currentValue !== value) {
+                // Only update if necessary
+                internalHive[key] = value;
+                let bindings = bindingsByKeypath[propertyKeypath];
+                if (bindings) {
+                    bindings.forEach(binding => {
+                        let {object, property} = binding;
+                        // This will handle assigning the value, so that the handler can optionally prevent it from happening
+                        object[OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE](property, value);
+                    });
+                }
             }
         } else {
             throw new TypeError(`Invalid hive value for key "${propertyKeypath}"`);
