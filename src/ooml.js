@@ -34,9 +34,7 @@ let OOMLNodesWithUnwrittenChanges = new NodeSet(),
             return;
         }
 
-        if (OOMLWriteChangesSetTimeout) {
-            clearTimeout(OOMLWriteChangesSetTimeout);
-        }
+        clearTimeout(OOMLWriteChangesSetTimeout);
 
         OOMLWriteChangesSetTimeout = setTimeout(() => {
             OOMLNodesWithUnwrittenChanges.forEach(attr => {
@@ -65,6 +63,8 @@ let OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners';
 
 let OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive';
 let OOML_HIVE_PROPNAME_KEYPATH_PREFIX = '__oomlHiveKeypath';
+let OOML_HIVE_PROPNAME_BINDINGS = '__oomlHiveBindings';
+let OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH = '__oomlHiveBindingsByKeypath';
 
 let OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace';
 let OOML_DOM_PROPNAME_ISCUSTOMHTML = '__oomlIsCustomHtml';

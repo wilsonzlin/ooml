@@ -1,4 +1,4 @@
-let { hive, hiveBind, hiveUnbind } = (() => {
+let hive = (() => {
     let reservedKeys = new StringSet(["get", "set", "delete"]);
 
     let isValidKey = key => Utils.typeOf(key, TYPEOF_STRING) && key.length > 0 && !/^__/.test(key) && key.indexOf('.') == -1 && OOMLReservedPropertyNames.indexOf(key) == -1 && !reservedKeys.has(key);
@@ -161,12 +161,18 @@ let { hive, hiveBind, hiveUnbind } = (() => {
 
     };
 
-    let hive = new HiveObject("");
+    let Hive = function() {
+        this.hive = new HiveObject("");
+        this[OOML_HIVE_PROPNAME_BINDINGS] = [];
+        this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH] = Utils.createCleanObject();
+        Object.freeze(this);
+    };
+    let HiveProto = Hive.prototype;
+    HiveProto.bind = function(keypath, object, property) {
+        let bindings = this[OOML_HIVE_PROPNAME_BINDINGS];
+        let bindingsByKeypath = this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH];
+        let hive = this.hive;
 
-    let bindingsByKeypath = Utils.createCleanObject();
-    let bindings = [];
-
-    let hiveBind = function(keypath, object, property) {
         let splitKeypath;
 
         if (!Utils.typeOf(keypath, TYPEOF_STRING) || !(splitKeypath = keypath.split(".")).every(k => isValidKey(k))) {
@@ -189,12 +195,15 @@ let { hive, hiveBind, hiveUnbind } = (() => {
 
         return bindingId;
     };
-    let hiveUnbind = function(bindingId) {
+    HiveProto.unbind = function(bindingId) {
+        let bindings = this[OOML_HIVE_PROPNAME_BINDINGS];
+        let bindingsByKeypath = this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH];
+
         let bindingKeypath = bindings[bindingId];
         delete bindings[bindingId];
         delete bindingsByKeypath[bindingKeypath][bindingId];
     };
 
-    return { hive, hiveBind, hiveUnbind };
+    return new Hive();
 })();
 OOML.hive = hive;

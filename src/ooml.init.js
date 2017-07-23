@@ -710,10 +710,10 @@ OOML.Namespace = function(namespace, settings) {
                 }
 
                 if (currentBindingId != undefined) {
-                    hiveUnbind(currentBindingId);
+                    hive.unbind(currentBindingId);
                 }
 
-                internalObject.bindingId = hiveBind(internalObject.binding.keypath, property ? instance : instance.attributes, propOrAttrName);
+                internalObject.bindingId = hive.bind(internalObject.binding.keypath, property ? instance : instance.attributes, propOrAttrName);
             }
             function rebindDynamicBinding(property, attribute) {
                 let propOrAttrName = property || attribute;
