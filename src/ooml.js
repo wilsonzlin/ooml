@@ -1,29 +1,32 @@
-var TYPEOF_FUNCTION = 'function';
-var TYPEOF_OBJECT = 'object';
-var TYPEOF_STRING = 'string';
-var TYPEOF_BOOLEAN = 'boolean';
-var TYPEOF_NUMBER = 'number';
-
-var BINDING_STATE_INIT = 1;
-var BINDING_STATE_EXISTS = 2;
-var BINDING_STATE_MISSING = 3;
+let TYPEOF_FUNCTION = 'function';
+let TYPEOF_OBJECT = 'object';
+let TYPEOF_STRING = 'string';
+let TYPEOF_BOOLEAN = 'boolean';
+let TYPEOF_NUMBER = 'number';
 
 <ZC-IMPORT[utils]>
 
-var OOMLCompatSymbolExists = !!window.Symbol;
-var OOMLCompatSetExists = !!window.Set;
-var OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
-var OOMLCompatDatasetExists = !!document.createElement('div').dataset;
+let BINDING_STATE_INIT = 1;
+let BINDING_STATE_EXISTS = 2;
+let BINDING_STATE_MISSING = 3;
 
+let OOMLCompatSymbolExists = !!window.Symbol;
+let OOMLCompatSetExists = !!window.Set;
+let OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
+let OOMLCompatDatasetExists = !!document.createElement('div').dataset;
+
+
+let NodeSet;
+let StringSet;
 if (!OOMLCompatSetExists) {
     <ZC-IMPORT[NodeSet]>
     <ZC-IMPORT[StringSet]>
 } else {
-    var NodeSet = Set;
-    var StringSet = Set;
+    NodeSet = Set;
+    StringSet = Set;
 }
 
-var OOMLNodesWithUnwrittenChanges = new NodeSet(),
+let OOMLNodesWithUnwrittenChanges = new NodeSet(),
     OOMLWriteChangesSetTimeout,
     OOMLWriteChanges = function() {
 
@@ -46,43 +49,43 @@ var OOMLNodesWithUnwrittenChanges = new NodeSet(),
     };
 
 // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
-var OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes'];
+let OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes'];
 // NOTE: Obviously list not complete, but hopefully the rest should be obvious...
-var OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'class'];
+let OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'class'];
 
-var OOMLPrimitiveTypes = ['null', 'number', 'boolean', 'string'];
-var OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
-var OOMLPropertyTypes = Utils.concat(OOMLPrimitiveTypes, OOMLPropertyNumberTypes).slice(0, -1); // Remove duplicate entry "number"
-var OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['Object', 'Array', 'function']);
+let OOMLPrimitiveTypes = ['null', 'number', 'boolean', 'string'];
+let OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
+let OOMLPropertyTypes = Utils.concat(OOMLPrimitiveTypes, OOMLPropertyNumberTypes).slice(0, -1); // Remove duplicate entry "number"
+let OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['Object', 'Array', 'function']);
 
-var OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray',
-    OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor',
-    OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem',
-    OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners',
+let OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray';
+let OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor';
+let OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem';
+let OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners';
 
-    OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive',
-    OOML_HIVE_PROPNAME_KEYPATH_PREFIX = '__oomlHiveKeypath',
+let OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive';
+let OOML_HIVE_PROPNAME_KEYPATH_PREFIX = '__oomlHiveKeypath';
 
-    OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace',
-    OOML_DOM_PROPNAME_ISCUSTOMHTML = '__oomlIsCustomHtml',
+let OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace';
+let OOML_DOM_PROPNAME_ISCUSTOMHTML = '__oomlIsCustomHtml';
 
-    OOML_INSTANCE_PROPNAME_DOMELEM = '__oomlDomElem',
-    OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach',
-    OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach',
-    OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch',
-    OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE = '__oomlBindingOnStateChange',
+let OOML_INSTANCE_PROPNAME_DOMELEM = '__oomlDomElem';
+let OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach';
+let OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach';
+let OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch';
+let OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE = '__oomlBindingOnStateChange';
 
-    OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties',
-    OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties',
-    OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes',
-    OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties',
-    OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor',
-    OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint',
-    OOML_CLASS_PROPNAME_ROOTELEMTAGNAME = '__oomlRootElemTagName';
+let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
+let OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties';
+let OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes';
+let OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties';
+let OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
+let OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint';
+let OOML_CLASS_PROPNAME_ROOTELEMTAGNAME = '__oomlRootElemTagName';
 
-var OOML = {};
+let OOML = {};
 
-var OOMLGlobalImports = Utils.createCleanObject();
+let OOMLGlobalImports = Utils.createCleanObject();
 OOML.import = function() {
     if (arguments.length == 2) {
         var importName = arguments[0];

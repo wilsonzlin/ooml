@@ -7,7 +7,7 @@ OOMLElementProto.toObject = function() {
     let instance = this;
     let obj = Utils.createCleanObject();
 
-    let klass = this.constructor;
+    let klass = instance.constructor;
 
     klass[OOML_CLASS_PROPNAME_PROPNAMES].forEach((propName) => {
         if (klass[OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES].has(propName)) {

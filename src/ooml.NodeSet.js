@@ -1,9 +1,9 @@
-var NODESET_NODE_PROPNAME_NODEID_PREFIX = '__nodeSetId';
-var NODESET_PROPNAME_NODESETID = '__nodeSetId';
-var NODESET_PROPNAME_AUTOINCREMENT = '__nodeSetAutoIncrement';
-var NODESET_PROPNAME_INTERNALARRAY = '__nodeSetInternalArray';
-var NodeSetCount = 0; // Start from zero so falsey checks won't false positive
-var NodeSet = function() {
+let NODESET_NODE_PROPNAME_NODEID_PREFIX = '__nodeSetId';
+let NODESET_PROPNAME_NODESETID = '__nodeSetId';
+let NODESET_PROPNAME_AUTOINCREMENT = '__nodeSetAutoIncrement';
+let NODESET_PROPNAME_INTERNALARRAY = '__nodeSetInternalArray';
+let NodeSetCount = 0; // Start from zero so falsey checks won't false positive
+NodeSet = function() {
     var _this = this;
 
     _this[NODESET_PROPNAME_NODESETID] = ++NodeSetCount;
@@ -14,7 +14,7 @@ var NodeSet = function() {
         get: () => _this[NODESET_PROPNAME_INTERNALARRAY].length,
     });
 };
-var NodeSetProto = NodeSet.prototype;
+let NodeSetProto = NodeSet.prototype;
 NodeSetProto.add = function(node) {
     var nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
     if (!node[nodeIdPropName]) {
