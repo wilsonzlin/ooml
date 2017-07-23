@@ -4,7 +4,7 @@ let NODESET_PROPNAME_AUTOINCREMENT = '__nodeSetAutoIncrement';
 let NODESET_PROPNAME_INTERNALARRAY = '__nodeSetInternalArray';
 let NodeSetCount = 0; // Start from zero so falsey checks won't false positive
 NodeSet = function() {
-    var _this = this;
+    let _this = this;
 
     _this[NODESET_PROPNAME_NODESETID] = ++NodeSetCount;
     _this[NODESET_PROPNAME_AUTOINCREMENT] = 0; // Start from zero so falsey checks won't false positive
@@ -16,15 +16,15 @@ NodeSet = function() {
 };
 let NodeSetProto = NodeSet.prototype;
 NodeSetProto.add = function(node) {
-    var nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
+    let nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
     if (!node[nodeIdPropName]) {
-        var nodeId = node[nodeIdPropName] = ++this[NODESET_PROPNAME_AUTOINCREMENT];
+        let nodeId = node[nodeIdPropName] = ++this[NODESET_PROPNAME_AUTOINCREMENT];
         this[NODESET_PROPNAME_INTERNALARRAY][nodeId] = node;
     }
     return this;
 };
 NodeSetProto.clear = function() {
-    var nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
+    let nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
     this[NODESET_PROPNAME_INTERNALARRAY].forEach((node) => {
         delete node[nodeIdPropName];
     });
@@ -32,8 +32,8 @@ NodeSetProto.clear = function() {
     this[NODESET_PROPNAME_AUTOINCREMENT] = 0;
 };
 NodeSetProto.delete = function(node) {
-    var nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
-    var nodeId = node[nodeIdPropName];
+    let nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
+    let nodeId = node[nodeIdPropName];
     if (nodeId) {
         delete this[NODESET_PROPNAME_INTERNALARRAY][nodeId];
         delete node[nodeIdPropName];
@@ -42,13 +42,13 @@ NodeSetProto.delete = function(node) {
     return false;
 };
 NodeSetProto.forEach = function(callback, thisArg) {
-    var _this = this;
+    let _this = this;
     this[NODESET_PROPNAME_INTERNALARRAY].forEach((node, index) => {
         callback.call(thisArg, node, index, _this);
     });
 };
 NodeSetProto.has = function(node) {
-    var nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
+    let nodeIdPropName = NODESET_NODE_PROPNAME_NODEID_PREFIX + this[NODESET_PROPNAME_NODESETID];
     return !!node[nodeIdPropName];
 };
 NodeSetProto.values = function() {

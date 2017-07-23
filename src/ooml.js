@@ -88,8 +88,8 @@ let OOML = {};
 let OOMLGlobalImports = Utils.createCleanObject();
 OOML.import = function() {
     if (arguments.length == 2) {
-        var importName = arguments[0];
-        var importClass = arguments[1];
+        let importName = arguments[0];
+        let importClass = arguments[1];
         if (!Utils.typeOf(importName, TYPEOF_STRING)) {
             throw new TypeError(`Invalid import name`);
         }
@@ -101,13 +101,13 @@ OOML.import = function() {
         }
         OOMLGlobalImports[importName] = importClass;
     } else {
-        for (var i = 0; i < arguments.length; i++) {
-            var argobj = arguments[i];
+        for (let i = 0; i < arguments.length; i++) {
+            let argobj = arguments[i];
             if (!Utils.isObjectLiteral(argobj)) {
                 throw new TypeError(`Invalid import definition`);
             }
             Object.keys(argobj).forEach(importName => {
-                var importClass = argobj[importName];
+                let importClass = argobj[importName];
                 OOML.import(importName, importClass);
             });
         }

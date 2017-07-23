@@ -1,7 +1,7 @@
 let STRINGSET_PROPNAME_INTERNALARRAY = '__stringSetInternalArray';
 let STRINGSET_PROPNAME_INTERNALOBJECT = '__stringSetInternalObject';
 StringSet = function(initialValues) {
-    var _this = this;
+    let _this = this;
 
     _this[STRINGSET_PROPNAME_INTERNALARRAY] = [];
     _this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils.createCleanObject();
@@ -17,7 +17,7 @@ StringSet = function(initialValues) {
 let StringSetProto = StringSet.prototype;
 StringSetProto.add = function(str) {
     if (this[STRINGSET_PROPNAME_INTERNALOBJECT][str] == undefined) {
-        var newValueIndex = this[STRINGSET_PROPNAME_INTERNALARRAY].push(str) - 1;
+        let newValueIndex = this[STRINGSET_PROPNAME_INTERNALARRAY].push(str) - 1;
         this[STRINGSET_PROPNAME_INTERNALOBJECT][str] = newValueIndex;
     }
     return this;
@@ -28,7 +28,7 @@ StringSetProto.clear = function() {
 };
 StringSetProto.delete = function(str) {
     if (this[STRINGSET_PROPNAME_INTERNALOBJECT][str] != undefined) {
-        var strIndex = this[STRINGSET_PROPNAME_INTERNALOBJECT][str];
+        let strIndex = this[STRINGSET_PROPNAME_INTERNALOBJECT][str];
         this[STRINGSET_PROPNAME_INTERNALARRAY].splice(strIndex, 1);
         delete this[STRINGSET_PROPNAME_INTERNALOBJECT][str];
         return true;
@@ -36,7 +36,7 @@ StringSetProto.delete = function(str) {
     return false;
 };
 StringSetProto.forEach = function(callback, thisArg) {
-    var _this = this;
+    let _this = this;
     this[STRINGSET_PROPNAME_INTERNALARRAY].forEach((str, index) => {
         callback.call(thisArg, str, index, _this);
     });

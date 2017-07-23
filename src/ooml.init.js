@@ -148,18 +148,18 @@ OOML.Namespace = function(namespace, settings) {
         }
 
         // Used for applying default values on construction and extending a child class's predefined properties
-        var classPredefinedProperties = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties));
+        let classPredefinedProperties = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties));
 
         // Will be frozen later
-        var classProperties = Utils.clone(classPredefinedProperties);
+        let classProperties = Utils.clone(classPredefinedProperties);
 
         // Just for quick reference, nothing more
-        var classArrayProperties = new StringSet();
-        var classElementProperties = new StringSet();
-        var classSubstitutionDefaultValues = Utils.createCleanObject();
+        let classArrayProperties = new StringSet();
+        let classElementProperties = new StringSet();
+        let classSubstitutionDefaultValues = Utils.createCleanObject();
 
         // For .toObject
-        var classSuppressedProperties = new StringSet();
+        let classSuppressedProperties = new StringSet();
 
         Object.keys(classProperties).forEach(propName => {
             if (classProperties[propName].suppressed) {
@@ -167,11 +167,11 @@ OOML.Namespace = function(namespace, settings) {
             }
         });
 
-        var classAttributes = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDATTRS]) || Utils.createCleanObject(), classMetadata.attributes));
+        let classAttributes = Utils.deepFreeze(Utils.concat(Utils.clone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDATTRS]) || Utils.createCleanObject(), classMetadata.attributes));
 
-        var classMethods = classMetadata.methods;
+        let classMethods = classMetadata.methods;
 
-        var classConstructor = classMetadata.constructor;
+        let classConstructor = classMetadata.constructor;
 
         function parseClassDomTextSubstitution(code) {
             let regexpMatches = /^(?: ((?:(?:[a-zA-Z.]+)\|)*[a-zA-Z.]+))? (@)?this\.(attributes\.)?(.+?) $/.exec(code);
@@ -251,9 +251,9 @@ OOML.Namespace = function(namespace, settings) {
             };
         }
 
-        var classHasExtensionPoint;
+        let classHasExtensionPoint;
 
-        var classRawDom = classMetadata.rootElem;
+        let classRawDom = classMetadata.rootElem;
         if (classExtends[OOML_CLASS_PROPNAME_EXTENSIONPOINT]) {
             let parentClassRawDom = classExtends[OOML_CLASS_PROPNAME_EXTENSIONPOINT];
             let _extendedRawDom = parentClassRawDom.cloneNode(true);
@@ -265,7 +265,7 @@ OOML.Namespace = function(namespace, settings) {
             classRawDom = _extendedRawDom;
         }
 
-        var classRootElem = (function parseClassDom(current) {
+        let classRootElem = (function parseClassDom(current) {
 
             let ret;
 
@@ -623,7 +623,7 @@ OOML.Namespace = function(namespace, settings) {
         })(classRawDom);
 
         Utils.deepFreeze(classProperties);
-        var classPropertyNames = Object.freeze(Object.keys(classProperties));
+        let classPropertyNames = Object.freeze(Object.keys(classProperties));
 
         classes[className] = function(initState) {
             let instance = this;
