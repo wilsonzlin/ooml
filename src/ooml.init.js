@@ -762,7 +762,7 @@ OOML.Namespace = function(namespace, settings) {
                 }
             }
 
-            Object.defineProperty(instanceAttributesInterface, OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE, {
+            Object.defineProperty(instanceAttributesInterface, OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE, {
                 value: (attrName, storeValue) => {
                     handleBindingChangeEventFromStore(instanceAttributes[attrName], instanceAttributesInterface, attrName, storeValue);
                 },
@@ -1072,7 +1072,7 @@ OOML.Namespace = function(namespace, settings) {
                     settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
                 },
             };
-            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE] = {
+            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE] = {
                 value: (propName, storeValue) => {
                     handleBindingChangeEventFromStore(instanceProperties[propName], instance, propName, storeValue);
                 },

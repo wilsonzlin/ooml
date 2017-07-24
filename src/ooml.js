@@ -62,9 +62,15 @@ let OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem';
 let OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners';
 
 let OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive';
+let OOML_HIVE_PROPNAME_INTERNALARRAY = '__oomlHiveInternalArray';
+let OOML_HIVE_PROPNAME_SUBSCRIPTIONS = '__oomlHiveSubscriptions';
+let OOML_HIVE_PROPNAME_SUBSCRIBE = '__oomlHiveSubscribe';
 let OOML_HIVE_PROPNAME_KEYPATH_PREFIX = '__oomlHiveKeypath';
 let OOML_HIVE_PROPNAME_BINDINGS = '__oomlHiveBindings';
 let OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH = '__oomlHiveBindingsByKeypath';
+
+let OOML_HIVESUBSCRIBER_PROPNAME_RECEIVE = '__oomlHiveSubscriberReceive';
+let OOML_HIVESUBSCRIBER_PROPNAME_HANDLERS = '__oomlHiveSubscriberHandlers';
 
 let OOML_DOM_PROPNAME_ISNAMESPACE = '__oomlIsNamespace';
 let OOML_DOM_PROPNAME_ISCUSTOMHTML = '__oomlIsCustomHtml';
@@ -73,7 +79,7 @@ let OOML_INSTANCE_PROPNAME_DOMELEM = '__oomlDomElem';
 let OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach';
 let OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach';
 let OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch';
-let OOML_INSTANCE_PROPNAME_BINDING_ON_STATE_CHANGE = '__oomlBindingOnStateChange';
+let OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE = '__oomlBindingOnStateChange';
 
 let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
 let OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties';

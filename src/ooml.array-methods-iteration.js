@@ -1,7 +1,7 @@
 /*
     ITERATION
 */
-['every', 'filter', 'find', 'findIndex', 'forEach', 'map', 'reduce', 'reduceRight', 'some'].forEach(function(method) {
+['every', 'filter', 'find', 'findIndex', 'forEach', 'map', 'reduce', 'reduceRight', 'some'].forEach(method => {
     OOMLArrayProto[method] = function() {
         return Array.prototype[method].apply(this[OOML_ARRAY_PROPNAME_INTERNALARRAY], arguments);
     };
