@@ -627,7 +627,7 @@ OOML.Namespace = function(namespace, settings) {
 
         classes[className] = function(initState) {
             let instance = this;
-            let instanceIsAttachedTo;
+            let instanceIsAttachedTo = {};
 
             if (!(instance instanceof classes[className])) {
                 throw new ReferenceError(`OOML instances need to be constructed`);
@@ -681,7 +681,7 @@ OOML.Namespace = function(namespace, settings) {
                     });
                 }
 
-                if (!prevented && instanceIsAttachedTo) {
+                if (!prevented && instanceIsAttachedTo.parent) {
                     instanceIsAttachedTo.parent[OOML_INSTANCE_PROPNAME_DISPATCH](instanceIsAttachedTo.property, eventName, eventData);
                 }
 
@@ -1007,85 +1007,12 @@ OOML.Namespace = function(namespace, settings) {
                 },
                 get: () => instanceAttributesInterface,
             };
-            propertiesGetterSetterFuncs.on = {
-                value: Object.freeze(Utils.concat.apply(undefined, Object.keys(instanceEventHandlers).map(eventType => {
-                    let ret = Utils.createCleanObject();
-                    ret[eventType] = (eventName, handler) => {
-                        if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
-                            throw new TypeError(`The handler for the event "${ eventName }" of type "${ eventType }" is not a function`);
-                        }
-
-                        if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-                            throw new TypeError(`Event name is not a string`);
-                        }
-
-                        eventName = eventName.toLocaleLowerCase();
-
-                        if (!instanceEventHandlers[eventType][eventName]) {
-                            instanceEventHandlers[eventType][eventName] = [];
-                        }
-                        instanceEventHandlers[eventType][eventName].push(handler);
-                        return instance;
-                    };
-                    return ret;
-                }))),
-            };
-            propertiesGetterSetterFuncs.detach = {
-                value: () => {
-                    if (!instanceIsAttachedTo) {
-                        throw new ReferenceError(`This instance is not in use`);
-                    }
-
-                    let parent = instanceIsAttachedTo.parent;
-
-                    if (parent instanceof OOML.Array) {
-                        let indexOfThis = parent.indexOf(instance);
-                        if (indexOfThis < 0) {
-                            throw new Error(`This instance could not be found on its parent array`);
-                        }
-                        // This will call __oomlDetach
-                        parent.splice(indexOfThis, 1);
-                    } else if (parent instanceof OOML.Element) {
-                        // This will call __oomlDetach
-                        parent[instanceIsAttachedTo.property] = null;
-                    } else {
-                        throw new Error(`Unrecognised parent`);
-                    }
-
-                    return instance;
-                },
-            };
             propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_DOMELEM] = {
                 value: instanceDom,
-            };
-            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_ATTACH] = {
-                value: settings => {
-                    if (instanceIsAttachedTo) {
-                        throw new ReferenceError(`This instance is already in use`);
-                    }
-
-                    instanceIsAttachedTo = {
-                        parent: settings.parent,
-                        property: settings.property,
-                    };
-
-                    settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
-                },
             };
             propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE] = {
                 value: (propName, storeValue) => {
                     handleBindingChangeEventFromStore(instanceProperties[propName], instance, propName, storeValue);
-                },
-            };
-            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_DETACH] = {
-                value: () => {
-                    if (!instanceIsAttachedTo) {
-                        throw new Error(`This instance is not in use`);
-                    }
-
-                    instanceIsAttachedTo = undefined;
-
-                    instanceDom.parentNode.removeChild(instanceDom);
                 },
             };
             propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_DISPATCH] = {
@@ -1095,6 +1022,13 @@ OOML.Namespace = function(namespace, settings) {
                     }
                 },
             };
+            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH] = {
+                value: instanceEventHandlers.dispatch,
+            };
+            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION] = {
+                value: instanceEventHandlers.mutation,
+            };
+            instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT] = instanceIsAttachedTo;
 
             classPropertyNames.forEach(prop => {
 

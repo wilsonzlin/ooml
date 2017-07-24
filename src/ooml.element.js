@@ -1,7 +1,105 @@
 OOML.Element = function() {
     throw new TypeError(`OOML.Element is an abstract class`);
 };
+
 let OOMLElementProto = OOML.Element.prototype;
+
+OOMLElementProto.ondispatch = function(eventName, handler) {
+    if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
+        throw new TypeError(`The handler for the dispatch event "${ eventName }" is not a function`);
+    }
+
+    if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
+        throw new TypeError(`Event name is not a string`);
+    }
+
+    eventName = eventName.toLocaleLowerCase();
+
+    let instanceEventHandlers = this[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH];
+
+    if (!instanceEventHandlers[eventName]) {
+        instanceEventHandlers[eventName] = [];
+    }
+    instanceEventHandlers[eventName].push(handler);
+    return this;
+};
+OOMLElementProto.onmutation = function(eventName, handler) {
+    if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
+        throw new TypeError(`The handler for the mutation event "${ eventName }" is not a function`);
+    }
+
+    if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
+        throw new TypeError(`Event name is not a string`);
+    }
+
+    eventName = eventName.toLocaleLowerCase();
+
+    let instanceEventHandlers = this[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION];
+
+    if (!instanceEventHandlers[eventName]) {
+        instanceEventHandlers[eventName] = [];
+    }
+    instanceEventHandlers[eventName].push(handler);
+    return this;
+};
+OOMLElementProto.detach = function() {
+    let instance = this;
+
+    let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
+
+    if (!instanceIsAttachedTo.parent) {
+        throw new ReferenceError(`This instance is not in use`);
+    }
+
+    let parent = instanceIsAttachedTo.parent;
+
+    if (parent instanceof OOML.Array) {
+        let indexOfThis = parent.indexOf(instance);
+        if (indexOfThis < 0) {
+            throw new Error(`This instance could not be found on its parent array`);
+        }
+        // This will call __oomlDetach
+        parent.splice(indexOfThis, 1);
+    } else if (parent instanceof OOML.Element) {
+        // This will call __oomlDetach
+        parent[instanceIsAttachedTo.property] = null;
+    } else {
+        throw new Error(`Unrecognised parent`);
+    }
+
+    return instance;
+};
+OOMLElementProto[OOML_INSTANCE_PROPNAME_ATTACH] = function(settings) {
+    let instance = this;
+    let instanceDom = instance[OOML_INSTANCE_PROPNAME_DOMELEM];
+    let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
+
+    if (instanceIsAttachedTo.parent) {
+        throw new ReferenceError(`This instance is already in use`);
+    }
+
+    instanceIsAttachedTo.parent = settings.parent;
+    instanceIsAttachedTo.property = settings.property;
+
+    settings.insertAfter.parentNode.insertBefore(instanceDom, settings.insertAfter.nextSibling);
+};
+OOMLElementProto[OOML_INSTANCE_PROPNAME_DETACH] = function() {
+    let instance = this;
+    let instanceDom = instance[OOML_INSTANCE_PROPNAME_DOMELEM];
+    let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
+
+    if (!instanceIsAttachedTo.parent) {
+        throw new Error(`This instance is not in use`);
+    }
+
+    instanceIsAttachedTo.parent = undefined;
+
+    instanceDom.parentNode.removeChild(instanceDom);
+};
+
+
+
+
 OOMLElementProto.toObject = function() {
 
     let instance = this;
