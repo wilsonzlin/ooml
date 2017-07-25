@@ -24,7 +24,7 @@ Don't mistake ooml's simplicity for lack of features. Check out [ooml's guides](
 
 Let's create a to-do list app. No long instructions, just quickly scan through the single and only HTML file needed ([view it live in your browser](https://wilsonl.in/ooml/examples/to-do-list-1.html)):
 
-**Note that this page doesn't render anything; the point is to show the syntax and make you manually manipulate the object to see how easy it is to use ooml.**
+**Note that this page doesn't render anything initially; the point is to show you the syntax and make you manually manipulate the object to see how easy it is to use ooml.**
 
 **Check out the JS snippet immediately after this HTML block.**
 
@@ -112,18 +112,28 @@ Let's create a to-do list app. No long instructions, just quickly scan through t
 ```
 
 ```javascript
-// Try these in your console
+// Try these in your console and notice the similarity to plain JavaScript syntax
+
 app.list = { name: "My to-do list" };
+
 app.list.items.push({ label: "First item" });
+
 app.list.items.push(new namespace.classes.Item({ label: "Second item" }));
+
 app.list.items.sort("label");
+
 let firstItem = app.list.items.shift();
+
 firstItem.label = "No. 1";
+
 app.list.items.unshift(firstItem);
+
 app.list.items.get(0).label = "1st item";
 ```
 
-Open up your console, use the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays and more objects, which makes it extremely easy to traverse, manipulate and serialise at any level. Every object and array is self-contained, so it's really easy to encapsulate, isolate, and pass around parts of your app, just like regular objects and arrays. Know how to use object and array literals? Congratulations, you can now make web apps.
+Open up your console, tinker with the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays and more objects, which makes it extremely easy to traverse, manipulate, and serialise at any level.
+
+Every object and array is self-contained, so it's really easy to encapsulate, isolate, and pass around parts of your app, just like regular objects and arrays.
 
 Now, lets quickly add some controls so the user can actually modify and save the list. As a bonus, we'll enable Markdown input, to show just how easy it is to use HTML and external libraries in ooml ([view it live in your browser](https://wilsonl.in/ooml/examples/to-do-list-2.html)):
 
