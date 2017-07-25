@@ -17,6 +17,10 @@ As an example, compared to React + Redux, [ooml's raw performance is 2-3x better
 ### Have it your way
 ooml has a global store, message broker, and event system. Additionally, take advantage of abstract classes, union type checking, inheritance, constructors, advanced methods syntax, getters, setters and change listeners, mutation observers, serialisers and unserialisers, and so much more, to create your perfect app or library, your way. And because of the way it's designed, you can already use almost every existing web library out there.
 
+### Safety
+
+TODO
+
 ### So much more
 Don't mistake ooml's simplicity for lack of features. Check out [ooml's guides](https://wilsonl.in/docs/ooml) to see the all the neat stuff about ooml.
 

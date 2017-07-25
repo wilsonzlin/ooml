@@ -545,6 +545,7 @@ let Utils = {
 
                     let realFunc = Function.apply(undefined, Utils.concat(argNames, ['self', 'parent', `"use strict";${ methodMetadata.body }`]));
 
+                    // TODO DESTROY!!!
                     let wrapperFunc = function self() {
                         // See https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
                         // If arguments is length 1, manually construct, as Array constructor will interpret as length, not value

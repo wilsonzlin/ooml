@@ -26,25 +26,25 @@ if (!OOMLCompatSetExists) {
     StringSet = Set;
 }
 
-let OOMLNodesWithUnwrittenChanges = new NodeSet(),
-    OOMLWriteChangesSetTimeout,
-    OOMLWriteChanges = function() {
+let OOMLNodesWithUnwrittenChanges = new NodeSet();
+let OOMLWriteChangesSetTimeout;
+let OOMLWriteChanges = function() {
 
-        if (!OOMLNodesWithUnwrittenChanges.size) {
-            return;
-        }
+    if (!OOMLNodesWithUnwrittenChanges.size) {
+        return;
+    }
 
-        clearTimeout(OOMLWriteChangesSetTimeout);
+    clearTimeout(OOMLWriteChangesSetTimeout);
 
-        OOMLWriteChangesSetTimeout = setTimeout(() => {
-            OOMLNodesWithUnwrittenChanges.forEach(attr => {
-                attr.ownerElement.setAttribute(attr.name, attr.valueFormat.join(''));
-            });
+    OOMLWriteChangesSetTimeout = setTimeout(() => {
+        OOMLNodesWithUnwrittenChanges.forEach(attr => {
+            attr.ownerElement.setAttribute(attr.name, attr.valueFormat.join(''));
+        });
 
-            OOMLNodesWithUnwrittenChanges.clear();
-        }, 50);
+        OOMLNodesWithUnwrittenChanges.clear();
+    }, 50);
 
-    };
+};
 
 // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
 let OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes'];
@@ -83,6 +83,9 @@ let OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch';
 let OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE = '__oomlBindingOnStateChange';
 let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH = '__oomlEventHandlersDispatch';
 let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION = '__oomlEventHandlersMutation';
+let OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT = '__oomlPropertiesInternalObject';
+let OOML_INSTANCE_PROPNAME_GET_PROPERTY = '__oomlGetProperty';
+let OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY = '__oomlSetPrimitiveProperty';
 
 let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
 let OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties';
