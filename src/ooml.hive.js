@@ -1,5 +1,11 @@
 let { hive, HiveSubscriber } = (() => {
-    let isValidKey = key => Utils.typeOf(key, TYPEOF_STRING) && key.length > 0 && !/^__/.test(key) && key.indexOf('.') == -1 && OOMLReservedPropertyNames.indexOf(key) == -1;
+    let isValidKey = key => {
+        if (!Utils.typeOf(key, TYPEOF_STRING) && !Utils.typeOf(key, TYPEOF_NUMBER)) {
+            return false;
+        }
+        key = '' + key;
+        return key.length > 0 && !/^__/.test(key) && key.indexOf('.') == -1 && OOMLReservedPropertyNames.indexOf(key) == -1;
+    };
     let assertValidKey = key => {
         if (!isValidKey(key)) {
             throw new SyntaxError(`Invalid hive key name "${key}"`);

@@ -697,7 +697,6 @@ OOML.Namespace = function(namespace, settings) {
             let instanceAttributesInterface = Utils.createCleanObject();
 
             let dependentByBindings = Object.assign(Utils.createCleanObject(), { attributes: Utils.createCleanObject() });
-            let propertiesToLoadBindingsAfterConstruction = { attributes: new StringSet(), properties: new StringSet() };
             let rebindSetTimeouts = { attributes: Utils.createCleanObject(), properties: Utils.createCleanObject() };
             function setUpBinding(property, attribute) {
                 let propOrAttrName = property || attribute;
@@ -705,7 +704,7 @@ OOML.Namespace = function(namespace, settings) {
                 let internalObject = (property ? instanceProperties : instanceAttributes)[propOrAttrName];
                 let currentBindingId = internalObject.bindingId;
 
-                if (internalObject.isDynamic) {
+                if (internalObject.binding.isDynamic) {
                     internalObject.binding.keypath = internalObject.binding.parts.join("");
                 }
 
@@ -799,8 +798,9 @@ OOML.Namespace = function(namespace, settings) {
                             }
                             dependentByBindings.attributes[k].attributes.add(attrName);
                         });
+                    } else {
+                        rebindDynamicBinding(undefined, attrName);
                     }
-                    propertiesToLoadBindingsAfterConstruction.attributes.add(attrName);
                 }
 
                 // Set up attributes interface object
@@ -852,24 +852,25 @@ OOML.Namespace = function(namespace, settings) {
 
                             if (initial) {
                                 instanceAttributes[attrName].initialised = true;
-                            } else {
-                                let dependentBindings = dependentByBindings.attributes[attrName];
-                                if (dependentBindings) {
-                                    dependentBindings.attributes.forEach(a => {
-                                        let internalObject = instanceAttributes[a].binding;
-                                        internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
-                                            internalObject.parts[idx] = newVal;
-                                        });
-                                        rebindDynamicBinding(undefined, a);
+                            }
+
+                            // This should run initially as well (rebinding is really just binding)
+                            let dependentBindings = dependentByBindings.attributes[attrName];
+                            if (dependentBindings) {
+                                dependentBindings.attributes.forEach(a => {
+                                    let internalObject = instanceAttributes[a].binding;
+                                    internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
+                                        internalObject.parts[idx] = newVal;
                                     });
-                                    dependentBindings.properties.forEach(propName => {
-                                        let internalObject = instanceProperties[propName].binding;
-                                        internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
-                                            internalObject.parts[idx] = newVal;
-                                        });
-                                        rebindDynamicBinding(propName);
+                                    rebindDynamicBinding(undefined, a);
+                                });
+                                dependentBindings.properties.forEach(propName => {
+                                    let internalObject = instanceProperties[propName].binding;
+                                    internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
+                                        internalObject.parts[idx] = newVal;
                                     });
-                                }
+                                    rebindDynamicBinding(propName);
+                                });
                             }
 
                             if (classAttributes[attrName].onchange) {
@@ -1028,7 +1029,9 @@ OOML.Namespace = function(namespace, settings) {
             propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION] = {
                 value: instanceEventHandlers.mutation,
             };
-            instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT] = instanceIsAttachedTo;
+            propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT] = {
+                value: instanceIsAttachedTo,
+            };
 
             classPropertyNames.forEach(prop => {
 
@@ -1127,8 +1130,9 @@ OOML.Namespace = function(namespace, settings) {
                                 }
                                 dependentByBindings.attributes[k].properties.add(prop);
                             });
+                        } else {
+                            rebindDynamicBinding(prop);
                         }
-                        propertiesToLoadBindingsAfterConstruction.properties.add(prop);
                     }
 
                     setter = newVal => {
@@ -1179,24 +1183,25 @@ OOML.Namespace = function(namespace, settings) {
 
                             if (initial) {
                                 instanceProperties[prop].initialised = true;
-                            } else {
-                                let dependentBindings = dependentByBindings[prop];
-                                if (dependentBindings) {
-                                    dependentBindings.attributes.forEach(attrName => {
-                                        let internalObject = instanceAttributes[attrName].binding;
-                                        internalObject[prop].propertyToPartMap.forEach(idx => {
-                                            internalObject.parts[idx] = newVal;
-                                        });
-                                        rebindDynamicBinding(undefined, attrName);
+                            }
+
+                            // This should run initially as well (rebinding is really just binding)
+                            let dependentBindings = dependentByBindings[prop];
+                            if (dependentBindings) {
+                                dependentBindings.attributes.forEach(attrName => {
+                                    let internalObject = instanceAttributes[attrName].binding;
+                                    internalObject.propertyToPartMap[prop].forEach(idx => {
+                                        internalObject.parts[idx] = newVal;
                                     });
-                                    dependentBindings.properties.forEach(propName => {
-                                        let internalObject = instanceProperties[propName].binding;
-                                        internalObject[prop].propertyToPartMap.forEach(idx => {
-                                            internalObject.parts[idx] = newVal;
-                                        });
-                                        rebindDynamicBinding(propName);
+                                    rebindDynamicBinding(undefined, attrName);
+                                });
+                                dependentBindings.properties.forEach(propName => {
+                                    let internalObject = instanceProperties[propName].binding;
+                                    internalObject.propertyToPartMap[prop].forEach(idx => {
+                                        internalObject.parts[idx] = newVal;
                                     });
-                                }
+                                    rebindDynamicBinding(propName);
+                                });
                             }
 
                             if (classProperties[prop].onchange) {
@@ -1268,6 +1273,7 @@ OOML.Namespace = function(namespace, settings) {
                     }
                 });
             }
+
             classPropertyNames.forEach(propName => {
                 if (Utils.hasOwnProperty(initState, propName)) {
                     // If passthrough, initialise instance with initState built-in (to prevent it counting as a change, and to increase efficiency)
@@ -1315,14 +1321,6 @@ OOML.Namespace = function(namespace, settings) {
             if (builtConstructor) {
                 builtConstructor();
             }
-
-            propertiesToLoadBindingsAfterConstruction.attributes.forEach(attrName => {
-                setUpBinding(undefined, attrName);
-            });
-
-            propertiesToLoadBindingsAfterConstruction.properties.forEach(propName => {
-                setUpBinding(propName);
-            });
 
             // Update attribute nodes with parameter handlebars that have just been changed
             OOMLWriteChanges();

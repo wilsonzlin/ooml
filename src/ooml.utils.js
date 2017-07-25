@@ -150,7 +150,7 @@ let Utils = {
             // param === "{{ some.param }}"
             let param = toProcess.slice(0, posOfRightBrace + 2);
             let matches;
-            if (!(matches = /^{{ this\.((?:attributes)?)\.([a-zA-Z0-9_]+) }}$/.exec(param))) {
+            if (!(matches = /^{{ this\.((?:attributes\.)?)([a-zA-Z0-9_]+) }}$/.exec(param))) {
                 throw new SyntaxError(`Malformed binding syntax: "${ declaration }"`);
             }
             let isAttribute = !!matches[1];
@@ -165,7 +165,7 @@ let Utils = {
             if (!partMap[localProperty]) {
                 partMap[localProperty] = [];
             }
-            partMap[localProperty] = partId;
+            partMap[localProperty].push(partId);
 
             toProcess = toProcess.slice(posOfRightBrace + 2);
         }
