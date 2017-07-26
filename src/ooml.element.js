@@ -104,6 +104,65 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_GET_PROPERTY] = function(prop) {
     }
     return currentValue;
 };
+OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY] = function(prop, newVal) {
+    let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
+    if (!Array.isArray(newVal)) {
+        throw new TypeError(`Non-array provided to element array substitution property "${prop}"`);
+    }
+    instanceProperties[prop].value.initialize(newVal);
+};
+OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, newVal) {
+    // Let constructors handle newVal's type
+    if (newVal === undefined) {
+        throw new TypeError(`Undefined provided as element substitution property value for "${prop}"`);
+    }
+    let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
+
+    let elemDetails = instanceProperties[prop];
+
+    // This setter could be called WHILE property value is being normalised (i.e. set to not undefined)
+    let currentValue = instanceProperties[prop].value;
+    let currentlyInitialised = currentValue != undefined;
+
+    if (classProperties[prop].setter) {
+        let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal, dispatchEventToParent);
+        if (setterReturnVal === false) {
+            return;
+        }
+
+        if (setterReturnVal !== undefined) {
+            if (!Utils.isObjectLiteral(setterReturnVal)) {
+                throw new TypeError(`Invalid setter return value`);
+            }
+
+            if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
+                newVal = setterReturnVal.value;
+            }
+        }
+    }
+
+    if (classProperties[prop].passthrough != undefined && currentlyInitialised) {
+        currentValue[elemDetails.passthrough] = newVal;
+        return;
+    }
+
+    // Attach first to ensure that element is attachable
+    if (newVal !== null) {
+        newVal = Utils.constructElement(elemDetails.types[0], newVal);
+        newVal[OOML_INSTANCE_PROPNAME_ATTACH]({
+            insertAfter: elemDetails.insertAfter,
+            parent: this,
+            property: prop
+        });
+    }
+
+    // Current element may be null and therefore does not need detaching
+    if (currentlyInitialised) {
+        currentValue[OOML_INSTANCE_PROPNAME_DETACH]();
+    }
+
+    instanceProperties[prop].value = newVal;
+};
 OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY] = function(prop, newVal) {
     if (newVal === undefined) {
         throw new TypeError(`Undefined provided as property value for "${prop}"`);
@@ -193,6 +252,70 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY] = function(prop,
             });
         }
     }
+};
+OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] = function(internalObject, externalObject, key, currentStoreValue) {
+    let currentBindingState = internalObject.bindingState;
+    let currentBindingStateIsInitial = currentBindingState == BINDING_STATE_INIT;
+
+    let preventChange;
+    let valueToApplyLocally;
+    let newState;
+    let stateChangeHandler;
+
+    if (currentStoreValue !== undefined) {
+        valueToApplyLocally = currentStoreValue;
+        newState = BINDING_STATE_EXISTS;
+        stateChangeHandler = internalObject.bindingOnExist;
+    } else {
+        valueToApplyLocally = Utils.getDefaultPrimitiveValueForTypes(internalObject.types);
+        newState = BINDING_STATE_MISSING;
+        stateChangeHandler = internalObject.bindingOnMissing;
+    }
+
+    if (internalObject.bindingState != newState) {
+        internalObject.bindingState = newState;
+
+        if (stateChangeHandler) {
+            let eventObject = { preventDefault: () => preventChange = true };
+            let returnValue = stateChangeHandler.call(instance, classes, key, currentStoreValue, currentBindingStateIsInitial, dispatchEventToParent, eventObject);
+            if (returnValue === false) {
+                preventChange = true;
+            }
+        }
+    }
+
+    if (!preventChange) {
+        externalObject[key] = valueToApplyLocally;
+    }
+};
+OOMLElementProto[OOML_INSTANCE_PROPNAME_DISPATCH_EVENT_TO_PARENT] = function(eventName, eventData) {
+
+    if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
+        throw new TypeError(`Event name isn't a string`);
+    }
+
+    let prevented = false;
+    eventName = eventName.toLocaleLowerCase();
+
+    if (instanceEventHandlers.dispatch[eventName]) {
+        instanceEventHandlers.dispatch[eventName].forEach(handler => {
+            let eventObject = {
+                preventDefault: () => { prevented = true },
+                data: eventData,
+            };
+
+            let returnValue = handler.call(instance, eventObject);
+
+            if (returnValue === false) {
+                prevented = true;
+            }
+        });
+    }
+
+    if (!prevented && instanceIsAttachedTo.parent) {
+        instanceIsAttachedTo.parent[OOML_INSTANCE_PROPNAME_DISPATCH](instanceIsAttachedTo.property, eventName, eventData);
+    }
+
 };
 
 

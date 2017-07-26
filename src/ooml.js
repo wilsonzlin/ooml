@@ -13,7 +13,7 @@ let BINDING_STATE_MISSING = 3;
 let OOMLCompatSymbolExists = !!window.Symbol;
 let OOMLCompatSetExists = !!window.Set;
 let OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
-let OOMLCompatDatasetExists = !!document.createElement('div').dataset;
+let OOMLCompatDatasetExists = !!HTMLElement.prototype.dataset;
 
 
 let NodeSet;
@@ -45,6 +45,8 @@ let OOMLWriteChanges = function() {
     }, 50);
 
 };
+
+let dashCaseCache = Utils.createCleanObject();
 
 // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
 let OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes'];
@@ -86,6 +88,10 @@ let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION = '__oomlEventHandlersMutatio
 let OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT = '__oomlPropertiesInternalObject';
 let OOML_INSTANCE_PROPNAME_GET_PROPERTY = '__oomlGetProperty';
 let OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY = '__oomlSetPrimitiveProperty';
+let OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY = '__oomlSetArrayProperty';
+let OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY = '__oomlSetObjectProperty';
+let OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE = '__oomlHandleBindingChangeEventFromStore';
+let OOML_INSTANCE_PROPNAME_DISPATCH_EVENT_TO_PARENT = '__oomlDispatchEventToParent';
 
 let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
 let OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties';

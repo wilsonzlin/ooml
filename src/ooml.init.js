@@ -93,7 +93,7 @@ OOML.Namespace = function(namespace, settings) {
     Utils.DOM.find(namespace, 'template[ooml-class],template[ooml-abstract-class]').forEach(classTemplateElem => {
 
         /*
-            This is an object literal:
+            This is a classMetadata:
 
                 {
                     name: "NameOfClass",
@@ -174,74 +174,55 @@ OOML.Namespace = function(namespace, settings) {
         let classConstructor = classMetadata.constructor;
 
         function parseClassDomTextSubstitution(code) {
-            let regexpMatches = /^(?: ((?:(?:[a-zA-Z.]+)\|)*[a-zA-Z.]+))? (@)?this\.(attributes\.)?(.+?) $/.exec(code);
+            let regexpMatches = /^(?: ((?:(?:[a-zA-Z.]+)\|)*[a-zA-Z.]+))? (@)?this\.(.+?) $/.exec(code);
             if (!regexpMatches || !regexpMatches[4]) {
                 // .slice to prevent super-long messages
                 throw new SyntaxError(`Invalid property declaration at "${ code.slice(0, 200) }"`);
             }
 
             let types = regexpMatches[1] || undefined;
-            let propName = regexpMatches[4];
-            let isAttribute = !!regexpMatches[3];
+            let propName = regexpMatches[3];
             let isSuppressed = !!regexpMatches[2];
 
-            if (isAttribute) {
-                if (isSuppressed) {
-                    throw new TypeError(`Attributes cannot be suppressed`);
+            if (!Utils.isValidPropertyName(propName, settingStrictPropertyNames)) {
+                throw new SyntaxError(`"${ propName }" is not a valid property name`);
+            }
+
+            if (classMethods[propName]) {
+                throw new ReferenceError(`"${ propName }" already exists as a method`);
+            }
+
+            if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
+                throw new ReferenceError(`The property "${ propName }" already exists as a element substitution`);
+            }
+
+            let propAlreadyExists = !!classProperties[propName];
+
+            if (propAlreadyExists) {
+                if (isSuppressed && !classProperties[propName].suppressed) {
+                    classProperties[propName].suppressed = true;
+                    classSuppressedProperties.add(propName);
                 }
 
-                if (!Utils.isValidAttributeName(propName)) {
-                    throw new SyntaxError(`"${ propName }" is not a valid attribute name`);
-                }
-
-                if (!classAttributes[propName]) {
-                    throw new ReferenceError(`The attribute "${ propName }" does not exist`);
-                }
-
-                if (types && (!classProperties[propName].types || classAttributes[propName].types.join('|') !== types)) {
-                    throw new SyntaxError(`Invalid type declaration for the attribute substitution "${ propName }"`);
+                if (types) {
+                    if (classProperties[propName].types) {
+                        if (classProperties[propName].types.join('|') !== types) {
+                            throw new ReferenceError(`The types for the property "${ propName }" have already been declared`);
+                        }
+                    } else {
+                        classProperties[propName].types = Utils.parseTypeDeclaration(types);
+                    }
                 }
             } else {
-                if (!Utils.isValidPropertyName(propName, settingStrictPropertyNames)) {
-                    throw new SyntaxError(`"${ propName }" is not a valid property name`);
-                }
-
-                if (classMethods[propName]) {
-                    throw new ReferenceError(`"${ propName }" already exists as a method`);
-                }
-
-                if (classElementProperties.has(propName) || classArrayProperties.has(propName)) {
-                    throw new ReferenceError(`The property "${ propName }" already exists as a element substitution`);
-                }
-
-                let propAlreadyExists = !!classProperties[propName];
-
-                if (propAlreadyExists) {
-                    if (isSuppressed && !classProperties[propName].suppressed) {
-                        classProperties[propName].suppressed = true;
-                        classSuppressedProperties.add(propName);
-                    }
-
-                    if (types) {
-                        if (classProperties[propName].types) {
-                            if (classProperties[propName].types.join('|') !== types) {
-                                throw new ReferenceError(`The types for the property "${ propName }" have already been declared`);
-                            }
-                        } else {
-                            classProperties[propName].types = Utils.parseTypeDeclaration(types);
-                        }
-                    }
-                } else {
-                    classProperties[propName] = {
-                        // types is undefined if not matched in RegExp
-                        types: types && Utils.parseTypeDeclaration(types),
-                        isArray: false,
-                        value: undefined,
-                        suppressed: isSuppressed,
-                    };
-                    if (isSuppressed) {
-                        classSuppressedProperties.add(propName);
-                    }
+                classProperties[propName] = {
+                    // types is undefined if not matched in RegExp
+                    types: types && Utils.parseTypeDeclaration(types),
+                    isArray: false,
+                    value: undefined,
+                    suppressed: isSuppressed,
+                };
+                if (isSuppressed) {
+                    classSuppressedProperties.add(propName);
                 }
             }
 
@@ -288,11 +269,11 @@ OOML.Namespace = function(namespace, settings) {
                         let _attrVal = _attr.value;
 
                         switch (_attrName) {
-                            case 'property':
+                            case 'name':
                                 propName = _attrVal;
                                 break;
 
-                            case 'class':
+                            case 'type':
                                 elemConstructorName = _attrVal;
                                 break;
 
@@ -444,7 +425,7 @@ OOML.Namespace = function(namespace, settings) {
                     return;
                 }
 
-                if (/^ooml-(table|thead|tbody|tfoot|tr|th|td)$/.test(elemName)) {
+                if (/^ooml-(?:table|thead|tbody|tfoot|tr|th|td)$/.test(elemName)) {
                     elemName = elemName.slice(5);
                 }
 
@@ -560,7 +541,7 @@ OOML.Namespace = function(namespace, settings) {
                 let nodeName = current.name;
                 if (nodeName == 'ooml-style') {
                     // IE discards invalid style attributes (and ones with OOML bindings count as invalid), so allow alternative syntax
-                    nodeName = nodeName.slice(5);
+                    nodeName = 'style';
                 }
                 let nodeValue = current.value;
 
@@ -657,237 +638,37 @@ OOML.Namespace = function(namespace, settings) {
                 return ret;
             }
 
-            function dispatchEventToParent(eventName, eventData) {
-
-                if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-                    throw new TypeError(`Event name isn't a string`);
-                }
-
-                let prevented = false;
-                eventName = eventName.toLocaleLowerCase();
-
-                if (instanceEventHandlers.dispatch[eventName]) {
-                    instanceEventHandlers.dispatch[eventName].forEach(handler => {
-                        let eventObject = {
-                            preventDefault: () => { prevented = true },
-                            data: eventData,
-                        };
-
-                        let returnValue = handler.call(instance, eventObject);
-
-                        if (returnValue === false) {
-                            prevented = true;
-                        }
-                    });
-                }
-
-                if (!prevented && instanceIsAttachedTo.parent) {
-                    instanceIsAttachedTo.parent[OOML_INSTANCE_PROPNAME_DISPATCH](instanceIsAttachedTo.property, eventName, eventData);
-                }
-
-            }
-
             let instanceProperties = Utils.clone(classProperties);
             Object.keys(instanceProperties).forEach(propertyName => {
                 instanceProperties[propertyName].insertAfter = undefined;
                 instanceProperties[propertyName].nodes = new NodeSet(); // Use NodeSet as attributes may be binded to the same property more than once
             });
 
-            let instanceAttributes = Utils.clone(classAttributes);
-            let instanceAttributesInterface = Utils.createCleanObject();
-
             // Map from property names to properties and attributes that have a dynamic binding dependent on it
             let propertiesToDependentBindings = Utils.createCleanObject();
             // Map from attribute names to properties and attributes that have a dynamic binding dependent on it
             // TODO Remove attributes
-            let attributesToDependentBindings = Utils.createCleanObject();
-            let attributeRebindSetTimeouts = Utils.createCleanObject();
             let propertyRebindSetTimeouts = Utils.createCleanObject();
-            function rebindDynamicBinding(property, attribute) {
-                let propOrAttrName = property || attribute;
-                let setTimeoutMap;
-                if (property) {
-                    setTimeoutMap = propertyRebindSetTimeouts;
-                } else {
-                    setTimeoutMap = attributeRebindSetTimeouts;
-                }
+            function rebindDynamicBinding(property) {
 
-                clearTimeout(setTimeoutMap[propOrAttrName]);
+                clearTimeout(propertyRebindSetTimeouts[property]);
 
-                setTimeoutMap[propOrAttrName] = setTimeout(() => {
-                    let propOrAttrName = property || attribute;
-
-                    let internalObject = (property ? instanceProperties : instanceAttributes)[propOrAttrName];
+                propertyRebindSetTimeouts[property] = setTimeout(() => {
+                    let internalObject = instanceProperties[property];
                     let currentBindingId = internalObject.bindingId;
 
-                    if (internalObject.binding.isDynamic) {
-                        internalObject.binding.keypath = internalObject.binding.parts.join("");
+                    if (internalObject.bindingIsDynamic) {
+                        internalObject.bindingKeypath = internalObject.bindingParts.join("");
                     }
 
                     if (currentBindingId != undefined) {
                         hive.unbind(currentBindingId);
                     }
 
-                    internalObject.bindingId = hive.bind(internalObject.binding.keypath, property ? instance : instance.attributes, propOrAttrName);
+                    internalObject.bindingId = hive.bind(internalObject.bindingKeypath, instance, property);
                 }, 50);
             }
-            function handleBindingChangeEventFromStore(internalObject, externalObject, key, currentStoreValue) {
-                let currentBindingState = internalObject.bindingState;
-                let currentBindingStateIsInitial = currentBindingState == BINDING_STATE_INIT;
 
-                let preventChange;
-                let valueToApplyLocally;
-                let newState;
-                let stateChangeHandler;
-
-                if (currentStoreValue !== undefined) {
-                    valueToApplyLocally = currentStoreValue;
-                    newState = BINDING_STATE_EXISTS;
-                    stateChangeHandler = internalObject.bindOnExist;
-                } else {
-                    valueToApplyLocally = Utils.getDefaultPrimitiveValueForTypes(internalObject.types);
-                    newState = BINDING_STATE_MISSING;
-                    stateChangeHandler = internalObject.bindOnMissing;
-                }
-
-                if (internalObject.bindingState != newState) {
-                    internalObject.bindingState = newState;
-
-                    if (stateChangeHandler) {
-                        let eventObject = { preventDefault: () => preventChange = true };
-                        let returnValue = stateChangeHandler.call(instance, classes, key, currentStoreValue, currentBindingStateIsInitial, dispatchEventToParent, eventObject);
-                        if (returnValue === false) {
-                            preventChange = true;
-                        }
-                    }
-                }
-
-                if (!preventChange) {
-                    externalObject[key] = valueToApplyLocally;
-                }
-            }
-
-            Object.defineProperty(instanceAttributesInterface, OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE, {
-                value: (attrName, storeValue) => {
-                    handleBindingChangeEventFromStore(instanceAttributes[attrName], instanceAttributesInterface, attrName, storeValue);
-                },
-            });
-
-            // Must be before instanceDom initialisation as processClassDom uses instanceAttributes[attrName].nodes
-            Object.keys(instanceAttributes).forEach(attrName => {
-                // Use set as one DOM attribute can refer to one attribute more than once
-                instanceAttributes[attrName].nodes = new NodeSet();
-
-                // Set up the binding if it has one
-                let bindingConfig = instanceAttributes[attrName].binding;
-                if (bindingConfig) {
-                    instanceAttributes[attrName].bindingState = BINDING_STATE_INIT;
-                    if (bindingConfig.isDynamic) {
-                        let propertyToPartMap = bindingConfig.propertyToPartMap;
-                        Object.keys(propertyToPartMap).forEach(k => {
-                            if (k != "attributes") {
-                                if (!propertiesToDependentBindings[k]) {
-                                    propertiesToDependentBindings[k] = {
-                                        attributes: new StringSet(),
-                                        properties: new StringSet(),
-                                    };
-                                }
-                                propertiesToDependentBindings[k].attributes.add(attrName);
-                            }
-                        });
-                        Object.keys(propertyToPartMap.attributes).forEach(k => {
-                            if (!propertiesToDependentBindings.attributes[k]) {
-                                propertiesToDependentBindings.attributes[k] = {
-                                    attributes: new StringSet(),
-                                    properties: new StringSet(),
-                                };
-                            }
-                            propertiesToDependentBindings.attributes[k].attributes.add(attrName);
-                        });
-                    } else {
-                        rebindDynamicBinding(undefined, attrName);
-                    }
-                }
-
-                // Set up attributes interface object
-                Object.defineProperty(instanceAttributesInterface, attrName, {
-                    get: () => {
-                        let currentValue = instanceAttributes[attrName].value;
-                        if (classAttributes[attrName].getter) {
-                            return classAttributes[attrName].getter.call(instance, classes, attrName, currentValue, dispatchEventToParent)
-                        }
-                        return currentValue;
-                    },
-                    set: newVal => {
-                        if (newVal === undefined) {
-                            throw new TypeError(`The value for the attribute "${ attrName }" is invalid`);
-                        }
-
-                        let initial = !instanceAttributes[attrName].initialised;
-                        let oldVal = initial ? undefined : instanceAttributes[attrName].value;
-
-                        if (classAttributes[attrName].setter) {
-                            let setterReturnVal = classAttributes[attrName].setter.call(instance, classes, attrName, oldVal, newVal, dispatchEventToParent);
-                            if (setterReturnVal === false) {
-                                return;
-                            }
-
-                            if (setterReturnVal !== undefined) {
-                                if (!Utils.isObjectLiteral(setterReturnVal)) {
-                                    throw new TypeError(`Invalid setter return value`);
-                                }
-
-                                if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
-                                    newVal = setterReturnVal.value;
-                                }
-                            }
-                        }
-
-                        if (instanceAttributes[attrName].types) {
-                            if (!Utils.isType(instanceAttributes[attrName].types, newVal)) {
-                                throw new TypeError(`Cannot set new attribute value for "${ attrName }"; expected type to be one of: ${ instanceAttributes[attrName].types.join(', ') }`);
-                            }
-                        }
-
-                        if (initial || oldVal !== newVal) {
-                            // Write changes only if value changed
-                            Utils.DOM.writeValue('attribute', attrName, instanceAttributes[attrName].nodes, newVal);
-
-                            instanceAttributes[attrName].value = newVal;
-                            Utils.DOM.setData(instanceDom, attrName, newVal);
-
-                            if (initial) {
-                                instanceAttributes[attrName].initialised = true;
-                            }
-
-                            // This should run initially as well (rebinding is really just binding)
-                            let dependentBindings = propertiesToDependentBindings.attributes[attrName];
-                            if (dependentBindings) {
-                                dependentBindings.attributes.forEach(a => {
-                                    let internalObject = instanceAttributes[a].binding;
-                                    internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
-                                        internalObject.parts[idx] = newVal;
-                                    });
-                                    rebindDynamicBinding(undefined, a);
-                                });
-                                dependentBindings.properties.forEach(propName => {
-                                    let internalObject = instanceProperties[propName].binding;
-                                    internalObject.propertyToPartMap.attributes[attrName].forEach(idx => {
-                                        internalObject.parts[idx] = newVal;
-                                    });
-                                    rebindDynamicBinding(propName);
-                                });
-                            }
-
-                            if (classAttributes[attrName].onchange) {
-                                classAttributes[attrName].onchange.call(instance, classes, attrName, newVal, initial, dispatchEventToParent);
-                            }
-                        }
-                    },
-                    enumerable: true,
-                });
-            });
-            Object.preventExtensions(instanceAttributesInterface);
 
             let instanceEventHandlers = {
                 mutation: Utils.createCleanObject(),
@@ -958,10 +739,6 @@ OOML.Namespace = function(namespace, settings) {
                             instanceProperties[propertyName].nodes.add(cloned);
                         }
 
-                        if (node.bindedAttribute) {
-                            instanceAttributes[node.bindedAttribute].nodes.add(cloned);
-                        }
-
                         break;
 
                     case 'comment':
@@ -991,29 +768,6 @@ OOML.Namespace = function(namespace, settings) {
             })(classRootElem);
 
             let propertiesGetterSetterFuncs = Utils.createCleanObject();
-            propertiesGetterSetterFuncs.attributes = {
-                set: newObj => {
-                    if (!Utils.isObjectLiteral(newObj)) {
-                        throw new TypeError(`New attributes object provided is not a valid object`);
-                    }
-
-                    let newObjKeys = Object.keys(newObj);
-
-                    // Don't combine checking if attribute exists and setting it,
-                    // as that may result in a half-state where some attributes
-                    // are set and some aren't
-                    newObjKeys.forEach(attrName => {
-                        if (!instanceAttributes[attrName]) {
-                            throw new ReferenceError(`New attributes object provided has an unrecognised attribute "${ attrName }"`);
-                        }
-                    });
-
-                    newObjKeys.forEach(attrName => {
-                        instanceAttributesInterface[attrName] = newObj[attrName];
-                    });
-                },
-                get: () => instanceAttributesInterface,
-            };
             propertiesGetterSetterFuncs[OOML_INSTANCE_PROPNAME_DOMELEM] = {
                 value: instanceDom,
             };
@@ -1053,26 +807,9 @@ OOML.Namespace = function(namespace, settings) {
             Object.defineProperties(instance, propertiesGetterSetterFuncs);
             Object.preventExtensions(instance);
 
-            let initStateAttributes = Utils.hasOwnProperty(initState, 'attributes') && initState.attributes;
-            if (initStateAttributes) {
-                Object.keys(initStateAttributes).forEach(attrName => {
-                    if (!instanceAttributes[attrName]) {
-                        throw new ReferenceError(`The attribute "${attrName}" provided in an element substitution's default value does not exist`);
-                    }
-                });
-            }
-            Object.keys(instanceAttributes).forEach(attrName => {
-                // Set initial attribute value
-                if (Utils.hasOwnProperty(initStateAttributes, attrName)) {
-                    instanceAttributesInterface[attrName] = initStateAttributes[attrName];
-                } else {
-                    instanceAttributesInterface[attrName] = instanceAttributes[attrName].value;
-                }
-            });
-
             if (initState) {
                 Object.keys(initState).forEach(propName => {
-                    if (propName != "attributes" && classPropertyNames.indexOf(propName) < 0) {
+                    if (classPropertyNames.indexOf(propName) < 0) {
                         throw new ReferenceError(`The property "${propName}" provided in an element substitution's default value does not exist`);
                     }
                 });
@@ -1138,6 +875,7 @@ OOML.Namespace = function(namespace, settings) {
         classes[className][OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = classConstructor;
         classes[className][OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classHasExtensionPoint && classRawDom;
         classes[className][OOML_CLASS_PROPNAME_ROOTELEMTAGNAME] = classRootElem && classRootElem.name;
+        Object.defineProperty(classes[className], "name", { value: className });
 
         // Make class inherit from parent class
         classes[className].prototype = Object.create(classExtends.prototype);
@@ -1152,67 +890,14 @@ OOML.Namespace = function(namespace, settings) {
 
                 // Element array substitution
                 setter = function(newVal) {
-                    let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
-                    if (!Array.isArray(newVal)) {
-                        throw new TypeError(`Non-array provided to element array substitution property "${prop}"`);
-                    }
-                    instanceProperties[prop].value.initialize(newVal);
+                    this[OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY](prop, newVal);
                 };
 
             } else if (classElementProperties.has(prop)) {
 
                 // Element substitution
                 setter = function(newVal) {
-                    // Let constructors handle newVal's type
-                    if (newVal === undefined) {
-                        throw new TypeError(`Undefined provided as element substitution property value for "${prop}"`);
-                    }
-                    let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
-
-                    let elemDetails = instanceProperties[prop];
-
-                    // This setter could be called WHILE property value is being normalised (i.e. set to not undefined)
-                    let currentValue = instanceProperties[prop].value;
-                    let currentlyInitialised = currentValue != undefined;
-
-                    if (classProperties[prop].setter) {
-                        let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal, dispatchEventToParent);
-                        if (setterReturnVal === false) {
-                            return;
-                        }
-
-                        if (setterReturnVal !== undefined) {
-                            if (!Utils.isObjectLiteral(setterReturnVal)) {
-                                throw new TypeError(`Invalid setter return value`);
-                            }
-
-                            if (Utils.hasOwnProperty(setterReturnVal, 'value')) {
-                                newVal = setterReturnVal.value;
-                            }
-                        }
-                    }
-
-                    if (classProperties[prop].passthrough != undefined && currentlyInitialised) {
-                        currentValue[elemDetails.passthrough] = newVal;
-                        return;
-                    }
-
-                    // Attach first to ensure that element is attachable
-                    if (newVal !== null) {
-                        newVal = Utils.constructElement(elemDetails.types[0], newVal);
-                        newVal[OOML_INSTANCE_PROPNAME_ATTACH]({
-                            insertAfter: elemDetails.insertAfter,
-                            parent: this,
-                            property: prop
-                        });
-                    }
-
-                    // Current element may be null and therefore does not need detaching
-                    if (currentlyInitialised) {
-                        currentValue[OOML_INSTANCE_PROPNAME_DETACH]();
-                    }
-
-                    instanceProperties[prop].value = newVal;
+                    this[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY](prop, newVal);
                 };
 
             } else {
@@ -1248,23 +933,26 @@ OOML.Namespace = function(namespace, settings) {
                     }
                 }
 
+                setter = function(newValue) {
+                    // .bind is more expensive than closure
+                    // Also, .bind would prevent "this" value from being auto applied
+                    return this[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY](prop, newValue);
+                };
+
             }
 
             classProtoPropertiesConfig[prop] = {
                 get: function() {
                     return this[OOML_INSTANCE_PROPNAME_GET_PROPERTY](prop);
                 },
-                set: function(newValue) {
-                    // .bind is more expensive than closure
-                    return this[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY](prop, newValue);
-                },
-                enumerable: true,
+                set: setter,
+                // Don't make enumerable, as this is on prototype, so not enumerable anyway
             };
         });
 
         // Set defined methods in class prototype
         for (let methodName in classMethods) {
-            classProtoPropertiesConfig[methodName] = {value: classMethods[methodName].fn};
+            classProtoPropertiesConfig[methodName] = { value: classMethods[methodName].fn };
         }
 
         Object.defineProperties(classes[className].prototype, classProtoPropertiesConfig);
