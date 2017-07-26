@@ -288,7 +288,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] 
         externalObject[key] = valueToApplyLocally;
     }
 };
-OOMLElementProto[OOML_INSTANCE_PROPNAME_DISPATCH_EVENT_TO_PARENT] = function(eventName, eventData) {
+OOMLElementProto.dispatch = function(eventName, eventData) {
 
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
         throw new TypeError(`Event name isn't a string`);

@@ -306,7 +306,7 @@ let Utils = {
                                 onchangeListener = Function('classes', 'property', 'value', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
                                 break;
 
-                            case 'bindto':
+                            case 'bind-to':
                                 if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid binding`);
                                 }
@@ -318,6 +318,7 @@ let Utils = {
                                 propBindingKeypath = bindingConfig.keypath;
                                 break;
 
+                            // TODO Change to dash-case
                             case 'bindonexist':
                                 if (Utils.isNotOrBlankString(_attrVal)) {
                                     throw new SyntaxError(`Invalid ${ _attrName } function`);
@@ -391,38 +392,35 @@ let Utils = {
                         }
                     });
 
+                    if (!Utils.isValidPropertyName(methodName, strictPropertyNames)) {
+                        throw new SyntaxError(`The method name "${ methodName }" is invalid`);
+                    }
+
+                    let textContent = node.textContent.trim();
+
+                    if (!/^function *\((?:[a-zA-Z_][a-zA-Z0-9_]*,)*(?:[a-zA-Z_][a-zA-Z0-9_]*)*\)\s*\{/.test(textContent) || !/\}$/.test(textContent)) {
+                        throw new SyntaxError(`The "${ methodName }" method for the class "${ classMetadata.name }" is not a valid function declaration`);
+                    }
+
+                    let realFn = Utils.getEvalValue(textContent);
+
                     // Abstract methods can also have constructors, as descendant classes can call it
                     if (methodName == 'constructor') {
                         if (classMetadata.constructor) {
                             throw new ReferenceError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
                         }
 
-                        let textContent = node.textContent.trim();
-                        if (!/^function *\(\)\s*\{/.test(textContent) || !/\}$/.test(textContent)) {
-                            throw new SyntaxError(`The constructor method for the class "${ classMetadata.name }" is invalid`);
+                        classMetadata.constructor = realFn;
+                    } else {
+                        if (classMetadata.methods[methodName] || classMetadata.properties[methodName]) {
+                            throw new ReferenceError(`A method or property called "${ methodName }" already exists`);
                         }
+                        Object.defineProperty(realFn, "name", { value: methodName });
 
-                        let fnBody = textContent.slice(textContent.indexOf('{') + 1, -1);
-
-                        classMetadata.constructor = Function("parent", fnBody);
-
-                        break;
+                        classMetadata.methods[methodName] = {
+                            fn: realFn,
+                        };
                     }
-
-                    if (!Utils.isValidPropertyName(methodName, strictPropertyNames)) {
-                        throw new SyntaxError(`The method name "${ methodName }" is invalid`);
-                    }
-
-                    if (classMetadata.methods[methodName] || classMetadata.properties[methodName]) {
-                        throw new ReferenceError(`A method or property called "${ methodName }" already exists`);
-                    }
-
-                    let realFn = Utils.getEvalValue(node.textContent.trim());
-                    Object.defineProperty(realFn, "name", { value: methodName });
-
-                    classMetadata.methods[methodName] = {
-                        fn: realFn,
-                    };
 
                     break;
 
