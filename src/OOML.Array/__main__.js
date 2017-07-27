@@ -108,3 +108,4 @@ OOML.Array = function(elementConstructor, insertAfterDomElem, attachedToInstance
     Object.preventExtensions(_this);
 };
 let OOMLArrayProto = OOML.Array.prototype;
+let OOMLArrayProtoMutation = Utils.createCleanObject();

@@ -35,15 +35,8 @@ let OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
 let OOMLCompatDatasetExists = !!HTMLElement.prototype.dataset;
 
 
-let NodeSet;
-let StringSet;
-if (!OOMLCompatSetExists) {
-    <ZC-IMPORT[NodeSet]>
-    <ZC-IMPORT[StringSet]>
-} else {
-    NodeSet = Set;
-    StringSet = Set;
-}
+<ZC-IMPORT[NodeSet]>
+<ZC-IMPORT[StringSet]>
 
 let OOMLNodesWithUnwrittenChanges = new NodeSet();
 let OOMLWriteChangesSetTimeout;
