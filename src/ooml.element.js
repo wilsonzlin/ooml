@@ -99,8 +99,8 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_DETACH] = function() {
 OOMLElementProto[OOML_INSTANCE_PROPNAME_GET_PROPERTY] = function(prop) {
     let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
     let currentValue = instanceProperties[prop].value;
-    if (classProperties[prop].getter) {
-        return classProperties[prop].getter.call(this, classes, prop, currentValue, dispatchEventToParent);
+    if (instanceProperties[prop].getter) {
+        return instanceProperties[prop].getter.call(this, prop, currentValue);
     }
     return currentValue;
 };
@@ -124,8 +124,8 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, ne
     let currentValue = instanceProperties[prop].value;
     let currentlyInitialised = currentValue != undefined;
 
-    if (classProperties[prop].setter) {
-        let setterReturnVal = classProperties[prop].setter.call(instance, classes, prop, currentValue, newVal, dispatchEventToParent);
+    if (instanceProperties[prop].setter) {
+        let setterReturnVal = instanceProperties[prop].setter.call(this, prop, currentValue, newVal);
         if (setterReturnVal === false) {
             return;
         }
@@ -141,7 +141,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, ne
         }
     }
 
-    if (classProperties[prop].passthrough != undefined && currentlyInitialised) {
+    if (instanceProperties[prop].passthrough != undefined && currentlyInitialised) {
         currentValue[elemDetails.passthrough] = newVal;
         return;
     }
@@ -174,8 +174,8 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY] = function(prop,
     let initial = !instanceProperties[prop].initialised;
     let oldVal = initial ? undefined : instanceProperties[prop].value;
 
-    if (classProperties[prop].setter) {
-        let setterReturnVal = classProperties[prop].setter.call(this, classes, prop, oldVal, newVal, dispatchEventToParent);
+    if (instanceProperties[prop].setter) {
+        let setterReturnVal = instanceProperties[prop].setter.call(this, prop, oldVal, newVal);
         if (setterReturnVal === false) {
             return;
         }
@@ -235,7 +235,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY] = function(prop,
         }
 
         if (classProperties[prop].onchange) {
-            classProperties[prop].onchange.call(instance, classes, prop, newVal, initial, dispatchEventToParent);
+            classProperties[prop].onchange.call(instance, prop, newVal, initial);
         }
 
         let propertyValueChangeMutationHandler = instance[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION].propertyvaluechange;
@@ -277,7 +277,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] 
 
         if (stateChangeHandler) {
             let eventObject = { preventDefault: () => preventChange = true };
-            let returnValue = stateChangeHandler.call(instance, classes, key, currentStoreValue, currentBindingStateIsInitial, dispatchEventToParent, eventObject);
+            let returnValue = stateChangeHandler.call(this, key, currentStoreValue, currentBindingStateIsInitial, eventObject);
             if (returnValue === false) {
                 preventChange = true;
             }
@@ -286,6 +286,11 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] 
 
     if (!preventChange) {
         externalObject[key] = valueToApplyLocally;
+    }
+};
+OOMLElementProto[OOML_INSTANCE_PROPNAME_DISPATCH] = function(propName, eventName, data) {
+    if (classProperties[propName].dispatchEventHandlers[eventName]) {
+        classProperties[propName].dispatchEventHandlers[eventName].call(instance, data);
     }
 };
 OOMLElementProto.dispatch = function(eventName, eventData) {
@@ -317,10 +322,14 @@ OOMLElementProto.dispatch = function(eventName, eventData) {
     }
 
 };
+OOMLElementProto[OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE] = function(propName, storeValue) {
+    handleBindingChangeEventFromStore(instanceProperties[propName], instance, propName, storeValue);
+};
 
 
-
-
+OOMLElementProto.keys = function() {
+    // TODO
+};
 OOMLElementProto.toObject = function() {
 
     let instance = this;

@@ -1,3 +1,19 @@
+/*
+ * READ THIS BEFORE CONTINUING
+ *
+ * Before attempting to read or contribute to code that forms ooml.js,
+ * keep in mind that some things had to be sacrificed in order to
+ * ensure that the resulting ooml.js is:
+ *
+ *  1) Very small/minifiable
+ *  2) Very speedy and efficient
+ *  3) Very easy to use
+ *
+ */
+
+
+
+// Alias typeof values to prevent typos and minify better
 let TYPEOF_FUNCTION = 'function';
 let TYPEOF_OBJECT = 'object';
 let TYPEOF_STRING = 'string';
@@ -10,6 +26,7 @@ let BINDING_STATE_INIT = 1;
 let BINDING_STATE_EXISTS = 2;
 let BINDING_STATE_MISSING = 3;
 
+// Feature detection
 let OOMLCompatSymbolExists = !!window.Symbol;
 let OOMLCompatSetExists = !!window.Set;
 let OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
@@ -28,7 +45,7 @@ if (!OOMLCompatSetExists) {
 
 let OOMLNodesWithUnwrittenChanges = new NodeSet();
 let OOMLWriteChangesSetTimeout;
-let OOMLWriteChanges = function() {
+let OOMLWriteChanges = () => {
 
     if (!OOMLNodesWithUnwrittenChanges.size) {
         return;
@@ -49,14 +66,11 @@ let OOMLWriteChanges = function() {
 let dashCaseCache = Utils.createCleanObject();
 
 // NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
-let OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes'];
-// NOTE: Obviously list not complete, but hopefully the rest should be obvious...
-let OOMLReservedFnArgNames = ['self', 'parent', 'arguments', 'super', 'this', 'class'];
+let OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes', 'namespace', 'handle', 'keys'];
 
 let OOMLPrimitiveTypes = ['null', 'number', 'boolean', 'string'];
 let OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
 let OOMLPropertyTypes = Utils.concat(OOMLPrimitiveTypes, OOMLPropertyNumberTypes).slice(0, -1); // Remove duplicate entry "number"
-let OOMLFnArgTypes = Utils.concat(OOMLPropertyTypes, ['Object', 'Array', 'function']);
 
 let OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray';
 let OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor';
@@ -94,7 +108,6 @@ let OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE = '__oomlHandl
 
 let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
 let OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties';
-let OOML_CLASS_PROPNAME_PREDEFINEDATTRS = '__oomlPredefinedAttributes';
 let OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties';
 let OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
 let OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint';
@@ -103,7 +116,7 @@ let OOML_CLASS_PROPNAME_ROOTELEMTAGNAME = '__oomlRootElemTagName';
 let OOML = {};
 
 let OOMLGlobalImports = Utils.createCleanObject();
-OOML.import = function() {
+OOML.import = () => {
     if (arguments.length == 2) {
         let importName = arguments[0];
         let importClass = arguments[1];
