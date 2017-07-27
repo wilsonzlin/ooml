@@ -288,6 +288,30 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] 
         externalObject[key] = valueToApplyLocally;
     }
 };
+
+OOMLElementProto[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING] = function(property) {
+
+    let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
+    let propertyRebindSetTimeouts = this[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS];
+
+    clearTimeout(propertyRebindSetTimeouts[property]);
+
+    propertyRebindSetTimeouts[property] = setTimeout(() => {
+        let internalObject = instanceProperties[property];
+        let currentBindingId = internalObject.bindingId;
+
+        if (internalObject.bindingIsDynamic) {
+            internalObject.bindingKeypath = internalObject.bindingParts.join("");
+        }
+
+        if (currentBindingId != undefined) {
+            hive.unbind(currentBindingId);
+        }
+
+        internalObject.bindingId = hive.bind(internalObject.bindingKeypath, instance, property);
+    }, 50);
+};
+
 OOMLElementProto[OOML_INSTANCE_PROPNAME_DISPATCH] = function(propName, eventName, data) {
     if (classProperties[propName].dispatchEventHandlers[eventName]) {
         classProperties[propName].dispatchEventHandlers[eventName].call(instance, data);

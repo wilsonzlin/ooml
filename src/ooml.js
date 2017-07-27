@@ -2,7 +2,7 @@
  * READ THIS BEFORE CONTINUING
  *
  * Before attempting to read or contribute to code that forms ooml.js,
- * keep in mind that some things had to be sacrificed in order to
+ * keep in mind that the code was written like this in order to
  * ensure that the resulting ooml.js is:
  *
  *  1) Very small/minifiable
@@ -20,7 +20,9 @@ let TYPEOF_STRING = 'string';
 let TYPEOF_BOOLEAN = 'boolean';
 let TYPEOF_NUMBER = 'number';
 
-<ZC-IMPORT[utils]>
+// This line will be removed by compiler; Utils.* functions will be flattened to individual functions
+let Utils = {};
+<ZC-IMPORT[utils.DOM]>
 
 let BINDING_STATE_INIT = 1;
 let BINDING_STATE_EXISTS = 2;
@@ -105,6 +107,8 @@ let OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY = '__oomlSetPrimitiveProperty'
 let OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY = '__oomlSetArrayProperty';
 let OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY = '__oomlSetObjectProperty';
 let OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE = '__oomlHandleBindingChangeEventFromStore';
+let OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING = '__oomlRebindDynamicBinding';
+let OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS = '__oomlPropertyRebindSetTimeouts';
 
 let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
 let OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties';
