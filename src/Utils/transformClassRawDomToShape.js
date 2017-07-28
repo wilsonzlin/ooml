@@ -37,16 +37,6 @@ Utils.transformClassRawDomToShape = current => {
                         break;
 
                     case 'array':
-                        if (_attrVal !== '') {
-                            throw new SyntaxError(`Invalid "array" attribute value for element substitution property`);
-                        }
-                        if (passthroughPropName != undefined) {
-                            throw new SyntaxError(`Array substitutions cannot be passed through`);
-                        }
-                        if (getter || setter) {
-                            throw new SyntaxError(`Array substitutions cannot have getters or setters`);
-                        }
-                        isArraySubstitution = true;
                         break;
 
                     case 'get':
@@ -77,31 +67,8 @@ Utils.transformClassRawDomToShape = current => {
                         setter = _attrVal;
                         break;
 
-                    case 'passthrough':
-                        if (isArraySubstitution) {
-                            throw new SyntaxError(`Array substitutions cannot be passed through`);
-                        }
-                        if (Utils.isNotOrBlankString(_attrVal)) {
-                            throw new SyntaxError(`Invalid passthrough property name`);
-                        }
-                        passthroughPropName = _attrVal;
-                        break;
-
                     default:
-                        if (/^handle-/.test(_attrName)) {
-
-                            // Don't need to lowercase -- it already is
-                            let eventName = _attrName.slice(7);
-
-                            if (dispatchEventHandlers[eventName]) {
-                                throw new ReferenceError(`Another child "${ eventName }" event handler already exists`);
-                            }
-
-                            dispatchEventHandlers[eventName] = Function('dispatch', 'classes', 'data', `"use strict";${ _attrVal }`);
-
-                        } else {
-                            throw new SyntaxError(`Unknown attribute "${ _attrName }" on element substitution property declaration`);
-                        }
+                        throw new SyntaxError(`Unknown attribute "${ _attrName }" on element substitution property declaration`);
                 }
             });
 

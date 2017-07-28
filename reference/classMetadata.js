@@ -9,7 +9,7 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
     properties: {
         nameOfProp: {
             types: ["string", "natural", "null"] || [class SomeOOMLClass {}] || undefined,
-            value: "the default value" || undefined,
+            defaultValue: "the default value",
             isArray: true || false,
 
             getter: "someOwnMethod" || undefined,

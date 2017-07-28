@@ -12,11 +12,11 @@ Utils.createOOMLClass = ({ namespace, className, classParent, classMethods, clas
                 throw new ReferenceError(`OOML instances need to be constructed`);
             }
 
-            initState = Utils.unserialiseInitState(instance, initState);
-
             if (!Utils.typeOf(instance.abstractFactory, TYPEOF_FUNCTION)) {
                 throw new TypeError(`Unable to construct new instance; "${ className }" is an abstract class`);
             }
+
+            initState = Utils.unserialiseInitState(instance, initState);
 
             let ret = instance.abstractFactory(initState);
             if (!(ret instanceof OOML.Element)) {
@@ -38,19 +38,33 @@ Utils.createOOMLClass = ({ namespace, className, classParent, classMethods, clas
 
             initState = Utils.unserialiseInitState(instance, initState);
 
-            // Create a copy of the classProperties to use as this instance's internal state
-            let instanceProperties = Utils.deepClone(classProperties);
+            // Internal object to hold state of properties
+            let instanceProperties = Utils.createCleanObject();
+            Object.keys(classProperties).forEach(propName => {
+                let classPropertyObject = classProperties[propName];
+
+                let instancePropertyObject = {
+                    // Initially, the internal value should be undefined
+                    currentValue: undefined,
+
+                    // Use NodeSet as attributes may be binded to the same property more than once
+                    nodes: new NodeSet(),
+                };
+
+                if (classPropertyObject.bindingIsDynamic) {
+                    instancePropertyObject.bindingParts = classPropertyObject.bindingParts.slice();
+                }
+
+                instanceProperties[propName] = Object.seal(instancePropertyObject);
+            });
 
             // Defensive coding
-            Object.preventExtensions(instanceProperties);
+            Object.seal(instanceProperties);
 
             // Set up the instanceProperties internal object
             Object.keys(instanceProperties).forEach(propertyName => {
                 // For element and array substitutions, so that the anchor position is known
                 instanceProperties[propertyName].insertAfter = undefined;
-
-                // Use NodeSet as attributes may be binded to the same property more than once
-                instanceProperties[propertyName].nodes = new NodeSet();
 
                 // Defensive coding
                 Object.preventExtensions(instanceProperties[propertyName]);

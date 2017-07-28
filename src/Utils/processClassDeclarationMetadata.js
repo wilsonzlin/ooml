@@ -1,5 +1,12 @@
-Utils.processClassDeclarationMetadata = (templateElem) => {
-    let className, classIsAbstract, classExtends;
+Utils.processClassDeclarationMetadata = templateElem => {
+    let className;
+    let classIsAbstract;
+    let classExtends;
+    let classProperties = Utils.createCleanObject();
+    let classMethods = Utils.createCleanObject();
+    let classConstructor;
+    let classRootElem;
+
     // ooml-(abstract)?-class definitely exists as this function is only called via querySelectorAll
     Utils.iterate(templateElem.attributes, attribute => {
         switch (attribute.name) {
@@ -29,19 +36,6 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
         templateElem.content :
         templateElem;
 
-    // Keep this object flat; only "properties" and "methods" can be nested
-    let classMetadata = Object.preventExtensions({
-        name: className,
-        isAbstract: classIsAbstract,
-        extends: classExtends,
-
-        properties: Utils.createCleanObject(),
-        methods: Utils.createCleanObject(),
-
-        constructor: undefined,
-        rootElem: undefined,
-    });
-
     Utils.iterate(templateContent.childNodes, node => {
 
         if (node instanceof Comment) {
@@ -59,86 +53,111 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
             throw new TypeError(`Illegal top-level node in class declaration`);
         }
 
-        if (classMetadata.rootElem) {
-            throw new SyntaxError(`The class "${ classMetadata.name }" has more than one root element`);
+        if (classRootElem) {
+            throw new SyntaxError(`The class "${ className }" has more than one root element`);
         }
 
         switch (node.nodeName) {
             case 'OOML-PROPERTY':
 
                 let propName;
-                let propTypes;
+                let propTypes; // `undefined` as default
                 let isSuppressed = false;
+                let isArraySubstitution = false;
                 let isAttribute = false;
+                let passthroughPropName;
                 let propBindingParts;
                 let propBindingPropertyToPartMap;
                 let propBindingIsDynamic;
                 let propBindingKeypath;
                 let propBindingOnExist;
                 let propBindingOnMissing;
+                let propGetter;
+                let propSetter;
+                let onchangeListener;
+                let dispatchEventHandlers = [];
 
-                let propGetter, propSetter, onchangeListener;
+                let bindingConfig;
 
                 Utils.iterate(node.attributes, attr => {
-                    let _attrName = attr.name;
-                    let _attrVal = attr.value;
+                    let domAttrName = attr.name;
+                    let domAttrValue = attr.value;
 
-                    switch (_attrName) {
+                    switch (domAttrName) {
                         case 'name':
-                            propName = _attrVal;
+                            propName = domAttrValue;
                             break;
 
                         case 'type':
-                            if (Utils.isNotOrBlankString(_attrVal)) {
+                            if (Utils.isNotOrBlankString(domAttrValue)) {
                                 throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-property tag`);
                             }
-                            propTypes = _attrVal;
+
+                            propTypes = domAttrValue;
                             break;
 
                         case 'transient':
-                            if (_attrVal !== '') {
+                            if (domAttrValue !== '') {
                                 throw new SyntaxError(`Invalid "transient" value for attribute declared by ooml-property tag`);
                             }
+
                             isSuppressed = true;
                             break;
 
                         case 'attribute':
-                            if (_attrVal !== '') {
+                            if (domAttrValue !== '') {
                                 throw new SyntaxError(`Invalid "attribute" value for attribute declared by ooml-property tag`);
                             }
+
                             isAttribute = true;
                             break;
 
+                        case 'array':
+                            if (domAttrValue !== '') {
+                                throw new SyntaxError(`Invalid "array" attribute value for element substitution property`);
+                            }
+                            // TODO Check type is an OOML.Class, as can't have OOML.Array containing anything else
+                            isArraySubstitution = true;
+                            break;
+
+                        case 'passthrough':
+                            if (Utils.isNotOrBlankString(domAttrValue)) {
+                                throw new SyntaxError(`Invalid passthrough property name`);
+                            }
+                            passthroughPropName = domAttrValue;
+                            break;
+
                         case 'get':
-                            if (!Utils.isValidPropertyName(_attrVal)) {
-                                throw new SyntaxError(`Invalid ${ _attrName } function`);
+                            if (!Utils.isValidPropertyName(domAttrValue)) {
+                                throw new SyntaxError(`Invalid ${ domAttrName } function`);
                             }
 
-                            propGetter = _attrVal;
+                            propGetter = domAttrValue;
                             break;
 
                         case 'set':
-                            if (Utils.isNotOrBlankString(_attrVal)) {
-                                throw new SyntaxError(`Invalid ${ _attrName } function`);
+                            if (Utils.isNotOrBlankString(domAttrValue)) {
+                                throw new SyntaxError(`Invalid ${ domAttrName } function`);
                             }
 
-                            propSetter = _attrVal;
+                            propSetter = domAttrValue;
                             break;
 
                         case 'change':
-                            if (Utils.isNotOrBlankString(_attrVal)) {
-                                throw new SyntaxError(`Invalid ${ _attrName } function`);
+                            if (Utils.isNotOrBlankString(domAttrValue)) {
+                                throw new SyntaxError(`Invalid ${ domAttrName } function`);
                             }
 
-                            onchangeListener = Function('classes', 'property', 'value', 'initial', 'dispatch', `"use strict";${ _attrVal }`);
+                            // TODO Can have change listener on OOML.Array
+                            onchangeListener = domAttrValue;
                             break;
 
                         case 'bind-to':
-                            if (Utils.isNotOrBlankString(_attrVal)) {
-                                throw new SyntaxError(`Invalid binding`);
+                            if (Utils.isNotOrBlankString(domAttrValue)) {
+                                throw new SyntaxError(`Empty binding key`);
                             }
 
-                            let bindingConfig = Utils.parseBindingDeclaration(_attrVal.trim());
+                            bindingConfig = Utils.parseBindingDeclaration(domAttrValue.trim());
                             propBindingIsDynamic = bindingConfig.isDynamic;
                             propBindingParts = bindingConfig.parts;
                             propBindingPropertyToPartMap = bindingConfig.propertyToPartMap;
@@ -146,24 +165,37 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
                             break;
 
                         case 'binding-exist':
-                            if (Utils.isNotOrBlankString(_attrVal)) {
-                                throw new SyntaxError(`Invalid ${ _attrName } function`);
+                            if (Utils.isNotOrBlankString(domAttrValue)) {
+                                throw new SyntaxError(`Invalid ${ domAttrName } function`);
                             }
 
-                            propBindingOnExist = Function('classes', 'property', 'storeValue', 'initial', 'dispatch', 'event', `"use strict";${ _attrVal }`);
+                            propBindingOnExist = domAttrValue;
                             break;
 
                         case 'binding-missing':
-                            if (Utils.isNotOrBlankString(_attrVal)) {
-                                throw new SyntaxError(`Invalid ${ _attrName } function`);
+                            if (Utils.isNotOrBlankString(domAttrValue)) {
+                                throw new SyntaxError(`Invalid ${ domAttrName } function`);
                             }
 
                             // storeValue needs to be available, even though it's always undefined
-                            propBindingOnMissing = Function('classes', 'property', 'storeValue', 'initial', 'dispatch', 'event', `"use strict";${ _attrVal }`);
+                            propBindingOnMissing = domAttrValue;
                             break;
 
                         default:
-                            throw new ReferenceError(`Unrecognised attribute "${ _attrName }" on ooml-property tag`);
+                            if (/^handle-/.test(domAttrName)) {
+
+                                // Don't need to lowercase -- it already is
+                                let eventName = domAttrName.slice(7);
+
+                                if (dispatchEventHandlers[eventName]) {
+                                    throw new ReferenceError(`Another "${ eventName }" dispatch event handler already exists`);
+                                }
+
+                                dispatchEventHandlers[eventName] = domAttrValue;
+
+                            } else {
+                                throw new ReferenceError(`Unrecognised attribute "${ domAttrName }" on ooml-property tag`);
+                            }
                     }
                 });
 
@@ -171,7 +203,17 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
                     throw new SyntaxError(`The property name "${ propName }" is invalid`);
                 }
 
-                if (classMetadata.properties[propName] || classMetadata.methods[propName]) {
+                if (isArraySubstitution) {
+                    if (propGetter || propSetter) {
+                        throw new SyntaxError(`The array property "${ propName }" has a getter or setter`);
+                    }
+                    if (bindingConfig) {
+                        throw new SyntaxError(`The array property "${ propName }" has a binding`);
+                    }
+                } else {
+                }
+
+                if (classProperties[propName] || classMethods[propName]) {
                     throw new ReferenceError(`A property or method called "${ propName }" already exists`);
                 }
 
@@ -185,7 +227,7 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
                 }
 
                 // Keep this object flat
-                classMetadata.properties[propName] = {
+                classProperties[propName] = Object.freeze({
                     bindingIsDynamic: propBindingIsDynamic,
                     bindingParts: propBindingParts,
                     bindingPropertyToPartMap: propBindingPropertyToPartMap,
@@ -193,14 +235,14 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
                     bindingOnExist: propBindingOnExist,
                     bindingOnMissing: propBindingOnMissing,
                     types: propTypes,
-                    value: propValue,
+                    defaultValue: propValue,
                     isArray: false,
                     onChange: onchangeListener,
                     getter: propGetter,
                     setter: propSetter,
                     isSuppressed: isSuppressed,
                     isAttribute: isAttribute,
-                };
+                });
 
                 break;
 
@@ -227,40 +269,40 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
                 let textContent = node.textContent.trim();
 
                 if (!/^function *\((?:[a-zA-Z_][a-zA-Z0-9_]*,)*(?:[a-zA-Z_][a-zA-Z0-9_]*)*\)\s*\{/.test(textContent) || !/\}$/.test(textContent)) {
-                    throw new SyntaxError(`The "${ methodName }" method for the class "${ classMetadata.name }" is not a valid function declaration`);
+                    throw new SyntaxError(`The "${ methodName }" method for the class "${ className }" is not a valid function declaration`);
                 }
 
                 let realFn = Utils.getEvalValue(textContent);
 
                 // Abstract methods can also have constructors, as descendant classes can call it
                 if (methodName == 'constructor') {
-                    if (classMetadata.constructor) {
-                        throw new ReferenceError(`A constructor has already been defined for the class "${ classMetadata.name }"`);
+                    if (classConstructor) {
+                        throw new ReferenceError(`A constructor has already been defined for the class "${ className }"`);
                     }
 
-                    classMetadata.constructor = realFn;
+                    classConstructor = realFn;
                 } else {
-                    if (classMetadata.methods[methodName] || classMetadata.properties[methodName]) {
+                    if (classMethods[methodName] || classProperties[methodName]) {
                         throw new ReferenceError(`A method or property called "${ methodName }" already exists`);
                     }
                     Object.defineProperty(realFn, "name", { value: methodName });
 
                     // Keep this object flat
-                    classMetadata.methods[methodName] = {
+                    classMethods[methodName] = Object.freeze({
                         fn: realFn,
-                    };
+                    });
                 }
 
                 break;
 
             default:
-                classMetadata.rootElem = node;
+                classRootElem = node;
         }
     });
 
     // Non-abstract classes must have a DOM
-    if (!classMetadata.rootElem && !classMetadata.isAbstract) {
-        throw new SyntaxError(`The class "${ classMetadata.name }" does not have a root element`);
+    if (!classRootElem && !classIsAbstract) {
+        throw new SyntaxError(`The class "${ className }" does not have a root element`);
     }
 
     // Remove the class declaration from the DOM
@@ -269,11 +311,22 @@ Utils.processClassDeclarationMetadata = (templateElem) => {
     }
 
     // Prevent data-* attributes on the root element (as attribute properties should be used)
-    Utils.iterate(classMetadata.rootElem.attributes, attr => {
+    Utils.iterate(classRootElem.attributes, attr => {
         if (/^data-/i.test(attr.name)) {
-            throw new SyntaxError(`Data attributes are not allowed on the root element (class "${classMetadata.name}")`);
+            throw new SyntaxError(`Data attributes are not allowed on the root element (class "${className}")`);
         }
     });
 
-    return classMetadata;
+    // Keep this object flat; only "properties" and "methods" can be nested
+    return Object.freeze({
+        name: className,
+        isAbstract: classIsAbstract,
+        extends: classExtends,
+
+        properties: Object.freeze(classProperties),
+        methods: Object.freeze(classMethods),
+
+        constructor: classConstructor,
+        rootElem: classRootElem,
+    });
 };
