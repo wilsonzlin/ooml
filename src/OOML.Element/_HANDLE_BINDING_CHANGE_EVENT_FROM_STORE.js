@@ -1,4 +1,5 @@
-OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] = function(internalObject, externalObject, key, currentStoreValue) {
+OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] = function(key, currentStoreValue) {
+    let internalObject = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
     let currentBindingState = internalObject.bindingState;
     let currentBindingStateIsInitial = currentBindingState == BINDING_STATE_INIT;
 
@@ -30,6 +31,6 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE] 
     }
 
     if (!preventChange) {
-        externalObject[key] = valueToApplyLocally;
+        this[key] = valueToApplyLocally;
     }
 };

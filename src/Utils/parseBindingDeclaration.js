@@ -44,4 +44,4 @@ Utils.parseBindingDeclaration = declaration => {
             keypath: dynamicParts[0],
         };
     }
-}
+};

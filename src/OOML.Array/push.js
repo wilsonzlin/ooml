@@ -6,7 +6,7 @@ OOMLArrayProtoMutation.push = function(newVal) {
         _this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
     let elemConstructor = _this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
-    let newElem = Utils.constructElement(elemConstructor, newVal);
+    let newElem = Utils.constructOOMLElementInstance(elemConstructor, newVal);
     newElem[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: insertAfter, parent: _this });
 
     arr.push(newElem);

@@ -11,8 +11,6 @@
  *
  */
 
-
-
 // Alias typeof values to prevent typos and minify better
 let TYPEOF_FUNCTION = 'function';
 let TYPEOF_OBJECT = 'object';
@@ -20,8 +18,6 @@ let TYPEOF_STRING = 'string';
 let TYPEOF_BOOLEAN = 'boolean';
 let TYPEOF_NUMBER = 'number';
 
-// This line will be removed by compiler; Utils.* functions will be flattened to individual functions
-let Utils = {};
 <ZC-IMPORT[utils.DOM]>
 
 let BINDING_STATE_INIT = 1;
@@ -91,7 +87,6 @@ let OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT = '__oomlCurrentAttachment';
 let OOML_INSTANCE_PROPNAME_ATTACH = '__oomlAttach';
 let OOML_INSTANCE_PROPNAME_DETACH = '__oomlDetach';
 let OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch';
-let OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE = '__oomlBindingOnStateChange';
 let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH = '__oomlEventHandlersDispatch';
 let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION = '__oomlEventHandlersMutation';
 let OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT = '__oomlPropertiesInternalObject';
@@ -101,6 +96,7 @@ let OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY = '__oomlSetArrayProperty';
 let OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY = '__oomlSetObjectProperty';
 let OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE = '__oomlHandleBindingChangeEventFromStore';
 let OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING = '__oomlRebindDynamicBinding';
+let OOML_INSTANCE_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS = '__oomlPropertiesToDependentBindings';
 let OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS = '__oomlPropertyRebindSetTimeouts';
 
 let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
@@ -109,6 +105,7 @@ let OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties';
 let OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
 let OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint';
 let OOML_CLASS_PROPNAME_ROOTELEMTAGNAME = '__oomlRootElemTagName';
+let OOML_CLASS_PROPNAME_ANCESTOR_CLASSES = '__oomlAncestorClasses';
 
 let OOML = {};
 

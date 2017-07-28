@@ -2,27 +2,31 @@ Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceE
     let cloned;
 
     switch (node.type) {
-        case 'element':
 
+        // Create an HTMLElement
+        case 'element':
             cloned = document.createElement(node.name);
 
             Object.keys(node.domEventHandlers).forEach(eventName => {
-
                 // Event object will be provided when called by browser
                 cloned['on' + eventName] = node.domEventHandlers[eventName].bind(instance, cloned);
-
             });
 
             node.attributes.forEach(attr => {
+                // Expose HTMLElement
                 if (attr.name == 'ooml-expose') {
                     let exposeKey = attr.value;
                     if (instanceExposedDOMElems[exposeKey]) {
                         throw new ReferenceError(`A DOM element is already exposed with the key "${ exposeKey }"`);
                     }
                     instanceExposedDOMElems[exposeKey] = cloned;
+
                 } else {
+                    // Set normal HTML tag attribute
                     if (!attr.valueFormat) {
                         cloned.setAttribute(attr.name, attr.value);
+
+                    // Set up dynamic HTML attribute
                     } else {
                         // COMPATIBILITY - IE: Don't use .(get|set)Attribute(Node)? -- buggy behaviour in IE
                         let clonedAttr = {

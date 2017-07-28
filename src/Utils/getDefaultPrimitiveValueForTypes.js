@@ -10,4 +10,4 @@ Utils.getDefaultPrimitiveValueForTypes = types => {
     } else {
         throw new Error(`Unknown type "${types}"`);
     }
-}
+};

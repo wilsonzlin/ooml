@@ -10,4 +10,4 @@ Utils.getClassFromString = (imports, classes, className) => {
     }
 
     return ret;
-}
+};

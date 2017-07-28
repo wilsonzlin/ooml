@@ -12,7 +12,7 @@ OOMLElementProto.detach = function() {
     if (parent instanceof OOML.Array) {
         let indexOfThis = parent.indexOf(instance);
         if (indexOfThis < 0) {
-            throw new Error(`This instance could not be found on its parent array`);
+            throw new Error(`This instance could not be found in its parent array`);
         }
         // This will call __oomlDetach
         parent.splice(indexOfThis, 1);

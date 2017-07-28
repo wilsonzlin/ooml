@@ -3,7 +3,7 @@ OOMLArrayProtoMutation.unshift = function(newVal) {
         insertAfter = this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
     let elemConstructor = this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
-    let newElem = Utils.constructElement(elemConstructor, newVal);
+    let newElem = Utils.constructOOMLElementInstance(elemConstructor, newVal);
     newElem[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: insertAfter, parent: this });
 
     arr.unshift(newElem);

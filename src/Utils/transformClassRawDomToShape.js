@@ -1,4 +1,4 @@
-Utils.parseClassDom = current => {
+Utils.transformClassRawDomToShape = current => {
 
     let ret;
 
@@ -224,13 +224,13 @@ Utils.parseClassDom = current => {
 
             } else {
 
-                ret.attributes.push(parseClassDom(attr));
+                ret.attributes.push(transformClassRawDomToShape(attr));
 
             }
         });
 
         Utils.iterate(current.childNodes, childNode => {
-            let parsedChildNodes = parseClassDom(childNode);
+            let parsedChildNodes = transformClassRawDomToShape(childNode);
             if (Array.isArray(parsedChildNodes)) {
                 Array.prototype.push.apply(ret.childNodes, parsedChildNodes);
             } else if (parsedChildNodes) {

@@ -54,17 +54,9 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY] = function(prop,
         // This should run initially as well (rebinding is really just binding)
         let dependentBindings = propertiesToDependentBindings[prop];
         if (dependentBindings) {
-            dependentBindings.attributes.forEach(attrName => {
-                let internalObject = instanceAttributes[attrName].binding;
-                internalObject.propertyToPartMap[prop].forEach(idx => {
-                    internalObject.parts[idx] = newVal;
-                });
-                rebindDynamicBinding(undefined, attrName);
-            });
             dependentBindings.properties.forEach(propName => {
-                let internalObject = instanceProperties[propName].binding;
-                internalObject.propertyToPartMap[prop].forEach(idx => {
-                    internalObject.parts[idx] = newVal;
+                instanceProperties[propName].bindingPropertyToPartMap[prop].forEach(idx => {
+                    instanceProperties[propName].bindingParts[idx] = newVal;
                 });
                 rebindDynamicBinding(propName);
             });

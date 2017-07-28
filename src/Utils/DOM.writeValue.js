@@ -1,34 +1,3 @@
-Utils.DOM = {};
-Utils.DOM.find = (rootElem, sel) => Utils.concat(rootElem.querySelectorAll(sel)),
-    Utils.DOM.setData = (domElem, key, value) => {
-        if (OOMLCompatDatasetExists) {
-            domElem.dataset[key] = value;
-        } else {
-            domElem.setAttribute('data-' + Utils.toDashCase(key), value);
-        }
-    };
-
-Utils.DOM.hasAncestorOrDescendantNamespace = rootElem => {
-    let toCheck, current;
-
-    toCheck = rootElem;
-    while (toCheck) {
-        if (toCheck[OOML_DOM_PROPNAME_ISNAMESPACE]) {
-            return true;
-        }
-        toCheck = toCheck.parentNode;
-    }
-
-    toCheck = [rootElem];
-    while (current = toCheck.shift()) {
-        if (current[OOML_DOM_PROPNAME_ISNAMESPACE]) {
-            return true;
-        }
-        toCheck.push(current.children);
-    }
-
-    return false;
-};
 Utils.DOM.writeValue = (type, name, nodes, value, customHtml) => {
     let customDom;
     let useCustomHtml = Utils.typeOf(customHtml, TYPEOF_STRING);

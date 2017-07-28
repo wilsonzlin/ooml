@@ -65,7 +65,7 @@ let { hive, HiveSubscriber } = (() => {
                     bindings.forEach(binding => {
                         let {object, property} = binding;
                         // This will handle assigning the value, so that the handler can optionally prevent it from happening
-                        object[OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE](property, value);
+                        object[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE](property, value);
                     });
                 }
             }
@@ -91,7 +91,7 @@ let { hive, HiveSubscriber } = (() => {
                 bindings.forEach(binding => {
                     let {object, property} = binding;
                     // This should handle resetting the property to the default value
-                    object[OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE](property);
+                    object[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE](property);
                 });
             }
         }
@@ -222,7 +222,7 @@ let { hive, HiveSubscriber } = (() => {
         if (isHiveObjectOrHiveArray(currentValue)) {
             currentValue = undefined;
         }
-        object[OOML_INSTANCE_PROPNAME_BINDING_ON_STORE_VALUE_CHANGE](property, currentValue);
+        object[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE](property, currentValue);
 
         return bindingId;
     };

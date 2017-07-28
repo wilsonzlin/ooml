@@ -11,4 +11,4 @@ Utils.deepClone = obj => {
         cloned = obj;
     }
     return cloned;
-}
+};

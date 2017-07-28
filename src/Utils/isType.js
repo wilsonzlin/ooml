@@ -33,4 +33,4 @@ Utils.isType = (type, value) => {
         default:
             throw new Error(`Unrecognised type for checking against`);
     }
-}
+};

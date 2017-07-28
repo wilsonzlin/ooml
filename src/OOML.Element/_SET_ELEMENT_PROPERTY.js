@@ -35,7 +35,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, ne
 
     // Attach first to ensure that element is attachable
     if (newVal !== null) {
-        newVal = Utils.constructElement(elemDetails.types[0], newVal);
+        newVal = Utils.constructOOMLElementInstance(elemDetails.types[0], newVal);
         newVal[OOML_INSTANCE_PROPNAME_ATTACH]({
             insertAfter: elemDetails.insertAfter,
             parent: this,

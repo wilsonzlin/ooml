@@ -1,138 +1,147 @@
-Utils.createOOMLClass = ({ className, classParent, classMethods, classConstructor, classIsAbstract, classProperties }) => {
-    let oomlClass = function(initState) {
-        let instance = this;
-        let instanceIsAttachedTo = {};
+Utils.createOOMLClass = ({ namespace, className, classParent, classMethods, classConstructor, classIsAbstract, classProperties, classRootElem }) => {
+    let oomlClass;
 
-        if (!(instance instanceof oomlClass)) {
-            throw new ReferenceError(`OOML instances need to be constructed`);
-        }
+    let classPropertyNames = Object.freeze(Object.keys(classProperties));
 
-        if (initState !== undefined && !Utils.isObjectLiteral(initState)) {
-            if (!Utils.typeOf(instance.unserialise, TYPEOF_FUNCTION) || !Utils.isPrimitiveValue(initState)) {
-                throw new TypeError(`Invalid OOML instance initial state`);
+    // Create a simpler class if it's abstract
+    if (classIsAbstract) {
+        oomlClass = function(initState) {
+            let instance = this;
+
+            if (!(instance instanceof oomlClass)) {
+                throw new ReferenceError(`OOML instances need to be constructed`);
             }
 
-            initState = instance.unserialise(initState);
-            if (!Utils.isObjectLiteral(initState)) {
-                throw new TypeError(`Unserialised initial state is not an object`);
-            }
-        }
+            initState = Utils.unserialiseInitState(instance, initState);
 
-        if (classIsAbstract) {
             if (!Utils.typeOf(instance.abstractFactory, TYPEOF_FUNCTION)) {
                 throw new TypeError(`Unable to construct new instance; "${ className }" is an abstract class`);
             }
 
             let ret = instance.abstractFactory(initState);
             if (!(ret instanceof OOML.Element)) {
-                throw new TypeError(`Abstract factory returned value is not an OOML instance`);
+                throw new TypeError(`Abstract factory returned a value that is not an OOML element instance`);
             }
 
             return ret;
-        }
+        };
 
-        // Create a copy of the classProperties to use as this instance's internal state
-        let instanceProperties = Utils.deepClone(classProperties);
-        Object.keys(instanceProperties).forEach(propertyName => {
-            instanceProperties[propertyName].insertAfter = undefined;
+    // Create a normal non-abstract class
+    } else {
+        oomlClass = function(initState) {
+            let instance = this;
+            let instanceIsAttachedTo = {};
 
-            // Use NodeSet as attributes may be binded to the same property more than once
-            instanceProperties[propertyName].nodes = new NodeSet();
-        });
+            if (!(instance instanceof oomlClass)) {
+                throw new ReferenceError(`OOML instances need to be constructed`);
+            }
 
-        // Map from property names to properties that have a dynamic binding dependent on it
-        let propertiesToDependentBindings = Utils.createCleanObject();
-        let propertyRebindSetTimeouts = Utils.createCleanObject();
+            initState = Utils.unserialiseInitState(instance, initState);
 
-        let mutationEventHandlers = Utils.createCleanObject();
-        let dispatchEventHandlers = Utils.createCleanObject();
+            // Create a copy of the classProperties to use as this instance's internal state
+            let instanceProperties = Utils.deepClone(classProperties);
 
-        let instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
-        let instanceDom = Utils.constructInstanceDomFromShape({
-            instance, instanceProperties, instanceExposedDOMElems,
-            node: classRootElem
-        });
+            // Defensive coding
+            Object.preventExtensions(instanceProperties);
 
-        let instanceObjectProperties = Utils.createCleanObject();
-        instanceObjectProperties[OOML_INSTANCE_PROPNAME_DOMELEM]                       = instanceDom;
-        instanceObjectProperties[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH]       = dispatchEventHandlers;
-        instanceObjectProperties[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION]       = mutationEventHandlers;
-        instanceObjectProperties[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT]            = instanceIsAttachedTo;
-        instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT]    = instanceProperties;
-        instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS]  = propertyRebindSetTimeouts;
+            // Set up the instanceProperties internal object
+            Object.keys(instanceProperties).forEach(propertyName => {
+                // For element and array substitutions, so that the anchor position is known
+                instanceProperties[propertyName].insertAfter = undefined;
 
-        // Expose DOM elements via prefixed property
-        Object.keys(instanceExposedDOMElems).forEach(keyName => {
-            instanceObjectProperties['$' + keyName] = instanceExposedDOMElems[keyName];
-        });
+                // Use NodeSet as attributes may be binded to the same property more than once
+                instanceProperties[propertyName].nodes = new NodeSet();
 
-        // Apply getters and setters for local properties
-        for (let p in instanceObjectProperties) {
-            Object.defineProperty(instance, p, { value: instanceObjectProperties });
-        }
+                // Defensive coding
+                Object.preventExtensions(instanceProperties[propertyName]);
+            });
 
-        // Prevent assigning to non-existent properties
-        Object.preventExtensions(instance);
+            // Map from property names to properties that have a dynamic binding dependent on it
+            let propertiesToDependentBindings = Utils.createCleanObject();
+            let propertyRebindSetTimeouts = Utils.createCleanObject();
 
-        if (initState) {
-            Object.keys(initState).forEach(propName => {
-                if (classPropertyNames.indexOf(propName) < 0) {
-                    throw new ReferenceError(`The property "${propName}" provided in an element substitution's default value does not exist`);
+            let dispatchEventHandlers = Utils.createCleanObject();
+            let mutationEventHandlers = Utils.createCleanObject();
+
+            let instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
+            let instanceDom = Utils.constructInstanceDomFromShape({
+                instance, instanceProperties, instanceExposedDOMElems,
+                node: classRootElem
+            });
+
+            let instanceObjectProperties = Utils.createCleanObject();
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_DOMELEM]                       = instanceDom;
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH]       = dispatchEventHandlers;
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION]       = mutationEventHandlers;
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT]            = instanceIsAttachedTo;
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT]    = instanceProperties;
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS]  = propertiesToDependentBindings;
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS]  = propertyRebindSetTimeouts;
+
+            // Expose DOM elements via prefixed property
+            Object.keys(instanceExposedDOMElems).forEach(keyName => {
+                instanceObjectProperties['$' + keyName] = instanceExposedDOMElems[keyName];
+            });
+
+            // Apply getters and setters for local properties
+            for (let p in instanceObjectProperties) {
+                Object.defineProperty(instance, p, { value: instanceObjectProperties });
+            }
+
+            // Prevent assigning to non-existent properties
+            Object.preventExtensions(instance);
+
+            if (initState) {
+                Object.keys(initState).forEach(propName => {
+                    if (classPropertyNames.indexOf(propName) < 0) {
+                        throw new ReferenceError(`The property "${propName}" provided in an element substitution's default value does not exist`);
+                    }
+                });
+            }
+
+            classPropertyNames.forEach(propName => {
+                if (Utils.hasOwnProperty(initState, propName)) {
+                    // If passthrough, initialise instance with initState built-in (to prevent it counting as a change, and to increase efficiency)
+                    if (classProperties[propName].passthrough != undefined) {
+                        let initStateUnserialised = Utils.createCleanObject();
+                        initStateUnserialised[classProperties[propName].passthrough] = initState[propName];
+                        if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
+                            // WARNING: Unknown if should clone classSubstitutionDefaultValues value first
+                            instance[propName] = Utils.concat(classSubstitutionDefaultValues[propName], initStateUnserialised);
+                        } else {
+                            instance[propName] = initStateUnserialised;
+                        }
+                    } else {
+                        instance[propName] = initState[propName];
+                    }
+                } else if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
+                    // WARNING: Unknown if should clone first
+                    instance[propName] = classSubstitutionDefaultValues[propName];
+                } else if (Utils.hasOwnProperty(classPredefinedProperties, propName)) {
+                    instance[propName] = classPredefinedProperties[propName].value;
+                } else if (instance[propName] === undefined) { // WARNING: Must check as array substitution properties have value already set
+                    // Set any undefined values to their default type values
+                    let types = instanceProperties[propName].types;
+
+                    if (classElementProperties.has(propName)) {
+                        instance[propName] = classProperties[propName].passthrough != undefined ? {} : null;
+                    } else {
+                        instance[propName] = Utils.getDefaultPrimitiveValueForTypes(types);
+                    }
                 }
             });
-        }
 
-        classPropertyNames.forEach(propName => {
-            if (Utils.hasOwnProperty(initState, propName)) {
-                // If passthrough, initialise instance with initState built-in (to prevent it counting as a change, and to increase efficiency)
-                if (classProperties[propName].passthrough != undefined) {
-                    let initStateUnserialised = Utils.createCleanObject();
-                    initStateUnserialised[classProperties[propName].passthrough] = initState[propName];
-                    if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
-                        // WARNING: Unknown if should clone classSubstitutionDefaultValues value first
-                        instance[propName] = Utils.concat(classSubstitutionDefaultValues[propName], initStateUnserialised);
-                    } else {
-                        instance[propName] = initStateUnserialised;
-                    }
-                } else {
-                    instance[propName] = initState[propName];
-                }
-            } else if (Utils.hasOwnProperty(classSubstitutionDefaultValues, propName)) {
-                // WARNING: Unknown if should clone first
-                instance[propName] = classSubstitutionDefaultValues[propName];
-            } else if (Utils.hasOwnProperty(classPredefinedProperties, propName)) {
-                instance[propName] = classPredefinedProperties[propName].value;
-            } else if (instance[propName] === undefined) { // WARNING: Must check as array substitution properties have value already set
-                // Set any undefined values to their default type values
-                let types = instanceProperties[propName].types;
-
-                if (classElementProperties.has(propName)) {
-                    instance[propName] = classProperties[propName].passthrough != undefined ? {} : null;
-                } else {
-                    instance[propName] = Utils.getDefaultPrimitiveValueForTypes(types);
-                }
+            let builtConstructor = ancestorClasses.reduce((previous, ancestorClass) => {
+                return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] ? ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous) : previous;
+            }, undefined);
+            if (builtConstructor) {
+                builtConstructor();
             }
-        });
 
-        // Get all predefined attributes properties (including inherited ones)
-        let ancestorClasses = [];
-        let currentProto = Object.getPrototypeOf(this);
-
-        while (currentProto !== OOML.Element.prototype) {
-            ancestorClasses.unshift(currentProto.constructor);
-            currentProto = Object.getPrototypeOf(currentProto);
-        }
-
-        let builtConstructor = ancestorClasses.reduce((previous, ancestorClass) => {
-            return ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] ? ancestorClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR].bind(instance, previous) : previous;
-        }, undefined);
-        if (builtConstructor) {
-            builtConstructor();
-        }
-
-        // Update attribute nodes with parameter handlebars that have just been changed
-        OOMLWriteChanges();
-    };
+            // Update attribute nodes with parameter handlebars that have just been changed
+            OOMLWriteChanges();
+        };
+    }
 
     // Set properties for accessing properties' names and predefined properties' values
     oomlClass[OOML_CLASS_PROPNAME_PROPNAMES] = classPropertyNames; // Already frozen
@@ -141,15 +150,26 @@ Utils.createOOMLClass = ({ className, classParent, classMethods, classConstructo
     oomlClass[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR] = classConstructor;
     oomlClass[OOML_CLASS_PROPNAME_EXTENSIONPOINT] = classHasExtensionPoint && classRawDom;
     oomlClass[OOML_CLASS_PROPNAME_ROOTELEMTAGNAME] = classRootElem && classRootElem.name;
+
+    // Get all predefined attributes properties (including inherited ones)
+    let ancestorClasses = [];
+    let currentProto = Object.getPrototypeOf(this);
+
+    while (currentProto !== OOML.Element.prototype) {
+        ancestorClasses.unshift(currentProto.constructor);
+        currentProto = Object.getPrototypeOf(currentProto);
+    }
+    oomlClass[OOML_CLASS_PROPNAME_ANCESTOR_CLASSES] = ancestorClasses;
+
     Object.defineProperty(oomlClass, "name", { value: className });
 
     // Make class inherit from parent class
-    oomlClass.prototype = Object.create(classExtends.prototype);
+    oomlClass.prototype = Object.create(classParent.prototype);
     let classProtoPropertiesConfig = Utils.createCleanObject();
 
     classProtoPropertiesConfig.constructor = { value: oomlClass };
     // Do this to allow instance methods access to this namespace's classes
-    classProtoPropertiesConfig.namespace = { value: oomlNamespaceInstance };
+    classProtoPropertiesConfig.namespace = { value: namespace };
 
     classPropertyNames.forEach(prop => {
 
@@ -180,10 +200,7 @@ Utils.createOOMLClass = ({ className, classParent, classMethods, classConstructo
                     Object.keys(propertyToPartMap).forEach(k => {
                         if (k != "attributes") {
                             if (!propertiesToDependentBindings[k]) {
-                                propertiesToDependentBindings[k] = {
-                                    attributes: new StringSet(),
-                                    properties: new StringSet(),
-                                };
+                                propertiesToDependentBindings[k] = new StringSet();
                             }
                             propertiesToDependentBindings[k].properties.add(prop);
                         }

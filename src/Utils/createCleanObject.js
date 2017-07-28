@@ -1,1 +1,1 @@
-Utils.createCleanObject = () => Object.create(null)
+Utils.createCleanObject = () => Object.create(null);

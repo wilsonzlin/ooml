@@ -87,49 +87,7 @@ OOML.Namespace = function(namespace, settings) {
     // Go through the namespace and find any OOML class declarations
     Utils.DOM.find(namespace, 'template[ooml-class],template[ooml-abstract-class]').forEach(classTemplateElem => {
 
-        /*
-            This is a classMetadata object:
-
-                {
-                    name: "NameOfClass",
-                    isAbstract: true || false,
-                    extends: "a string representing the unverified name of the class, not a fuction representing the actual class",
-
-                    constructor: Function unbindedConstructor || undefined,
-                    rootElem: HTMLElement,
-
-                    properties: {
-                        nameOfProp: {
-                            types: ["string", "natural", "null"] || [SomeOOMLClassConstructor] || undefined,
-                            value: "the default value" || undefined,
-                            isArray: true || false,
-
-                            getter: Function someOwnMethod || undefined,
-                            setter: Function someOwnMethod || undefined,
-                            onChange: Function someOwnMethod || undefined,
-
-                            isSuppressed: false,
-                            isAttribute: true,
-
-                            bindingIsDynamic: true || false,
-                            bindingParts: ["users.", "", ".age"] || undefined,
-                            bindingPropertyToPartMap: {
-                                "userID": [1],
-                            } || undefined,
-                            bindingKeypath: undefined || "fixed.path.to.store.value",
-                            bindingOnExist: Function someOwnMethod || undefined,
-                            bindingOnMissing: Function someOwnMethod || undefined,
-                        },
-                    },
-                    methods: {
-                        nameOfMethod: {
-                            fn: Function realFn,
-                        },
-                    },
-                }
-
-
-        */
+        // See reference/classMetadata.js for reference
         let classMetadata = Utils.processClassDeclarationMetadata(classTemplateElem);
 
         // Get name, and check that it is unique
@@ -152,8 +110,6 @@ OOML.Namespace = function(namespace, settings) {
         let classProperties = Utils.deepClone(classPredefinedProperties);
 
         // Just for quick reference, nothing more
-        let classArrayProperties = new StringSet();
-        let classElementProperties = new StringSet();
         let classSubstitutionDefaultValues = Utils.createCleanObject();
 
         // For .toObject and .keys
@@ -183,12 +139,20 @@ OOML.Namespace = function(namespace, settings) {
             classRawDom = _extendedRawDom;
         }
 
-        let classRootElem = Utils.parseClassDom(classRawDom);
+        let classRootElem = Utils.transformClassRawDomToShape(classRawDom);
 
         Utils.deepFreeze(classProperties);
-        let classPropertyNames = Object.freeze(Object.keys(classProperties));
 
-        classes[className] = Utils.createOOMLClass(classMetadata);
+        classes[className] = Utils.createOOMLClass({
+            namespace: oomlNamespaceInstance,
+            className: className,
+            classParent: classExtends,
+            classMethods: classMethods,
+            classConstructor: classConstructor,
+            classIsAbstract: classMetadata.isAbstract,
+            classProperties: classProperties,
+            classRootElem: classRootElem,
+        });
     });
 
     Object.freeze(classes);
@@ -222,7 +186,7 @@ OOML.Namespace = function(namespace, settings) {
         Utils.iterate(instanceInstantiationElem.attributes, attr => {
             let _attrName = attr.name.toLocaleLowerCase();
             if (_attrName != 'ooml-instantiate') {
-                if (/^(data-|(mutation|dispatch|dom)?on)/.test(_attrName)) {
+                if (/^(data|handle)-/.test(_attrName)) {
                     throw new SyntaxError(`Illegal attribute "${ _attrName }" on ooml-instantiate element`);
                 }
                 instance[OOML_INSTANCE_PROPNAME_DOMELEM].setAttribute(_attrName, attr.value);

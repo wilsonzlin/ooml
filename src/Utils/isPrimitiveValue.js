@@ -1,1 +1,1 @@
-Utils.isPrimitiveValue = val => Utils.isType(OOMLPrimitiveTypes, val)
+Utils.isPrimitiveValue = val => Utils.isType(OOMLPrimitiveTypes, val);

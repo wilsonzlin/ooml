@@ -3,7 +3,7 @@ OOMLArrayProtoMutation.initialize = function(arr) {
     let elemConstructor = _this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
     let insertAfter = _this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
 
-    arr = arr.map(elem => Utils.constructElement(elemConstructor, elem));
+    arr = arr.map(elem => Utils.constructOOMLElementInstance(elemConstructor, elem));
 
     _this[OOML_ARRAY_PROPNAME_INTERNALARRAY].forEach(elemToDetach => elemToDetach[OOML_INSTANCE_PROPNAME_DETACH]());
 

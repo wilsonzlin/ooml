@@ -7,4 +7,4 @@ Utils.deepFreeze = obj => {
         }
     });
     return obj;
-}
+};

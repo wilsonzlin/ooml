@@ -22,4 +22,4 @@ Utils.concat = function () {
         }
     }
     return ret;
-}
+};

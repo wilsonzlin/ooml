@@ -12,4 +12,4 @@ Utils.parseTypeDeclaration = types => types.split('|').filter((type, idx, types)
         throw new SyntaxError(`Illegal type declaration "${ type }"`);
     }
     return true;
-})
+});
