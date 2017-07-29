@@ -56,12 +56,12 @@ let OOMLWriteChanges = () => {
 
 let dashCaseCache = Utils.createCleanObject();
 
-// NOTE: Property in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
-let OOMLReservedPropertyNames = ['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes', 'namespace', 'handle', 'keys'];
+// NOTE: "Property" in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
+let OOMLReservedPropertyNames = new StringSet(['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes', 'namespace', 'handle', 'keys']);
 
-let OOMLPrimitiveTypes = ['null', 'number', 'boolean', 'string'];
-let OOMLPropertyNumberTypes = ['natural', 'integer', 'float', 'number'];
-let OOMLPropertyTypes = Utils.concat(OOMLPrimitiveTypes, OOMLPropertyNumberTypes).slice(0, -1); // Remove duplicate entry "number"
+let JavaScriptNativePrimitiveTypes = ['null', 'number', 'boolean', 'string'];
+let OOMLPrimitiveNumberTypes = ['natural', 'integer', 'float', 'number'];
+let OOMLPrimitiveTypes = Utils.concat(JavaScriptNativePrimitiveTypes, OOMLPrimitiveNumberTypes).slice(0, -1); // Remove duplicate entry "number"
 
 let OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray';
 let OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor';

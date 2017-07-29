@@ -4,7 +4,7 @@ let { hive, HiveSubscriber } = (() => {
             return false;
         }
         key = '' + key;
-        return key.length > 0 && !/^__/.test(key) && key.indexOf('.') == -1 && OOMLReservedPropertyNames.indexOf(key) == -1;
+        return key.length > 0 && !/^__/.test(key) && key.indexOf('.') == -1;
     };
     let assertValidKey = key => {
         if (!isValidKey(key)) {

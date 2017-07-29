@@ -6,4 +6,4 @@ Utils.isValidPropertyName = name =>
     !(name[0] == '_' && name[1] == '_') &&
     // Starting or trailing whitespace
     !/^\s|\s$/.test(name) &&
-    OOMLReservedPropertyNames.indexOf(name) == -1;
+    !OOMLReservedPropertyNames.has(name);

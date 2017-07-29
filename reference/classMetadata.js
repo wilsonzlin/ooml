@@ -4,20 +4,26 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
     extends: "a string representing the unverified name of the class, not a fuction representing the actual class",
 
     constructor: function unbindedConstructor() {} || undefined,
-    rootElem: HTMLElement,
+    rawDom: HTMLElement,
+    viewShape: {}, // TODO
 
     properties: {
         nameOfProp: {
             types: ["string", "natural", "null"] || [class SomeOOMLClass {}] || undefined,
             defaultValue: "the default value",
+
             isArray: true || false,
+            isInstance: true || false,
 
-            getter: "someOwnMethod" || undefined,
-            setter: "someOwnMethod" || undefined,
-            onChange: "someOwnMethod" || undefined,
+            getter: "this.someOwnMethod" || undefined,
+            setter: "this.someOwnMethod" || undefined,
+            onChange: "this.someOwnMethod" || undefined,
 
-            isSuppressed: false,
+            isTransient: false,
             isAttribute: true,
+
+            passthroughProperty: "propName" || undefined,
+            dispatchEventHandlers: {}, // TODO
 
             bindingIsDynamic: true || false,
             bindingParts: ["users.", "", ".age"] || undefined,
@@ -25,8 +31,8 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
                 "userID": [1],
             } || undefined,
             bindingKeypath: undefined || "fixed.path.to.store.value",
-            bindingOnExist: "someOwnMethod" || undefined,
-            bindingOnMissing: "someOwnMethod" || undefined,
+            bindingOnExist: "this.someOwnMethod" || undefined,
+            bindingOnMissing: "this.someOwnMethod" || undefined,
         },
     },
     methods: {

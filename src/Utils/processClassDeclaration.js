@@ -1,11 +1,15 @@
-Utils.processClassDeclarationMetadata = templateElem => {
+Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
     let className;
     let classIsAbstract;
     let classExtends;
+
     let classProperties = Utils.createCleanObject();
     let classMethods = Utils.createCleanObject();
+
     let classConstructor;
-    let classRootElem;
+    let classViewShape;
+
+    let classHasExtensionPoint = false;
 
     // ooml-(abstract)?-class definitely exists as this function is only called via querySelectorAll
     Utils.iterate(templateElem.attributes, attribute => {
@@ -36,6 +40,8 @@ Utils.processClassDeclarationMetadata = templateElem => {
         templateElem.content :
         templateElem;
 
+    let classRawDom;
+
     Utils.iterate(templateContent.childNodes, node => {
 
         if (node instanceof Comment) {
@@ -64,6 +70,7 @@ Utils.processClassDeclarationMetadata = templateElem => {
                 let propTypes; // `undefined` as default
                 let isSuppressed = false;
                 let isArraySubstitution = false;
+                let isInstanceSubstitution = false;
                 let isAttribute = false;
                 let passthroughPropName;
                 let propBindingParts;
@@ -75,7 +82,7 @@ Utils.processClassDeclarationMetadata = templateElem => {
                 let propGetter;
                 let propSetter;
                 let onchangeListener;
-                let dispatchEventHandlers = [];
+                let dispatchEventHandlers = Utils.createCleanObject();
 
                 let bindingConfig;
 
@@ -210,7 +217,43 @@ Utils.processClassDeclarationMetadata = templateElem => {
                     if (bindingConfig) {
                         throw new SyntaxError(`The array property "${ propName }" has a binding`);
                     }
+                } else if (isInstanceSubstitution) {
+
                 } else {
+
+                }
+                // TODO START Process
+                let elemConstructorName;
+                let propName, passthroughPropName;
+
+                if (Utils.isNotOrBlankString(elemConstructorName)) {
+                    throw new SyntaxError(`"${ elemConstructorName }" is not a valid class`);
+                }
+                if (!Utils.isObjectLiteral(defaultValue) && !Array.isArray(defaultValue)) {
+                    throw new TypeError(`Invalid default value for element substitution "${ propName }"`);
+                }
+
+                if (current.textContent.trim()) {
+                    let defaultValue = Utils.getEvalValue(current.textContent);
+
+                    classSubstitutionDefaultValues[propName] = defaultValue;
+                }
+
+                let elemConstructor =
+                    elemConstructorName == 'OOML.Element' ? OOML.Element :
+                        getClassFromString(elemConstructorName);
+
+                if (passthroughPropName != undefined) {
+                    if (elemConstructor == OOML.Element || elemConstructor[OOML_CLASS_PROPNAME_PROPNAMES].indexOf(passthroughPropName) == -1) {
+                        throw new ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
+                    }
+                }
+                // TODO END
+
+                if (isSuppressed) {
+                    if (propTypes) {
+                        throw new SyntaxError(`The transient property "${ propName }" has types`);
+                    }
                 }
 
                 if (classProperties[propName] || classMethods[propName]) {
@@ -234,14 +277,23 @@ Utils.processClassDeclarationMetadata = templateElem => {
                     bindingKeypath: propBindingKeypath,
                     bindingOnExist: propBindingOnExist,
                     bindingOnMissing: propBindingOnMissing,
+
                     types: propTypes,
                     defaultValue: propValue,
-                    isArray: false,
-                    onChange: onchangeListener,
+
+                    isArray: isArraySubstitution,
+                    isInstance: isInstanceSubstitution,
+
                     getter: propGetter,
                     setter: propSetter,
-                    isSuppressed: isSuppressed,
+                    onChange: onchangeListener,
+
+                    isTransient: isSuppressed,
                     isAttribute: isAttribute,
+
+                    passthroughProperty: passthroughPropName,
+
+                    dispatchEventHandlers: dispatchEventHandlers,
                 });
 
                 break;
@@ -251,14 +303,15 @@ Utils.processClassDeclarationMetadata = templateElem => {
                 let methodName;
 
                 Utils.iterate(node.attributes, attr => {
-                    let attrVal = attr.value;
-                    switch (attr.name) {
+                    let domAttrName = attr.name;
+                    let domAttrValue = attr.value;
+                    switch (domAttrName) {
                         case 'name':
-                            methodName = attrVal;
+                            methodName = domAttrValue;
                             break;
 
                         default:
-                            throw new ReferenceError(`Unrecognised attribute "${ attr.name }" on ooml-method tag`);
+                            throw new ReferenceError(`Unrecognised attribute "${ domAttrName }" on ooml-method tag`);
                     }
                 });
 
@@ -296,13 +349,31 @@ Utils.processClassDeclarationMetadata = templateElem => {
                 break;
 
             default:
-                classRootElem = node;
+                classRawDom = node;
         }
     });
 
-    // Non-abstract classes must have a DOM
-    if (!classRootElem && !classIsAbstract) {
-        throw new SyntaxError(`The class "${ className }" does not have a root element`);
+    if (classRawDom) {
+        if (classRawDom.nodeName == "OOML-EXTENSION-POINT") {
+            throw new SyntaxError(`The extension point cannot be the root`);
+        }
+        let oomlExtensionPointElems = classRawDom.querySelectorAll("ooml-extension-point");
+        if (oomlExtensionPointElems.length) {
+            if (oomlExtensionPointElems.length > 1) {
+                throw new ReferenceError(`A class has more than one extension point`);
+            }
+            let oomlExtensionPointElem = oomlExtensionPointElems[0];
+            if (oomlExtensionPointElem.childNodes.length || oomlExtensionPointElem.attributes.length) {
+                throw new SyntaxError(`ooml-extension-point tag has attributes or contents`);
+            }
+            classHasExtensionPoint = true;
+            // Need to leave the element as is, so descendant classes can quickly substitute with their view
+        }
+    } else {
+        // Non-abstract classes must have a DOM
+        if (!classIsAbstract) {
+            throw new SyntaxError(`The class "${ className }" does not have a root element`);
+        }
     }
 
     // Remove the class declaration from the DOM
@@ -311,7 +382,7 @@ Utils.processClassDeclarationMetadata = templateElem => {
     }
 
     // Prevent data-* attributes on the root element (as attribute properties should be used)
-    Utils.iterate(classRootElem.attributes, attr => {
+    Utils.iterate(classRawDom.attributes, attr => {
         if (/^data-/i.test(attr.name)) {
             throw new SyntaxError(`Data attributes are not allowed on the root element (class "${className}")`);
         }
@@ -327,6 +398,9 @@ Utils.processClassDeclarationMetadata = templateElem => {
         methods: Object.freeze(classMethods),
 
         constructor: classConstructor,
-        rootElem: classRootElem,
+        rawDom: classRawDom,
+        // Don't really need to freeze, as shape is traversed, not directly accessed
+        // Same as all other properties that are arrays or maps
+        viewShape: classViewShape,
     });
 };

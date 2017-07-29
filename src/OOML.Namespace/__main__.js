@@ -43,8 +43,8 @@ OOML.Namespace = function(namespace, settings) {
         throw new TypeError(`Invalid settings object`);
     }
 
-    // Prepare an object to store imports; fill with global imports initially
-    let imports = Utils.concat(OOMLGlobalImports);
+    // Prepare an object to store classes (parsed and imported); fill with global imports initially
+    let classes = Utils.concat(OOMLGlobalImports);
 
     // Iterate settings object rather than directly accessing properties
     // to check for non-existent settings that have been provided
@@ -69,7 +69,7 @@ OOML.Namespace = function(namespace, settings) {
                     if (!Utils.isOOMLClass(importClass)) {
                         throw new TypeError(`The value for the import "${ importName }" is not an OOML class`);
                     }
-                    imports[importName] = importClass;
+                    classes[importName] = importClass;
                 });
 
                 break;
@@ -79,8 +79,6 @@ OOML.Namespace = function(namespace, settings) {
         }
     });
 
-    // To hold parsed OOML classes
-    let classes = Utils.createCleanObject();
     // To hold bootstrapped objects
     let objects = Utils.createCleanObject();
 
@@ -88,7 +86,10 @@ OOML.Namespace = function(namespace, settings) {
     Utils.DOM.find(namespace, 'template[ooml-class],template[ooml-abstract-class]').forEach(classTemplateElem => {
 
         // See reference/classMetadata.js for reference
-        let classMetadata = Utils.processClassDeclarationMetadata(classTemplateElem);
+        let classMetadata = Utils.processClassDeclaration({
+            otherClasses: classes,
+            templateElem: classTemplateElem,
+        });
 
         // Get name, and check that it is unique
         let className = classMetadata.name;
@@ -139,7 +140,7 @@ OOML.Namespace = function(namespace, settings) {
             classRawDom = _extendedRawDom;
         }
 
-        let classRootElem = Utils.transformClassRawDomToShape(classRawDom);
+        let classRootElem = Utils.transformClassRawDomToViewShape(classRawDom);
 
         Utils.deepFreeze(classProperties);
 
