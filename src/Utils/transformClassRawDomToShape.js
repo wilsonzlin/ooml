@@ -1,6 +1,6 @@
 // declaredProperties is required to check that substitutions reference existing properties
 // declaredMethods is required to check that handlers reference existing methods
-Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, current, pathFromRoot, realPathToExtensionPoint) => {
+Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, current, arrayOrInstanceSubstitutionsCount, exposeKeys, pathFromRoot, realPathToExtensionPoint) => {
 
     if (current instanceof Element) {
         // The name of the tag
@@ -11,6 +11,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
             elemName = elemName.slice(5);
         }
 
+        let elemExposeKey; // `undefined` default
         let elemDomEventHandlers = Utils.createCleanObject();
         let elemAttributes = [];
         let elemChildNodes = [];
@@ -18,7 +19,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
         // To check that there are no attributes declared more than once
         let attrNames = new StringSet();
 
-        // Process DOM attribute
+        // Process DOM attributes
         Utils.iterate(current.attributes, attr => {
 
             // DOM attributes should be case-insensitive
@@ -48,6 +49,16 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
             } else if (/^on/.test(attrName)) {
                 throw new TypeError(`Native DOM event handlers using on* syntax are not allowed ("${ attrName }")`);
 
+            } else if (attrName == "ooml-expose") {
+                if (!Utils.isValidPropertyName(attrValue)) {
+                    throw new SyntaxError(`ooml-expose value is invalid ("${attrValue}")`);
+                }
+                elemExposeKey = attrValue;
+                if (exposeKeys.has(elemExposeKey)) {
+                    throw new ReferenceError(`More than one element has been exposed with "${ elemExposeKey }"`);
+                }
+                exposeKeys.add(elemExposeKey);
+
             // Normal HTML attribute
             } else {
                 elemAttributes.push(Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, attr));
@@ -61,9 +72,9 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
             if (pathFromRoot && !realPathToExtensionPoint.found && childNode instanceof Element) {
                 nextPathFromRoot = pathFromRoot.concat(elemChildNodes.length);
-                parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, nextPathFromRoot, realPathToExtensionPoint);
+                parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, arrayOrInstanceSubstitutionsCount, exposeKeys, nextPathFromRoot, realPathToExtensionPoint);
             } else {
-                parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode);
+                parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, arrayOrInstanceSubstitutionsCount);
             }
 
             if (Array.isArray(parsed)) {
@@ -91,6 +102,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
         return Object.freeze({
             type: 'element',
             name: elemName,
+            exposeKey: elemExposeKey,
             domEventHandlers: elemDomEventHandlers,
             attributes: elemAttributes,
             childNodes: elemChildNodes,
@@ -102,9 +114,18 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
         let processed = Utils.processBracesSyntaxToPartsAndMap({
             onbracepart: param => {
                 let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
+                let declaredProperty = declaredProperties[propertyToSubstituteIn];
 
-                if (!declaredProperties[propertyToSubstituteIn]) {
+                if (!declaredProperty) {
                     throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
+                }
+
+                if (declaredProperty.isArray || declaredProperty.isInstance) {
+                    if (!arrayOrInstanceSubstitutionsCount[propertyToSubstituteIn]) {
+                        arrayOrInstanceSubstitutionsCount[propertyToSubstituteIn] = true;
+                    } else {
+                        throw new ReferenceError(`Array and instance properties may only be substituted at most once`);
+                    }
                 }
 
                 return {
@@ -143,7 +164,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
         }
         let attrValue = current.value;
 
-
+        // Normal attribute
         if (attrValue.indexOf('{{') == -1) {
             return Object.freeze({
                 type: 'attribute',

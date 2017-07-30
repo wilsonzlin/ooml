@@ -1,15 +1,11 @@
 const INSTANCE_PROPERTIES_OBJECT_STRUCTURE = {
     nameOfProp: {
-        currentValue: "current value" || undefined,
+        currentValue: "current value" || OOML.Element || OOML.Array || Object || undefined,
 
-        // TODO Remove bindingIsDynamic, bindingPropertyToPartMap, bindingOnExist, bindingOnMissing
-        bindingIsDynamic: true || false,
+        nodes: NodeSet,
+
         bindingParts: ["users.", "", ".age"] || undefined,
-        bindingPropertyToPartMap: {
-            "userID": [1],
-        } || undefined,
-        bindingKeypath: undefined || "fixed.path.to.store.value",
-        bindingOnExist: "someOwnMethod" || undefined,
-        bindingOnMissing: "someOwnMethod" || undefined,
+
+        insertAfter: Node || undefined,
     },
 };

@@ -1,7 +1,7 @@
 Utils.createOOMLClass = ({ namespace, className, classParent, classMethods, classConstructor, classIsAbstract, classProperties, classRootElem }) => {
     let oomlClass;
 
-    let classPropertyNames = Object.freeze(Object.keys(classProperties));
+    let classPropertyNames = new StringSet(Object.keys(classProperties));
 
     // Create a simpler class if it's abstract
     if (classIsAbstract) {
@@ -40,6 +40,7 @@ Utils.createOOMLClass = ({ namespace, className, classParent, classMethods, clas
 
             // Internal object to hold state of properties
             let instanceProperties = Utils.createCleanObject();
+
             Object.keys(classProperties).forEach(propName => {
                 let classPropertyObject = classProperties[propName];
 
@@ -55,20 +56,16 @@ Utils.createOOMLClass = ({ namespace, className, classParent, classMethods, clas
                     instancePropertyObject.bindingParts = classPropertyObject.bindingParts.slice();
                 }
 
+                if (classPropertyObject.isArray || classPropertyObject.isInstance) {
+                    // For element and array substitutions, so that the anchor position is known
+                    instancePropertyObject.insertAfter = undefined;
+                }
+
                 instanceProperties[propName] = Object.seal(instancePropertyObject);
             });
 
             // Defensive coding
             Object.seal(instanceProperties);
-
-            // Set up the instanceProperties internal object
-            Object.keys(instanceProperties).forEach(propertyName => {
-                // For element and array substitutions, so that the anchor position is known
-                instanceProperties[propertyName].insertAfter = undefined;
-
-                // Defensive coding
-                Object.preventExtensions(instanceProperties[propertyName]);
-            });
 
             // Map from property names to properties that have a dynamic binding dependent on it
             let propertiesToDependentBindings = Utils.createCleanObject();
@@ -91,6 +88,7 @@ Utils.createOOMLClass = ({ namespace, className, classParent, classMethods, clas
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT]    = instanceProperties;
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS]  = propertiesToDependentBindings;
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS]  = propertyRebindSetTimeouts;
+            instanceObjectProperties[OOML_INSTANCE_PROPNAME_EXPOSED_DOM_ELEMS] = instanceExposedDOMElems;
 
             // Expose DOM elements via prefixed property
             Object.keys(instanceExposedDOMElems).forEach(keyName => {

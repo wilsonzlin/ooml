@@ -1,75 +1,69 @@
-Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceExposedDOMElems, node }) => {
+Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceExposedDOMElems, shape }) => {
     let cloned;
 
-    switch (node.type) {
-
-        // Create an HTMLElement
+    switch (shape.type) {
         case 'element':
-            cloned = document.createElement(node.name);
+            cloned = document.createElement(shape.name);
 
-            Object.keys(node.domEventHandlers).forEach(eventName => {
+            // Expose HTMLElement
+            if (shape.exposeKey) {
+                instanceExposedDOMElems[shape.exposeKey] = cloned;
+            }
+
+            Object.keys(shape.domEventHandlers).forEach(eventName => {
+                let linkedMethod = shape.domEventHandlers[eventName];
+
                 // Event object will be provided when called by browser
-                cloned['on' + eventName] = node.domEventHandlers[eventName].bind(instance, cloned);
+                // Arrow functions are faster than .bind, and can save memory by removing visible but unused scope variables
+                // https://stackoverflow.com/questions/42117911/lambda-functions-vs-bind-memory-and-performance
+                cloned['on' + eventName] = event => {
+                    // This is probably faster than .call
+                    // Don't need to pass in cloned shape, as event will have .target
+                    instance[linkedMethod](event);
+                };
             });
 
-            node.attributes.forEach(attr => {
-                // Expose HTMLElement
-                if (attr.name == 'ooml-expose') {
-                    let exposeKey = attr.value;
-                    if (instanceExposedDOMElems[exposeKey]) {
-                        throw new ReferenceError(`A DOM element is already exposed with the key "${ exposeKey }"`);
-                    }
-                    instanceExposedDOMElems[exposeKey] = cloned;
+            shape.attributes.forEach(attr => {
+                // Set normal HTML tag attribute
+                if (!attr.parts) {
+                    cloned.setAttribute(attr.name, attr.value);
 
+                // Set up dynamic HTML attribute
                 } else {
-                    // Set normal HTML tag attribute
-                    if (!attr.valueFormat) {
-                        cloned.setAttribute(attr.name, attr.value);
+                    // COMPATIBILITY - IE: Don't use .(get|set)Attribute(Node)? -- buggy behaviour in IE
+                    // This is an emulated Node instance
+                    let clonedAttr = {
+                        name: attr.name,
+                        valueFormat: attr.parts.slice(),
+                        valueFormatMap: attr.map,
+                        ownerElement: cloned,
+                    };
 
-                    // Set up dynamic HTML attribute
-                    } else {
-                        // COMPATIBILITY - IE: Don't use .(get|set)Attribute(Node)? -- buggy behaviour in IE
-                        let clonedAttr = {
-                            name: attr.name,
-                            valueFormat: attr.valueFormat.slice(),
-                            valueFormatMap: attr.valueFormatMap,
-                            ownerElement: cloned,
-                        };
-
-                        Object.keys(attr.valueFormatMap).forEach(propertyName => {
-                            instanceProperties[propertyName].nodes.add(clonedAttr);
-                        });
-                    }
+                    Object.keys(attr.map).forEach(propertyName => {
+                        instanceProperties[propertyName].nodes.add(clonedAttr);
+                    });
                 }
             });
 
-            node.childNodes.forEach(childNode => {
+            shape.childNodes.forEach(childNode => {
                 cloned.appendChild(Utils.constructInstanceDomFromShape({
                     instance, instanceProperties, instanceExposedDOMElems,
-                    node: childNode
+                    shape: childNode
                 }));
             });
 
             break;
 
         case 'text':
+            cloned = document.createTextNode(shape.value || "");
 
-            cloned = document.createTextNode(node.value);
-
-            if (node.bindedProperty) {
-                let propertyName = node.bindedProperty;
-                instanceProperties[propertyName].nodes.add(cloned);
+            if (shape.substitutionProperty) {
+                instanceProperties[shape.substitutionProperty].nodes.add(cloned);
             }
 
-            break;
+            if (shape.bindedProperty) {
 
-        case 'comment':
-
-            cloned = document.createComment(node.value);
-
-            if (node.bindedProperty) {
-
-                let propertyName = node.bindedProperty;
+                let propertyName = shape.bindedProperty;
 
                 instanceProperties[propertyName].insertAfter = cloned;
                 if (instanceProperties[propertyName].isArray) {
@@ -80,10 +74,14 @@ Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceE
 
             break;
 
+        case 'comment':
+            cloned = document.createComment(shape.value);
+
+            break;
+
         default:
-
-            throw new Error(`Invalid class DOM node type to process`);
-
+            // Defensive coding
+            throw new Error(`Invalid class view shape type to process`);
     }
 
     return cloned;

@@ -8,6 +8,8 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
     viewShape: {}, // TODO
     viewShapePathToExtensionPoint: [0, 5, 3] || undefined,
 
+    exposeKeys: StringSet,
+
     properties: {
         nameOfProp: {
             types: ["string", "natural", "null"] || class SomeOOMLClass {} || undefined,

@@ -6,6 +6,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
 
     let classProperties = Utils.createCleanObject();
     let classMethods = Utils.createCleanObject();
+    let classExposeKeys = new StringSet();
 
     let classConstructor;
     let classViewShape;
@@ -175,7 +176,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                             passthroughPropName = domAttrValue;
                             break;
 
-                        case 'bind-to':
+                        case 'binding':
                             if (Utils.isNotOrBlankString(domAttrValue)) {
                                 throw new SyntaxError(`Empty binding key`);
                             }
@@ -183,6 +184,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                             bindingConfig = Utils.parseBindingDeclaration(domAttrValue.trim());
                             propBindingIsDynamic = bindingConfig.isDynamic;
                             propBindingParts = bindingConfig.parts;
+                            // TODO Check that binding's dependent properties exist are are primitive or transitive
                             propBindingPropertyToPartMap = bindingConfig.propertyToPartMap;
                             propBindingKeypath = bindingConfig.keypath;
                             break;
@@ -250,7 +252,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
 
                 // Can't have binding handlers on a property that isn't bound to anything
                 if ((propBindingOnMissing || propBindingOnExist) && !bindingConfig) {
-                    throw new SyntaxError(`Binding missing/exist handler exists on non-binding property`);
+                    throw new SyntaxError(`Binding missing/exist handler exists on unbound property`);
                 }
 
                 // getEvalValue will trim code
@@ -425,6 +427,8 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
         }
     });
 
+    // TODO Inherit properties before checking methods
+
     // Check that methods linked to have been declared
     linkedMethods.forEach(methodName => {
         if (!classMethods[methodName]) {
@@ -459,7 +463,9 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
         let realPathToExtensionPoint = {
             found: false,
         };
-        classViewShape = Utils.transformClassRawDomToViewShape(classProperties, classMethods, classRawDom, [], realPathToExtensionPoint);
+        // Since array and instance substitutions can only occur once per property, keep track of them
+        let arrayOrInstanceSubstitutionsCount = Utils.createCleanObject();
+        classViewShape = Utils.transformClassRawDomToViewShape(classProperties, classMethods, classRawDom, arrayOrInstanceSubstitutionsCount, classExposeKeys, [], realPathToExtensionPoint);
         classViewShapePathToExtensionPoint = realPathToExtensionPoint.path;
     }
 
@@ -493,6 +499,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
 
         properties: Object.freeze(classProperties),
         methods: Object.freeze(classMethods),
+        exposeKeys: classExposeKeys,
 
         constructor: classConstructor,
         // Don't really need to freeze, as shape is traversed, not directly accessed
