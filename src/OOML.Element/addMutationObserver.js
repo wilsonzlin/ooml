@@ -1,6 +1,6 @@
-OOMLElementProto.onmutation = function(eventName, handler) {
-    if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
-        throw new TypeError(`The handler for the mutation event "${ eventName }" is not a function`);
+OOMLElementProto.addMutationObserver = function(eventName, observer) {
+    if (!Utils.typeOf(observer, TYPEOF_FUNCTION)) {
+        throw new TypeError(`The observer for the mutation event "${ eventName }" is not a function`);
     }
 
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
@@ -14,6 +14,6 @@ OOMLElementProto.onmutation = function(eventName, handler) {
     if (!instanceEventHandlers[eventName]) {
         instanceEventHandlers[eventName] = [];
     }
-    instanceEventHandlers[eventName].push(handler);
+    instanceEventHandlers[eventName].push(observer);
     return this;
 };

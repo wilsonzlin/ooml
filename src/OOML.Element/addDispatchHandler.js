@@ -1,4 +1,4 @@
-OOMLElementProto.ondispatch = function(eventName, handler) {
+OOMLElementProto.addDispatchHandler = function(eventName, handler) {
     if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
         throw new TypeError(`The handler for the dispatch event "${ eventName }" is not a function`);
     }

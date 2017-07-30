@@ -312,7 +312,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                     }
                 } else if (isInstanceSubstitution) {
                     if (bindingConfig) {
-                        throw new SyntaxError(`The property "${ propName }" has a binding`);
+                        throw new SyntaxError(`The instance property "${ propName }" has a binding`);
                     }
                 } else {
                     if (!Utils.isPrimitiveValue(propDefaultValue) || (propTypes && !Utils.isType(propTypes, propDefaultValue))) {

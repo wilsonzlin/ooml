@@ -1,6 +1,11 @@
 OOML.Array = function(elementConstructor, insertAfterDomElem, attachedToInstance, attachedToProperty) {
     let _this = this;
 
+    let placeholderDomParent = document.createElement('div');
+    let placeholderDomAnchor = document.createComment('');
+    // TODO Insert all instances after placeholder anchor, and then move placeholder anchor around (when attaching/detaching)
+    placeholderDomParent.appendChild(placeholderDomAnchor);
+
     let dispatchEventHandlers = Utils.createCleanObject();
 
     // Use defineProperty for properties to prevent enumeration
