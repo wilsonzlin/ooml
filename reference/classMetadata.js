@@ -1,15 +1,16 @@
 const CLASS_METADATA_OBJECT_STRUCTURE = {
     name: "NameOfClass",
     isAbstract: true || false,
-    extends: "a string representing the unverified name of the class, not a fuction representing the actual class",
+    parent: class SomeOOMLClass {} || undefined,
 
     constructor: function unbindedConstructor() {} || undefined,
-    rawDom: HTMLElement,
+
     viewShape: {}, // TODO
+    viewShapePathToExtensionPoint: [0, 5, 3] || undefined,
 
     properties: {
         nameOfProp: {
-            types: ["string", "natural", "null"] || [class SomeOOMLClass {}] || undefined,
+            types: ["string", "natural", "null"] || class SomeOOMLClass {} || undefined,
             defaultValue: "the default value",
 
             isArray: true || false,

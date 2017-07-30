@@ -1,8 +1,7 @@
-Utils.parseClassViewSubstitution = code => {
+Utils.parsePropertySubstitution = code => {
     let regexpMatches = /^ this\.(.+?) $/.exec(code);
     if (!regexpMatches) {
-        // .slice to prevent super-long messages
-        throw new SyntaxError(`Invalid property substitution around:\n\n${ code.slice(0, 200) }\n`);
+        throw new SyntaxError(`Invalid property substitution around "${ code }"`);
     }
 
     let propName = regexpMatches[1];

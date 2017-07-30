@@ -13,10 +13,6 @@ if (OOMLCompatSetExists) {
         _this[NODESET_PROPNAME_NODESETID] = ++NodeSetCount;
         _this[NODESET_PROPNAME_AUTOINCREMENT] = 0; // Start from zero so falsey checks won't false positive
         _this[NODESET_PROPNAME_INTERNALARRAY] = [];
-
-        Object.defineProperty(_this, 'size', {
-            get: () => _this[NODESET_PROPNAME_INTERNALARRAY].length,
-        });
     };
     let NodeSetProto = NodeSet.prototype;
     NodeSetProto.add = function (node) {
@@ -57,6 +53,13 @@ if (OOMLCompatSetExists) {
     };
     NodeSetProto.values = function () {
         // .filter callback is never called on deleted/non-set indexes
+        // and is probably faster than .map
         return this[NODESET_PROPNAME_INTERNALARRAY].filter(() => true);
     };
+
+    Object.defineProperty(NodeSetProto, 'size', {
+        get: function() {
+            return this[NODESET_PROPNAME_INTERNALARRAY].length;
+        },
+    });
 }

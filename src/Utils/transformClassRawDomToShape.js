@@ -1,15 +1,10 @@
 // declaredProperties is required to check that substitutions reference existing properties
 // declaredMethods is required to check that handlers reference existing methods
-Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, current) => {
+Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, current, pathFromRoot, realPathToExtensionPoint) => {
 
     if (current instanceof Element) {
         // The name of the tag
         let elemName = current.nodeName.toLocaleLowerCase();
-
-        // Already handled by processClassDeclaration, so don't need to to do anything
-        if (elemName == 'ooml-extension-point') {
-            return;
-        }
 
         // Due to the way table tags are parsed in browsers, allow alternative syntax
         if (/^ooml-(?:table|thead|tbody|tfoot|tr|th|td)$/.test(elemName)) {
@@ -28,6 +23,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
             // DOM attributes should be case-insensitive
             let attrName = attr.name.toLocaleLowerCase();
+            let attrValue = attr.value;
 
             // Check if already declared
             if (attrNames.has(attrName)) {
@@ -40,12 +36,13 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
                 // Don't need to lowercase, as it already is
                 let eventName = attrName.slice(7);
 
-                if (elemDomEventHandlers[eventName]) {
-                    throw new ReferenceError(`Another DOM "${ eventName }" event handler already exists`);
-                }
+                // Attribute name is unique, so don't need to check for duplicates
 
-                // TODO Check method exists
-                elemDomEventHandlers[eventName] = attr.value;
+                let methodName = Utils.parseMethodLinkingDeclaration(attrValue);
+                if (!declaredMethods[methodName]) {
+                    throw new ReferenceError(`The method "${ methodName }" is linked to, but has not been declared`);
+                }
+                elemDomEventHandlers[eventName] = methodName;
 
             // Native syntax is not allowed
             } else if (/^on/.test(attrName)) {
@@ -53,13 +50,21 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
             // Normal HTML attribute
             } else {
-                elemAttributes.push(Utils.transformClassRawDomToViewShape(attr));
+                elemAttributes.push(Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, attr));
             }
         });
 
         // Process child nodes
         Utils.iterate(current.childNodes, childNode => {
-            let parsed = Utils.transformClassRawDomToViewShape(childNode);
+            let parsed;
+            let nextPathFromRoot;
+
+            if (pathFromRoot && !realPathToExtensionPoint.found && childNode instanceof Element) {
+                nextPathFromRoot = pathFromRoot.concat(elemChildNodes.length);
+                parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, nextPathFromRoot, realPathToExtensionPoint);
+            } else {
+                parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode);
+            }
 
             if (Array.isArray(parsed)) {
                 Array.prototype.push.apply(elemChildNodes, parsed);
@@ -67,6 +72,19 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
             // Could be undefined
             } else if (parsed) {
                 elemChildNodes.push(parsed);
+
+                if (parsed.type == 'element' && parsed.name == 'ooml-extension-point') {
+                    if (realPathToExtensionPoint.found) {
+                        throw new SyntaxError(`Multiple extension points declared`);
+                    }
+
+                    if (parsed.childNodes.length || parsed.attributes.length) {
+                        throw new SyntaxError(`ooml-extension-point tag has attributes or contents`);
+                    }
+
+                    realPathToExtensionPoint.found = true;
+                    realPathToExtensionPoint.path = nextPathFromRoot;
+                }
             }
         });
 
@@ -83,8 +101,11 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
     if (current instanceof Text) {
         let processed = Utils.processBracesSyntaxToPartsAndMap({
             onbracepart: param => {
-                let propertyToSubstituteIn = Utils.parseClassViewSubstitution(param);
-                // TODO Check property is valid
+                let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
+
+                if (!declaredProperties[propertyToSubstituteIn]) {
+                    throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
+                }
 
                 return {
                     value: Object.freeze({
@@ -133,8 +154,16 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
         } else {
             let processed = Utils.processBracesSyntaxToPartsAndMap({
                 onbracepart: param => {
-                    let propertyToSubstituteIn = Utils.parseClassViewSubstitution(param);
-                    // TODO Check property is valid (can only be primitive or transient)
+                    let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
+
+                    let declaredProperty = declaredProperties[propertyToSubstituteIn];
+
+                    if (!declaredProperty) {
+                        throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
+                    }
+                    if (declaredProperty.isArray || declaredProperty.isInstance) {
+                        throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in an attribute in the view, but is an array or instance`);
+                    }
 
                     return {
                         key: propertyToSubstituteIn,

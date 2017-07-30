@@ -10,10 +10,6 @@ if (OOMLCompatSetExists) {
         _this[STRINGSET_PROPNAME_INTERNALARRAY] = [];
         _this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils.createCleanObject();
 
-        Object.defineProperty(_this, 'size', {
-            get: () => _this[STRINGSET_PROPNAME_INTERNALARRAY].length,
-        });
-
         if (initialValues) {
             initialValues.forEach(v => _this.add(v));
         }
@@ -21,8 +17,7 @@ if (OOMLCompatSetExists) {
     let StringSetProto = StringSet.prototype;
     StringSetProto.add = function(str) {
         if (this[STRINGSET_PROPNAME_INTERNALOBJECT][str] == undefined) {
-            let newValueIndex = this[STRINGSET_PROPNAME_INTERNALARRAY].push(str) - 1;
-            this[STRINGSET_PROPNAME_INTERNALOBJECT][str] = newValueIndex;
+            this[STRINGSET_PROPNAME_INTERNALOBJECT][str] = this[STRINGSET_PROPNAME_INTERNALARRAY].push(str) - 1;
         }
         return this;
     };
@@ -51,4 +46,9 @@ if (OOMLCompatSetExists) {
     StringSetProto.values = function() {
         return this[STRINGSET_PROPNAME_INTERNALARRAY].slice();
     };
+    Object.defineProperty(StringSetProto, 'size', {
+        get: function() {
+            return this[STRINGSET_PROPNAME_INTERNALARRAY].length;
+        },
+    });
 }

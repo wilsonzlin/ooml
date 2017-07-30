@@ -60,8 +60,9 @@ let dashCaseCache = Utils.createCleanObject();
 let OOMLReservedPropertyNames = new StringSet(['constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf', 'toObject', 'toJSON', 'assign', 'on', 'detach', 'attributes', 'namespace', 'handle', 'keys']);
 
 let JavaScriptNativePrimitiveTypes = ['null', 'number', 'boolean', 'string'];
-let OOMLPrimitiveNumberTypes = ['natural', 'integer', 'float', 'number'];
-let OOMLPrimitiveTypes = Utils.concat(JavaScriptNativePrimitiveTypes, OOMLPrimitiveNumberTypes).slice(0, -1); // Remove duplicate entry "number"
+let OOMLPrimitiveNumberTypes = new StringSet(['natural', 'integer', 'float', 'number']);
+// Duplicate entry "number" will be removed automatically
+let OOMLPrimitiveTypes = new StringSet(Utils.concat(JavaScriptNativePrimitiveTypes, OOMLPrimitiveNumberTypes.values()));
 
 let OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray';
 let OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor';

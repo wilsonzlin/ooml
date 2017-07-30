@@ -91,60 +91,13 @@ OOML.Namespace = function(namespace, settings) {
             templateElem: classTemplateElem,
         });
 
-        // Get name, and check that it is unique
-        let className = classMetadata.name;
-        if (classes[className]) {
-            throw new ReferenceError(`The class "${ className }" already exists`);
-        }
-
-        let classExtends = classMetadata.extends;
-        if (classExtends) {
-            classExtends = Utils.getClassFromString(imports, classes, classExtends);
-        } else {
-            classExtends = OOML.Element;
-        }
-
         // Used for applying default values on construction and extending a child class's predefined properties
         let classPredefinedProperties = Utils.deepFreeze(Utils.concat(Utils.deepClone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties));
 
-        // Will be frozen later
-        let classProperties = Utils.deepClone(classPredefinedProperties);
-
-        // Just for quick reference, nothing more
-        let classSubstitutionDefaultValues = Utils.createCleanObject();
-
-        // For .toObject and .keys
+        // TODO Refactor
         let classSuppressedProperties = new StringSet();
 
-        Object.keys(classProperties).forEach(propName => {
-            if (classProperties[propName].suppressed) {
-                classSuppressedProperties.add(propName);
-            }
-        });
-
-        let classMethods = classMetadata.methods;
-
-        let classConstructor = classMetadata.constructor;
-
-        let classHasExtensionPoint;
-
-        let classRawDom = classMetadata.rootElem;
-        if (classExtends[OOML_CLASS_PROPNAME_EXTENSIONPOINT]) {
-            let parentClassRawDom = classExtends[OOML_CLASS_PROPNAME_EXTENSIONPOINT];
-            let _extendedRawDom = parentClassRawDom.cloneNode(true);
-            let extensionPoint = _extendedRawDom.querySelector('ooml-extension-point');
-            if (!extensionPoint) {
-                throw new Error(`Extension point element node not found on parent class`);
-            }
-            extensionPoint.parentNode.replaceChild(classRawDom, extensionPoint);
-            classRawDom = _extendedRawDom;
-        }
-
-        let classRootElem = Utils.transformClassRawDomToViewShape(classRawDom);
-
-        Utils.deepFreeze(classProperties);
-
-        classes[className] = Utils.createOOMLClass({
+        classes[classMetadata.name] = Utils.createOOMLClass({
             namespace: oomlNamespaceInstance,
             className: className,
             classParent: classExtends,
@@ -160,9 +113,9 @@ OOML.Namespace = function(namespace, settings) {
 
     Utils.DOM.find(namespace, '[ooml-instantiate]').forEach(instanceInstantiationElem => {
 
-        let instDetails  = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' '),
-            className    = instDetails[0],
-            instanceName = instDetails[1];
+        let instDetails  = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' ');
+        let className    = instDetails[0];
+        let instanceName = instDetails[1];
 
         if (objects[instanceName]) {
             throw new ReferenceError(`An object already exists with the name "${ instanceName }"`);
