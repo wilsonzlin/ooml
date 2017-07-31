@@ -51,7 +51,9 @@ Let's create a to-do list app. No long instructions, just quickly scan through t
             <li>{{ this.label }}</li>
         </template>
 
-        <!-- Here's our List class: -->
+        <!--
+            Here's our List class:
+        -->
         <template ooml-class="List">
             <!--
                 The properties of our class (called member/instance
