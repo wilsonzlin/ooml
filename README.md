@@ -28,8 +28,6 @@ Don't mistake ooml's simplicity for lack of features or scalability. Check out [
 
 Let's create a to-do list app. No long instructions, just quickly scan through the single and only HTML file needed, and then try out the subsequent JS example code in your browser ([view it live in your browser](https://wilsonl.in/ooml/examples/to-do-list-1.html)):
 
-Note that this page **doesn't render anything initially**; the point is to demonstrate the syntax and API.
-
 ```html
 <!DOCTYPE html>
 <html>
@@ -48,17 +46,22 @@ Note that this page **doesn't render anything initially**; the point is to demon
 
             <!--
                 ...but ooml classes also declare HTML to represent the
-                view of the class (this is a web UI framework after all)
+                view of the class (this is a web UI framework after all).
             -->
             <li>{{ this.label }}</li>
         </template>
 
-        <!-- Here's our List class -->
+        <!-- Here's our List class: -->
         <template ooml-class="List">
             <!--
                 The properties of our class (called member/instance
                 variables/fields in other languages) must be declared before
-                we can use them in the view
+                we can use them in the view.
+
+                The value inside the ooml-property tag is the default value,
+                which is the value that is initially used when constructing
+                an instance, if a specific value isn't provided via the
+                constructor.
             -->
             <ooml-property name="name" type="string">""</ooml-property>
             <ooml-property name="items" type="Item" array>[]</ooml-property>
@@ -67,20 +70,19 @@ Note that this page **doesn't render anything initially**; the point is to demon
                 <!--
                     Notice the braces; this means that whatever the value of
                     "name" is will go here, updating itself automatically
-                    whenever the value of "name" changes
-                -->
-                <!--
-                    This is known as substitution
+                    whenever the value of "name" changes.
+
+                    This is known as substitution.
                 -->
                 <h2>{{ this.name }}</h2>
                 <ul>
                     <!--
                         We can also substitute other instances of OOML
-                        classes, or arrays of them
-                    -->
-                    <!--
-                        Array of Item instances will be placed here(which makes
-                        sense)
+                        classes, or arrays of them.
+
+                        An array of Item instances will be placed here
+                        because we declared the "items" property to be
+                        an array of Item instances (which makes sense).
                     -->
                     {{ this.items }}
                 </ul>
@@ -88,26 +90,26 @@ Note that this page **doesn't render anything initially**; the point is to demon
         </template>
 
         <!--
-            This is our App class. Note that this isn't necessary, but it's nice
-            to have a single top-level class that represents our entire app
+            This is our App class. While we could've just used the List class,
+            it's nice to have a single top-level class that represents our entire
+            app that we can extend later.
         -->
         <template ooml-class="App">
-            <ooml-property name="list" type="List"></ooml-property>
+            <ooml-property name="list" type="List">null</ooml-property>
             
             <div id="app">
+                <h1>Open your console and try adding items to this list</h1>
                 <ooml-substitution property="list" class="List"></ooml-substitution>
             </div>
         </template>
 
         <!--
             Declaring a whole bunch of classes is nice,
-            but we still need to create something to show in the browser
-        -->
-        <!--
+            but we still need to create something to show in the browser.
+ 
             In ooml, you can quickly bootstrap your app by declaring a class
-            to initially create an instance of, and where to place it
-        -->
-        <!--
+            to initially create an instance of, and where to place it.
+
             In this case, we're declaring a new instance of the class App,
             and naming that instance object "app", so we can refer to it later
         -->
@@ -166,12 +168,23 @@ Now, lets quickly add some controls so the user can actually modify and save the
     <body>
         <template ooml-class="Item">
             <!--
-                ooml properties can have type checking, getters, setters, and change listeners
-            -->
-            <!--
-                You can display rich HTML rather than just the value of a property
+                ooml properties can have type checking, getters, setters, and change listeners.
+
+                You can display rich HTML rather than just the value of a property, by using
+                the setter and returning an object with an "HTML" property.
             -->
             <ooml-property name="label" type="string" set="this.labelSetter">""</ooml-property>
+            
+            <!--
+                We can also declare transient properties. These are properties not considered
+                part of the object's JSON data, and are useful for holding things that are
+                temporary and not primitives.
+                
+                For example, you may want to have a CKEditor instance in this class's view.
+                You can store the CKEditor instance object in a transient property, so it is
+                still kept close and encapsulation is not broken.
+            -->
+            <ooml-property name="transientProperty" transient>null</ooml-property>
             
             <ooml-method name="labelSetter">
                 function(newValue) {
@@ -239,11 +252,11 @@ Now, lets quickly add some controls so the user can actually modify and save the
                 </ul>
 
                 <!--
-                    Binding to DOM events is extremely simple
+                    Listening to DOM events is extremely simple.
                 -->
                 <form handle-submit="this.handleNewItemFormSubmit">
                     <!--
-                        Sometimes, we actually want to expose the DOM, not hide it away
+                        Sometimes, we actually want to expose the DOM, not hide it away.
                     -->
                     <input ooml-expose="newItemInput" placeholder="You can use Markdown!">
                     <button>Add new item</button>
@@ -252,7 +265,7 @@ Now, lets quickly add some controls so the user can actually modify and save the
                 <br>
 
                 <!--
-                    Serialisation is tightly built in to all objects and arrays
+                    Serialisation is tightly built in to all objects and arrays.
                 -->
                 <button handle-click="this.handleSerialisationButtonClick">Serialise this list</button>
             </div>
@@ -260,18 +273,10 @@ Now, lets quickly add some controls so the user can actually modify and save the
 
         <template ooml-class="App">
             <!--
-                Normally, substitution objects in a class are not
-                initialised when the main object is constructed.
-            -->
-            <!--
-                However, if it will always have a familiar structure,
-                or you need it to be immediately available, you can
-                set a default state for the object, and it will be
-                built alongside the main object.
-            -->
-            <!--
-                Since everything in ooml is just JSON, we can very
-                easily describe the default value of our app's list.
+                We can give instance properties a default value using JSON, so that it
+                will be initialised automatically when we construct its parent object.
+
+                Conversely, giving it a default value of `null` will prevent this.
             -->
             <ooml-property name="list" type="List">{
                 name: "My list"
@@ -291,6 +296,8 @@ Now, lets quickly add some controls so the user can actually modify and save the
     </body>
 </html>
 ```
+
+While so far we have only created very basic apps, ooml has a lot more features, and can definitely scale to complex, large applications.
 
 ## Learning ooml in 15 minutes
 
