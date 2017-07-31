@@ -15,7 +15,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = f
     let initial = oldVal === undefined;
 
     if (classProperty.setter) {
-        let setterReturnVal = classProperty.setter.call(instance, prop, oldVal, newVal, initial);
+        let setterReturnVal = instance[classProperty.setter](prop, oldVal, newVal, initial);
         if (setterReturnVal === false) {
             return;
         }

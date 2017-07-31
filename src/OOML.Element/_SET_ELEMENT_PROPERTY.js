@@ -3,16 +3,16 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, ne
     if (newVal === undefined) {
         throw new TypeError(`Undefined provided as element substitution property value for "${prop}"`);
     }
-    let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
-
-    let elemDetails = instanceProperties[prop];
+    let instance = this;
+    let instanceProperty = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT][prop];
+    let classProperty = instance.constructor[OOML_CLASS_PROPNAME_PROPERTIES][prop];
 
     // This setter could be called WHILE property value is being normalised (i.e. set to not undefined)
-    let currentValue = instanceProperties[prop].value;
+    let currentValue = instanceProperty.currentValue;
     let currentlyInitialised = currentValue != undefined;
 
-    if (instanceProperties[prop].setter) {
-        let setterReturnVal = instanceProperties[prop].setter.call(this, prop, currentValue, newVal);
+    if (classProperty.setter) {
+        let setterReturnVal = instance[classProperty.setter](prop, currentValue, newVal);
         if (setterReturnVal === false) {
             return;
         }
@@ -28,17 +28,17 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, ne
         }
     }
 
-    if (instanceProperties[prop].passthrough != undefined && currentlyInitialised) {
-        currentValue[elemDetails.passthrough] = newVal;
+    if (classProperty.passthroughProperty != undefined && currentlyInitialised) {
+        currentValue[classProperty.passthroughProperty] = newVal;
         return;
     }
 
     // Attach first to ensure that element is attachable
     if (newVal !== null) {
-        newVal = Utils.constructOOMLElementInstance(elemDetails.types[0], newVal);
+        newVal = Utils.constructOOMLElementInstance(classProperty.types, newVal);
         newVal[OOML_INSTANCE_PROPNAME_ATTACH]({
-            insertAfter: elemDetails.insertAfter,
-            parent: this,
+            insertAfter: instanceProperty.insertAfter,
+            parent: instance,
             property: prop
         });
     }
@@ -48,5 +48,5 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, ne
         currentValue[OOML_INSTANCE_PROPNAME_DETACH]();
     }
 
-    instanceProperties[prop].value = newVal;
+    instanceProperty.currentValue = newVal;
 };

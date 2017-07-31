@@ -19,7 +19,7 @@ Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceE
                 cloned.addEventListener(eventName, event => {
                     // This is probably faster than .call
                     // Don't need to pass in cloned shape, as event will have .target
-                    instance[linkedMethod](event);
+                    return instance[linkedMethod](event);
                 });
             });
 

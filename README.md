@@ -61,7 +61,7 @@ Note that this page **doesn't render anything initially**; the point is to demon
                 we can use them in the view
             -->
             <ooml-property name="name" type="string">""</ooml-property>
-            <ooml-property name="items" type="Item" array></ooml-property>
+            <ooml-property name="items" type="Item" array>[]</ooml-property>
         
             <div>
                 <!--
@@ -79,7 +79,8 @@ Note that this page **doesn't render anything initially**; the point is to demon
                         classes, or arrays of them
                     -->
                     <!--
-                        This is an array of Item instances (which makes sense)
+                        Array of Item instances will be placed here(which makes
+                        sense)
                     -->
                     {{ this.items }}
                 </ul>
@@ -115,8 +116,8 @@ Note that this page **doesn't render anything initially**; the point is to demon
         <script>
             // Don't worry about these 2 lines for now; just consider them as
             // code that parses your classes and bootstraps your app
-            let namespace = new OOML.Namespace();
-            let app = namespace.objects.app;
+            var namespace = new OOML.Namespace();
+            var app = namespace.objects.app;
         </script>
     </body>
 </html>
@@ -209,6 +210,7 @@ Now, lets quickly add some controls so the user can actually modify and save the
 
         <template ooml-class="List">
             <ooml-property name="name" type="string">""</ooml-property>
+            <ooml-property name="items" type="Item" array handle-delete="this.handleItemDelete">[]</ooml-property>
             
             <ooml-method name="handleItemDelete">
                 function(data) {
@@ -233,9 +235,7 @@ Now, lets quickly add some controls so the user can actually modify and save the
             <div>
                 <h2>{{ this.name }}</h2>
                 <ul>
-                    <ooml-substitution property="items" class="Item" array
-                        handle-delete="this.handleItemDelete"
-                    ></ooml-substitution>
+                    {{ this.items }}
                 </ul>
 
                 <!--
@@ -259,24 +259,26 @@ Now, lets quickly add some controls so the user can actually modify and save the
         </template>
 
         <template ooml-class="App">
+            <!--
+                Normally, substitution objects in a class are not
+                initialised when the main object is constructed.
+            -->
+            <!--
+                However, if it will always have a familiar structure,
+                or you need it to be immediately available, you can
+                set a default state for the object, and it will be
+                built alongside the main object.
+            -->
+            <!--
+                Since everything in ooml is just JSON, we can very
+                easily describe the default value of our app's list.
+            -->
+            <ooml-property name="list" type="List">{
+                name: "My list"
+            }</ooml-property>
+        
             <div id="app">
-                <!--
-                    Normally, substitution objects in a class are not
-                    initialised when the main object is constructed.
-                -->
-                <!--
-                    However, if it will always have a familiar structure,
-                    or you need it to be immediately available, you can
-                    set a default state for the object, and it will be
-                    built alongside the main object.
-                -->
-                <!--
-                    Since everything in ooml is just JSON, we can very
-                    easily describe the default value of our app's list.
-                -->
-                <ooml-substitution property="list" class="List">{
-                    name: "My list"
-                }</ooml-substitution>
+                {{ this.list }}
             </div>
         </template>
 
