@@ -4,7 +4,7 @@ OOMLArrayProtoMutation.sort = function(propName, ascending) {
     }
     let ascendingMultiplier = ascending ? 1 : -1;
 
-    let sorted = this[OOML_ARRAY_PROPNAME_INTERNALARRAY].sort((a, b) => {
+    let sorted = this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY].sort((a, b) => {
         if (a[propName] < b[propName]) {
             return -1 * ascendingMultiplier;
         } else if (a[propName] === b[propName]) {
@@ -14,12 +14,12 @@ OOMLArrayProtoMutation.sort = function(propName, ascending) {
         }
     });
 
-    let insertAfter = this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM];
+    let insertAfter = this[OOML_ARRAY_PROPNAME_DOM_ANCHOR];
 
     sorted.reduce((previousElem, elem) => {
         previousElem.parentNode.insertBefore(elem[OOML_INSTANCE_PROPNAME_DOMELEM], previousElem.nextSibling);
         return elem[OOML_INSTANCE_PROPNAME_DOMELEM];
     }, insertAfter);
 
-    this[OOML_ARRAY_PROPNAME_INTERNALARRAY] = sorted;
+    this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY] = sorted;
 };

@@ -64,10 +64,18 @@ let OOMLPrimitiveNumberTypes = new StringSet(['natural', 'integer', 'float', 'nu
 // Duplicate entry "number" will be removed automatically
 let OOMLPrimitiveTypes = new StringSet(Utils.concat(JavaScriptNativePrimitiveTypes, OOMLPrimitiveNumberTypes.values()));
 
-let OOML_ARRAY_PROPNAME_INTERNALARRAY = '__oomlInternalArray';
+let OOML_ARRAY_PROPNAME_INTERNAL_ARRAY = '__oomlInternalArray';
 let OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = '__oomlElementConstructor';
-let OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM = '__oomlAnchorDOMElem';
-let OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS = '__oomlMutationEventListeners';
+let OOML_ARRAY_PROPNAME_DOM_ANCHOR = '__oomlAnchorDOMElem';
+let OOML_ARRAY_PROPNAME_INTERNAL_DOM_PARENT = '__oomlArrayAnchorPlaceholderParent';
+
+let OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS = '__oomlMutationEventListeners';
+let OOML_ARRAY_PROPNAME_DISPATCH_HANDLERS = '__oomlDispatchEventListeners';
+
+let OOML_ARRAY_PROPNAME_ATTACH = '__oomlArrayAttach';
+let OOML_ARRAY_PROPNAME_DETACH = '__oomlArrayDetach';
+let OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE = '__oomlAttachmentParentInstance';
+let OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_PROPERTY = '__oomlAttachmentParentProperty';
 
 let OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive';
 let OOML_HIVE_PROPNAME_INTERNALARRAY = '__oomlHiveInternalArray';
@@ -91,8 +99,10 @@ let OOML_INSTANCE_PROPNAME_DISPATCH = '__oomlDispatch';
 let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH = '__oomlEventHandlersDispatch';
 let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION = '__oomlEventHandlersMutation';
 let OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT = '__oomlPropertiesInternalObject';
+let OOML_INSTANCE_PROPNAME_GET_EXPOSED_DOM_ELEM = '__oomlGetExposedDomElem';
+let OOML_INSTANCE_PROPNAME_EXPOSED_DOM_ELEMS = '__oomlExposedDomElems';
 let OOML_INSTANCE_PROPNAME_GET_PROPERTY = '__oomlGetProperty';
-let OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY = '__oomlSetPrimitiveProperty';
+let OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY = '__oomlSetPrimitiveProperty';
 let OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY = '__oomlSetArrayProperty';
 let OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY = '__oomlSetObjectProperty';
 let OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE = '__oomlHandleBindingChangeEventFromStore';
@@ -102,11 +112,12 @@ let OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS = '__oomlPropertyRebindS
 
 let OOML_CLASS_PROPNAME_PROPNAMES = '__oomlProperties';
 let OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES = '__oomlSuppressedProperties';
-let OOML_CLASS_PROPNAME_PREDEFINEDPROPS = '__oomlPredefinedProperties';
+let OOML_CLASS_PROPNAME_PROPERTIES = '__oomlPredefinedProperties';
 let OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = '__oomlPredefinedConstructor';
-let OOML_CLASS_PROPNAME_EXTENSIONPOINT = '__oomlExtensionPoint';
+let OOML_CLASS_PROPNAME_VIEW_SHAPE = '__oomlExtensionPoint';
+let OOML_CLASS_PROPNAME_EXTENSIONPOINT_PATH = '__oomlExtensionPointPath';
 let OOML_CLASS_PROPNAME_ROOTELEMTAGNAME = '__oomlRootElemTagName';
-let OOML_CLASS_PROPNAME_ANCESTOR_CLASSES = '__oomlAncestorClasses';
+let OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS = '__oomlAncestorClasses';
 
 let OOML = {};
 

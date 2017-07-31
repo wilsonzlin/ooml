@@ -1,8 +1,9 @@
 // TODO Rename as initially all bindings (even fixed ones) are "rebinded"
 OOMLElementProto[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING] = function(property) {
+    let instance = this;
 
-    let instanceProperties = this[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
-    let propertyRebindSetTimeouts = this[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS];
+    let instanceProperties = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
+    let propertyRebindSetTimeouts = instance[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS];
 
     clearTimeout(propertyRebindSetTimeouts[property]);
 

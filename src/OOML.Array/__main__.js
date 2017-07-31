@@ -1,113 +1,51 @@
-OOML.Array = function(elementConstructor, insertAfterDomElem, attachedToInstance, attachedToProperty) {
+OOML.Array = function(elementConstructor, initialElems) {
     let _this = this;
 
     let placeholderDomParent = document.createElement('div');
-    let placeholderDomAnchor = document.createComment('');
-    // TODO Insert all instances after placeholder anchor, and then move placeholder anchor around (when attaching/detaching)
-    placeholderDomParent.appendChild(placeholderDomAnchor);
+    let domAnchor = document.createComment('');
+    placeholderDomParent.appendChild(domAnchor);
+
+    let internalArr;
+    if (initialElems) {
+        internalArr = initialElems.map(elem => Utils.constructOOMLElementInstance(elementConstructor, elem));
+        internalArr.reduce((previousElem, elemToAttach) => {
+            elemToAttach[OOML_INSTANCE_PROPNAME_ATTACH]({ insertAfter: previousElem, parent: _this });
+            return elemToAttach[OOML_INSTANCE_PROPNAME_DOMELEM];
+        }, domAnchor);
+    } else {
+        internalArr = [];
+    }
 
     let dispatchEventHandlers = Utils.createCleanObject();
+    let mutationEventHandlers = Utils.createCleanObject();
 
     // Use defineProperty for properties to prevent enumeration
-    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INTERNALARRAY, {
-        value: [],
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INTERNAL_ARRAY, {
+        value: internalArr,
+    });
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE, {
+        value: undefined,
+        writable: true,
+    });
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_PROPERTY, {
+        value: undefined,
         writable: true,
     });
     Object.defineProperty(_this, OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR, {
         value: elementConstructor,
     });
-    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM, {
-        value: insertAfterDomElem,
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_DOM_ANCHOR, {
+        value: domAnchor,
+    });
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INTERNAL_DOM_PARENT, {
+        value: placeholderDomParent,
     });
 
-    Object.defineProperty(_this, OOML_INSTANCE_PROPNAME_DISPATCH, {
-        value: (_, eventName, eventData) => {
-
-            if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-                throw new TypeError(`Event name isn't a string`);
-            }
-
-            eventName = eventName.toLocaleLowerCase();
-
-            let prevented = false;
-
-            if (dispatchEventHandlers[eventName]) {
-                dispatchEventHandlers[eventName].forEach(handler => {
-                    let eventObject = {
-                        preventDefault: () => {
-                            prevented = true
-                        },
-                        data: eventData,
-                    };
-
-                    if (handler.call(_this, eventObject) === false) {
-                        prevented = true;
-                    }
-                });
-            }
-
-            if (!prevented) {
-                attachedToInstance[OOML_INSTANCE_PROPNAME_DISPATCH](attachedToProperty, eventName, eventData);
-            }
-        },
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_DISPATCH_HANDLERS, {
+        value: dispatchEventHandlers,
     });
-
-    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS, {
-        value: {
-            arraychange: [],
-        },
-    });
-
-    Object.defineProperty(_this, "on", {
-        value: Object.freeze({
-            dispatch: (eventName, handler) => {
-
-                if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
-                    throw new TypeError(`The dispatch handler for the event "${ eventName }" is not a function`);
-                }
-
-                if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-                    throw new TypeError(`Event name is not a string`);
-                }
-
-                eventName = eventName.toLocaleLowerCase();
-
-                if (!dispatchEventHandlers[eventName]) {
-                    dispatchEventHandlers[eventName] = [];
-                }
-
-                dispatchEventHandlers[eventName].push(handler);
-
-                return _this;
-            },
-            mutation: (eventName, handler) => {
-
-                if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-                    throw new TypeError(`Event name is not a string`);
-                }
-
-                if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
-                    throw new TypeError(`The mutation handler for the event "${ eventName }" is not a function`);
-                }
-
-                eventName = eventName.toLocaleLowerCase();
-
-                switch (eventName) {
-                    case 'arraychange':
-                        _this[OOML_ARRAY_PROPNAME_MUTATIONEVENTLISTENERS].arraychange.push(handler);
-                        break;
-
-                    default:
-                        throw new ReferenceError(`Invalid mutation event name "${ eventName }"`);
-                }
-
-                return _this;
-            },
-        }),
-    });
-
-    Object.defineProperty(_this, "length", {
-        get: () => _this[OOML_ARRAY_PROPNAME_INTERNALARRAY].length,
+    Object.defineProperty(_this, OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS, {
+        value: mutationEventHandlers,
     });
 
     Object.preventExtensions(_this);

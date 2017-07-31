@@ -1,17 +1,21 @@
-// TODO Rename as not limited to primitives (suppressed properties can have any non-undefined type)
-OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY] = function(prop, newVal) {
+// TODO Rename as not limited to primitives (transient properties can have any non-undefined type)
+OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = function(prop, newVal) {
     if (newVal === undefined) {
         throw new TypeError(`Undefined provided as property value for "${prop}"`);
     }
+
     let instance = this;
     let instanceProperties = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
+    let instanceProperty = instanceProperties[prop];
+    let classProperties = instance.constructor[OOML_CLASS_PROPNAME_PROPERTIES];
+    let classProperty = classProperties[prop];
 
     let customHtml;
-    let initial = !instanceProperties[prop].initialised;
-    let oldVal = initial ? undefined : instanceProperties[prop].value;
+    let oldVal = instanceProperty.currentValue;
+    let initial = oldVal === undefined;
 
-    if (instanceProperties[prop].setter) {
-        let setterReturnVal = instanceProperties[prop].setter.call(this, prop, oldVal, newVal);
+    if (classProperty.setter) {
+        let setterReturnVal = classProperty.setter.call(instance, prop, oldVal, newVal, initial);
         if (setterReturnVal === false) {
             return;
         }
@@ -35,35 +39,32 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_PROPERTY] = function(prop,
         throw new TypeError(`Cannot set new property value for "${ prop }"; unrecognised type`);
     }
 
-    if (instanceProperties[prop].types) {
-        if (!Utils.isType(instanceProperties[prop].types, newVal)) {
-            throw new TypeError(`Cannot set new property value for "${ prop }"; expected type to be one of: ${ instanceProperties[prop].types.join(', ') }`);
+    let acceptableTypes = classProperty.types;
+    if (acceptableTypes) {
+        if (!Utils.isType(acceptableTypes, newVal)) {
+            throw new TypeError(`Cannot set new property value for "${ prop }"; expected type to be one of: ${ acceptableTypes.join(', ') }`);
         }
     }
 
     if (initial || oldVal !== newVal) {
         // Write changes only if value changed
-        Utils.DOM.writeValue('text', prop, instanceProperties[prop].nodes, newVal, customHtml);
+        Utils.DOM.writeValue('text', prop, instanceProperty.nodes, newVal, customHtml);
 
-        instanceProperties[prop].value = newVal;
-
-        if (initial) {
-            instanceProperties[prop].initialised = true;
-        }
+        instanceProperty.value = newVal;
 
         // This should run initially as well (rebinding is really just binding)
-        let dependentBindings = propertiesToDependentBindings[prop];
+        let dependentBindings = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS][prop];
         if (dependentBindings) {
-            dependentBindings.properties.forEach(propName => {
-                instanceProperties[propName].bindingPropertyToPartMap[prop].forEach(idx => {
-                    instanceProperties[propName].bindingParts[idx] = newVal;
+            dependentBindings.forEach(dependentProperty => {
+                classProperties[dependentProperty].bindingPropertyToPartMap[prop].forEach(idx => {
+                    instanceProperties[dependentProperty].bindingParts[idx] = newVal;
                 });
-                rebindDynamicBinding(propName);
+                instance[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING](dependentProperty);
             });
         }
 
-        if (classProperties[prop].onchange) {
-            classProperties[prop].onchange.call(instance, prop, newVal, initial);
+        if (classProperty.onChange) {
+            classProperty.onChange.call(instance, prop, newVal, initial);
         }
 
         let propertyValueChangeMutationHandler = instance[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION].propertyvaluechange;

@@ -1,4 +1,4 @@
-OOMLElementProto.addMutationObserver = function(eventName, observer) {
+OOMLArrayProto.addMutationObserver = function(eventName, observer) {
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
         throw new TypeError(`Event name is not a string`);
     }
@@ -9,11 +9,12 @@ OOMLElementProto.addMutationObserver = function(eventName, observer) {
 
     eventName = eventName.toLocaleLowerCase();
 
-    let instanceEventHandlers = this[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION];
+    let arrayMutationObservers = this[OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS];
 
-    if (!instanceEventHandlers[eventName]) {
-        instanceEventHandlers[eventName] = [];
+    if (!arrayMutationObservers[eventName]) {
+        arrayMutationObservers[eventName] = [];
     }
-    instanceEventHandlers[eventName].push(observer);
+    arrayMutationObservers[eventName].push(observer);
+
     return this;
 };

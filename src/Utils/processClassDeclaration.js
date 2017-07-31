@@ -173,6 +173,8 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                             if (Utils.isNotOrBlankString(domAttrValue)) {
                                 throw new SyntaxError(`Invalid passthrough property name`);
                             }
+
+                            // Passthrough validity is checked later
                             passthroughPropName = domAttrValue;
                             break;
 
@@ -300,20 +302,24 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                     }
                 }
 
+                if (isArraySubstitution || isInstanceSubstitution) {
+                    if (bindingConfig) {
+                        throw new SyntaxError(`The array or instance property "${ propName }" has a binding`);
+                    }
+                    if (isSuppressed) {
+                        throw new SyntaxError(`The array or instance property "${ propName }" is transient`);
+                    }
+                    if (isAttribute) {
+                        throw new SyntaxError(`The array or instance property "${ propName }" is an attribute`);
+                    }
+                }
+
                 if (isArraySubstitution) {
                     if (propGetter || propSetter) {
                         throw new SyntaxError(`The array property "${ propName }" has a getter or setter`);
                     }
-                    if (bindingConfig) {
-                        throw new SyntaxError(`The array property "${ propName }" has a binding`);
-                    }
-                    if (isSuppressed) {
-                        throw new SyntaxError(`The array property "${ propName }" is transient`);
-                    }
                 } else if (isInstanceSubstitution) {
-                    if (bindingConfig) {
-                        throw new SyntaxError(`The instance property "${ propName }" has a binding`);
-                    }
+                    // Nothing additional to check
                 } else {
                     if (!Utils.isPrimitiveValue(propDefaultValue) || (propTypes && !Utils.isType(propTypes, propDefaultValue))) {
                         throw new TypeError(`The value for the property "${ propName }" is invalid`);
@@ -427,7 +433,14 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
         }
     });
 
-    // TODO Inherit properties before checking methods
+    // OOML.Element doesn't have OOML_CLASS_PROPNAME_PROPERTIES
+    if (classParent[OOML_CLASS_PROPNAME_PROPERTIES]) {
+        // Should not need to clone as all classProperties objects are 1) frozen and 2) are never/shouldn't be mutated
+        // Shouldn't need to run checks on inherit properties (e.g. whether method exists, binding properties are valid,
+        // passthrough is correct, etc.), as if they passed on the parent, they should pass here
+        // TODO Implement inheritance code, rules, and restrictions to ensure the above statement is correct
+        classProperties = Utils.concat(classParent[OOML_CLASS_PROPNAME_PROPERTIES], classProperties);
+    }
 
     // Check that methods linked to have been declared
     linkedMethods.forEach(methodName => {

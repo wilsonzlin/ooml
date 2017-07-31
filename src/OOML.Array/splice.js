@@ -3,9 +3,9 @@ OOMLArrayProtoMutation.splice = function(start, deleteCount) {
         throw new TypeError(`Invalid arguments provided to .splice`);
     }
     let _this = this,
-        arr = _this[OOML_ARRAY_PROPNAME_INTERNALARRAY],
+        arr = _this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY],
         elemConstructor = _this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR],
-        insertAfter = _this[OOML_ARRAY_PROPNAME_INSERTAFTERDOMELEM],
+        insertAfter = _this[OOML_ARRAY_PROPNAME_DOM_ANCHOR],
         toAppend = [];
 
     for (let i = 2; i < arguments.length; i++) {

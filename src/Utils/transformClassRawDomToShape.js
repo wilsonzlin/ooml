@@ -115,12 +115,13 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
             onbracepart: param => {
                 let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
                 let declaredProperty = declaredProperties[propertyToSubstituteIn];
+                let isArrayOrInstance = declaredProperty.isArray || declaredProperty.isInstance;
 
                 if (!declaredProperty) {
                     throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
                 }
 
-                if (declaredProperty.isArray || declaredProperty.isInstance) {
+                if (isArrayOrInstance) {
                     if (!arrayOrInstanceSubstitutionsCount[propertyToSubstituteIn]) {
                         arrayOrInstanceSubstitutionsCount[propertyToSubstituteIn] = true;
                     } else {
@@ -130,7 +131,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
                 return {
                     value: Object.freeze({
-                        type: 'text',
+                        type: isArrayOrInstance ? 'comment' : 'text',
                         substitutionProperty: propertyToSubstituteIn,
                     }),
                 };

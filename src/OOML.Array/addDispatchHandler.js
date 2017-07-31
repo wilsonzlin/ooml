@@ -1,4 +1,4 @@
-OOMLElementProto.addDispatchHandler = function(eventName, handler) {
+OOMLArrayProto.addDispatchHandler = function(eventName, handler) {
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
         throw new TypeError(`Event name is not a string`);
     }
@@ -9,11 +9,12 @@ OOMLElementProto.addDispatchHandler = function(eventName, handler) {
 
     eventName = eventName.toLocaleLowerCase();
 
-    let instanceEventHandlers = this[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH];
+    let arrayDispatchHandlers = this[OOML_ARRAY_PROPNAME_DISPATCH_HANDLERS];
 
-    if (!instanceEventHandlers[eventName]) {
-        instanceEventHandlers[eventName] = [];
+    if (!arrayDispatchHandlers[eventName]) {
+        arrayDispatchHandlers[eventName] = [];
     }
-    instanceEventHandlers[eventName].push(handler);
+    arrayDispatchHandlers[eventName].push(handler);
+
     return this;
 };

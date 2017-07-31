@@ -16,11 +16,11 @@ Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceE
                 // Event object will be provided when called by browser
                 // Arrow functions are faster than .bind, and can save memory by removing visible but unused scope variables
                 // https://stackoverflow.com/questions/42117911/lambda-functions-vs-bind-memory-and-performance
-                cloned['on' + eventName] = event => {
+                cloned.addEventListener(eventName, event => {
                     // This is probably faster than .call
                     // Don't need to pass in cloned shape, as event will have .target
                     instance[linkedMethod](event);
-                };
+                });
             });
 
             shape.attributes.forEach(attr => {
@@ -61,21 +61,14 @@ Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceE
                 instanceProperties[shape.substitutionProperty].nodes.add(cloned);
             }
 
-            if (shape.bindedProperty) {
-
-                let propertyName = shape.bindedProperty;
-
-                instanceProperties[propertyName].insertAfter = cloned;
-                if (instanceProperties[propertyName].isArray) {
-                    instanceProperties[propertyName].value = new OOML.Array(instanceProperties[propertyName].types[0], cloned, instance, propertyName);
-                }
-
-            }
-
             break;
 
         case 'comment':
-            cloned = document.createComment(shape.value);
+            cloned = document.createComment(shape.value || "");
+
+            if (shape.substitutionProperty) {
+                instanceProperties[shape.substitutionProperty].insertAfter = cloned;
+            }
 
             break;
 

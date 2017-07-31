@@ -1,5 +1,5 @@
 OOMLArrayProtoMutation.shift = function() {
-    let arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
+    let arr = this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
 
     let instanceToDetach = arr.shift();
     if (instanceToDetach) {

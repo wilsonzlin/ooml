@@ -4,6 +4,6 @@
             throw new TypeError(`Can't find the index of non-element`);
         }
 
-        return this[OOML_ARRAY_PROPNAME_INTERNALARRAY][methodName](elem, fromIdx);
+        return this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY][methodName](elem, fromIdx);
     };
 });

@@ -11,7 +11,7 @@ OOML.Namespace = function(namespace, settings) {
     if (namespace === undefined) {
         namespace = document.body;
 
-    // Find element matching selector, or used provided HTML
+        // Find element matching selector, or used provided HTML
     } else if (Utils.typeOf(namespace, TYPEOF_STRING)) {
         namespace = namespace.trim();
 
@@ -24,7 +24,7 @@ OOML.Namespace = function(namespace, settings) {
             namespace = document.querySelector(namespace);
         }
 
-    // Otherwise, must provide an element
+        // Otherwise, must provide an element
     } else if (!(namespace instanceof HTMLElement)) {
         throw new TypeError(`Invalid namespace`);
     }
@@ -45,6 +45,8 @@ OOML.Namespace = function(namespace, settings) {
 
     // Prepare an object to store classes (parsed and imported); fill with global imports initially
     let classes = Utils.concat(OOMLGlobalImports);
+    // To hold bootstrapped objects
+    let objects = Utils.createCleanObject();
 
     // Iterate settings object rather than directly accessing properties
     // to check for non-existent settings that have been provided
@@ -79,9 +81,6 @@ OOML.Namespace = function(namespace, settings) {
         }
     });
 
-    // To hold bootstrapped objects
-    let objects = Utils.createCleanObject();
-
     // Go through the namespace and find any OOML class declarations
     Utils.DOM.find(namespace, 'template[ooml-class],template[ooml-abstract-class]').forEach(classTemplateElem => {
 
@@ -91,30 +90,16 @@ OOML.Namespace = function(namespace, settings) {
             templateElem: classTemplateElem,
         });
 
-        // Used for applying default values on construction and extending a child class's predefined properties
-        let classPredefinedProperties = Utils.deepFreeze(Utils.concat(Utils.deepClone(classExtends[OOML_CLASS_PROPNAME_PREDEFINEDPROPS]) || Utils.createCleanObject(), classMetadata.properties));
-
-        // TODO Refactor
-        let classSuppressedProperties = new StringSet();
-
         classes[classMetadata.name] = Utils.createOOMLClass({
             namespace: oomlNamespaceInstance,
-            className: className,
-            classParent: classExtends,
-            classMethods: classMethods,
-            classConstructor: classConstructor,
-            classIsAbstract: classMetadata.isAbstract,
-            classProperties: classProperties,
-            classRootElem: classRootElem,
+            classMetadata: classMetadata,
         });
     });
 
-    Object.freeze(classes);
-
     Utils.DOM.find(namespace, '[ooml-instantiate]').forEach(instanceInstantiationElem => {
 
-        let instDetails  = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' ');
-        let className    = instDetails[0];
+        let instDetails = instanceInstantiationElem.getAttribute('ooml-instantiate').split(' ');
+        let className = instDetails[0];
         let instanceName = instDetails[1];
 
         if (objects[instanceName]) {
@@ -138,12 +123,14 @@ OOML.Namespace = function(namespace, settings) {
 
         // Copy attributes on instantiation element to new instance's root element
         Utils.iterate(instanceInstantiationElem.attributes, attr => {
-            let _attrName = attr.name.toLocaleLowerCase();
-            if (_attrName != 'ooml-instantiate') {
-                if (/^(data|handle)-/.test(_attrName)) {
-                    throw new SyntaxError(`Illegal attribute "${ _attrName }" on ooml-instantiate element`);
+            let domAttrName = attr.name.toLocaleLowerCase();
+            let domAttrValue = attr.value;
+
+            if (domAttrName != 'ooml-instantiate') {
+                if (/^(data|handle)-/.test(domAttrName)) {
+                    throw new SyntaxError(`Illegal attribute "${ domAttrName }" on ooml-instantiate element`);
                 }
-                instance[OOML_INSTANCE_PROPNAME_DOMELEM].setAttribute(_attrName, attr.value);
+                instance[OOML_INSTANCE_PROPNAME_DOMELEM].setAttribute(domAttrName, domAttrValue);
             }
         });
 
@@ -153,8 +140,8 @@ OOML.Namespace = function(namespace, settings) {
         objects[instanceName] = instance;
     });
 
-    this.classes = classes;
-    this.objects = objects;
+    this.classes = Object.freeze(classes);
+    this.objects = Object.freeze(objects);
 
     Object.freeze(this);
 };

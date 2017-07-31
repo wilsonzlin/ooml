@@ -1,6 +1,6 @@
 OOMLArrayProto.toArray = function(startIdx, endIdx) {
 
-    let arr = this[OOML_ARRAY_PROPNAME_INTERNALARRAY];
+    let arr = this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
 
     startIdx = startIdx || 0;
     endIdx = endIdx == undefined ? this.length : endIdx;
