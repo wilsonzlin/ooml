@@ -12,7 +12,7 @@ let hiveSetup = (() => {
         }
     };
 
-    let HiveObject = function (keypath, initialState) {
+    let HiveObject = function(keypath, initialState) {
         // Internal only class, so don't need checks
         let _this = this;
         // Don't add dot suffix if first keypath ("")
@@ -28,12 +28,12 @@ let hiveSetup = (() => {
     };
 
     let HiveObjectPrototype = HiveObject.prototype;
-    HiveObjectPrototype.get = function (key) {
+    HiveObjectPrototype.get = function(key) {
         assertValidKey(key);
 
         return this[OOML_HIVE_PROPNAME_INTERNALHIVE][key];
     };
-    HiveObjectPrototype.set = function (key, value) {
+    HiveObjectPrototype.set = function(key, value) {
         assertValidKey(key);
 
         let _this = this;
@@ -74,7 +74,7 @@ let hiveSetup = (() => {
             throw new TypeError(`Invalid hive value for key "${propertyKeypath}"`);
         }
     };
-    HiveObjectPrototype.delete = function (key) {
+    HiveObjectPrototype.delete = function(key) {
         assertValidKey(key);
 
         let _this = this;
@@ -98,7 +98,7 @@ let hiveSetup = (() => {
             }
         }
     };
-    HiveObjectPrototype.deleteAll = function () {
+    HiveObjectPrototype.deleteAll = function() {
         let _this = this;
         let internalHive = _this[OOML_HIVE_PROPNAME_INTERNALHIVE];
 
@@ -106,7 +106,7 @@ let hiveSetup = (() => {
             _this.delete(k);
         });
     };
-    HiveObjectPrototype.toObject = function () {
+    HiveObjectPrototype.toObject = function() {
         let _this = this;
         let internalHive = _this[OOML_HIVE_PROPNAME_INTERNALHIVE];
 
@@ -125,10 +125,10 @@ let hiveSetup = (() => {
 
         return obj;
     };
-    HiveObjectPrototype.toJSON = function (indentation) {
+    HiveObjectPrototype.toJSON = function(indentation) {
         return JSON.stringify(this.toObject(), undefined, indentation);
     };
-    HiveObjectPrototype.assign = function () {
+    HiveObjectPrototype.assign = function() {
         let hive = this;
 
         for (let i = 0; i < arguments.length; i++) {
@@ -142,7 +142,7 @@ let hiveSetup = (() => {
         return hive;
     };
     if (OOMLCompatSymbolExists) {
-        HiveObjectPrototype[Symbol.iterator] = function () {
+        HiveObjectPrototype[Symbol.iterator] = function() {
             let hive = this;
             let propertyNames = Object.keys(hive[OOML_HIVE_PROPNAME_INTERNALHIVE]);
             let currentIdx = -1;
@@ -151,15 +151,15 @@ let hiveSetup = (() => {
                 next: () => {
                     let nextProperty = propertyNames[++currentIdx];
                     if (currentIdx == propertyNames.length) {
-                        return {done: true};
+                        return { done: true };
                     }
-                    return {value: [nextProperty, hive.get(nextProperty)], done: false};
+                    return { value: [nextProperty, hive.get(nextProperty)], done: false };
                 }
             };
         };
     }
 
-    let HiveArray = function () {
+    let HiveArray = function() {
         this[OOML_HIVE_PROPNAME_INTERNALARRAY] = [];
     };
 
@@ -167,21 +167,21 @@ let hiveSetup = (() => {
         return thing instanceof HiveObject || thing instanceof HiveArray;
     };
 
-    let HiveSubscriber = function (channel) {
+    let HiveSubscriber = function(channel) {
         this[OOML_HIVESUBSCRIBER_PROPNAME_HANDLERS] = [];
         hive[OOML_HIVE_PROPNAME_SUBSCRIBE](channel, this);
     };
     let HiveSubscriberProto = HiveSubscriber.prototype;
-    HiveSubscriberProto[OOML_HIVESUBSCRIBER_PROPNAME_RECEIVE] = function (data) {
+    HiveSubscriberProto[OOML_HIVESUBSCRIBER_PROPNAME_RECEIVE] = function(data) {
         this[OOML_HIVESUBSCRIBER_PROPNAME_HANDLERS].forEach(h => {
             h(data);
         });
     };
-    HiveSubscriberProto.addHandler = function (handler) {
+    HiveSubscriberProto.addHandler = function(handler) {
         this[OOML_HIVESUBSCRIBER_PROPNAME_HANDLERS].push(handler);
         return this;
     };
-    HiveSubscriberProto.removeHandler = function (handler) {
+    HiveSubscriberProto.removeHandler = function(handler) {
         let indexOf = this[OOML_HIVESUBSCRIBER_PROPNAME_HANDLERS].indexOf(handler);
         if (indexOf > -1) {
             this[OOML_HIVESUBSCRIBER_PROPNAME_HANDLERS].splice(indexOf, 1);
@@ -189,7 +189,7 @@ let hiveSetup = (() => {
         return this;
     };
 
-    let Hive = function () {
+    let Hive = function() {
         this.store = new HiveObject("");
         this[OOML_HIVE_PROPNAME_BINDINGS] = [];
         this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH] = Utils.createCleanObject();
@@ -198,7 +198,7 @@ let hiveSetup = (() => {
         Object.freeze(this);
     };
     let HiveProto = Hive.prototype;
-    HiveProto.bind = function (keypath, object, property) {
+    HiveProto.bind = function(keypath, object, property) {
         let bindings = this[OOML_HIVE_PROPNAME_BINDINGS];
         let bindingsByKeypath = this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH];
         let hive = this.store;
@@ -228,7 +228,7 @@ let hiveSetup = (() => {
 
         return bindingId;
     };
-    HiveProto.unbind = function (bindingId) {
+    HiveProto.unbind = function(bindingId) {
         let bindings = this[OOML_HIVE_PROPNAME_BINDINGS];
         let bindingsByKeypath = this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH];
 
@@ -236,7 +236,7 @@ let hiveSetup = (() => {
         delete bindings[bindingId];
         delete bindingsByKeypath[bindingKeypath][bindingId];
     };
-    HiveProto.publish = function (channel, data) {
+    HiveProto.publish = function(channel, data) {
         (this[OOML_HIVE_PROPNAME_SUBSCRIPTIONS][channel] || []).forEach(s => {
             // Prevent exceptions from preventing remaining subscribers from getting message
             // Also... async? (Although JS is single threaded)
