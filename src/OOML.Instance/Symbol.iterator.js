@@ -1,5 +1,5 @@
 if (OOMLCompatSymbolExists) {
-    OOMLElementProto[Symbol.iterator] = function() {
+    OOMLInstanceProto[Symbol.iterator] = function() {
         let inst = this;
         let propNamesIterator = inst.constructor[OOML_CLASS_PROPNAME_PROPNAMES].values();
 

@@ -1,4 +1,4 @@
-OOMLElementProto.dispatch = function(eventName, eventData) {
+OOMLInstanceProto.dispatch = function(eventName, eventData) {
 
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
         throw new TypeError(`Event name isn't a string`);

@@ -1,4 +1,4 @@
-OOMLElementProto.detach = function() {
+OOMLInstanceProto.detach = function() {
     let instance = this;
 
     let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
@@ -16,7 +16,7 @@ OOMLElementProto.detach = function() {
         }
         // This will call __oomlDetach
         parent.splice(indexOfThis, 1);
-    } else if (parent instanceof OOML.Element) {
+    } else if (parent instanceof OOML.Instance) {
         // This will call __oomlDetach
         parent[instanceIsAttachedTo.property] = null;
     } else {

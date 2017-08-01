@@ -1,4 +1,4 @@
-OOMLElementProto.addMutationObserver = function(eventName, observer) {
+OOMLInstanceProto.addMutationObserver = function(eventName, observer) {
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
         throw new TypeError(`Event name is not a string`);
     }

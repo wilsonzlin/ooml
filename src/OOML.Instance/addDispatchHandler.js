@@ -1,4 +1,4 @@
-OOMLElementProto.addDispatchHandler = function(eventName, handler) {
+OOMLInstanceProto.addDispatchHandler = function(eventName, handler) {
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
         throw new TypeError(`Event name is not a string`);
     }

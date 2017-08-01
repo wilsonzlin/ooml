@@ -1,4 +1,4 @@
-let { hive, HiveSubscriber } = (() => {
+let hiveSetup = (() => {
     let isValidKey = key => {
         if (!Utils.typeOf(key, TYPEOF_STRING) && !Utils.typeOf(key, TYPEOF_NUMBER)) {
             return false;
@@ -63,7 +63,8 @@ let { hive, HiveSubscriber } = (() => {
                 let bindings = hive[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH][propertyKeypath];
                 if (bindings) {
                     bindings.forEach(binding => {
-                        let {object, property} = binding;
+                        let object = binding.object;
+                        let property = binding.property;
                         // This will handle assigning the value, so that the handler can optionally prevent it from happening
                         object[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE](property, value);
                     });
@@ -89,7 +90,8 @@ let { hive, HiveSubscriber } = (() => {
             let bindings = hive[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH][propertyKeypath];
             if (bindings) {
                 bindings.forEach(binding => {
-                    let {object, property} = binding;
+                    let object = binding.object;
+                    let property = binding.property;
                     // This should handle resetting the property to the default value
                     object[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE](property);
                 });
@@ -254,7 +256,10 @@ let { hive, HiveSubscriber } = (() => {
 
     // Encapsulate to ensure only one hive, as HiveSubscriber is hard-coded to this instance
     // You can't have more than one/dynamically created global store anyway
-    return { hive, HiveSubscriber };
+    return {
+        hive: hive,
+        HiveSubscriber: HiveSubscriber,
+    };
 })();
-OOML.hive = hive;
-OOML.HiveSubscriber = HiveSubscriber;
+OOML.hive = hiveSetup.hive;
+OOML.HiveSubscriber = hiveSetup.HiveSubscriber;

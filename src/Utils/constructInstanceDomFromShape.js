@@ -1,4 +1,9 @@
-Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceExposedDOMElems, shape }) => {
+Utils.constructInstanceDomFromShape = config => {
+    let instance = config.instance;
+    let instanceProperties = config.instanceProperties;
+    let instanceExposedDOMElems = config.instanceExposedDOMElems;
+    let shape = config.shape;
+
     let cloned;
 
     switch (shape.type) {
@@ -47,7 +52,9 @@ Utils.constructInstanceDomFromShape = ({ instance, instanceProperties, instanceE
 
             shape.childNodes.forEach(childNode => {
                 cloned.appendChild(Utils.constructInstanceDomFromShape({
-                    instance, instanceProperties, instanceExposedDOMElems,
+                    instance: instance,
+                    instanceProperties: instanceProperties,
+                    instanceExposedDOMElems: instanceExposedDOMElems,
                     shape: childNode
                 }));
             });

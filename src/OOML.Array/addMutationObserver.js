@@ -7,14 +7,16 @@ OOMLArrayProto.addMutationObserver = function(eventName, observer) {
         throw new TypeError(`The observer for the mutation event "${ eventName }" is not a function`);
     }
 
+    let oomlArray = this;
+
     eventName = eventName.toLocaleLowerCase();
 
-    let arrayMutationObservers = this[OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS];
+    let arrayMutationObservers = oomlArray[OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS];
 
     if (!arrayMutationObservers[eventName]) {
         arrayMutationObservers[eventName] = [];
     }
     arrayMutationObservers[eventName].push(observer);
 
-    return this;
+    return oomlArray;
 };

@@ -1,4 +1,8 @@
-Utils.processBracesSyntaxToPartsAndMap = ({ syntax, onstaticpart, onbracepart }) => {
+Utils.processBracesSyntaxToPartsAndMap = config => {
+    let syntax = config.syntax;
+    let onstaticpart = config.onstaticpart;
+    let onbracepart = config.onbracepart;
+
     let parts = [];
     let map = Utils.createCleanObject();
 
@@ -12,8 +16,8 @@ Utils.processBracesSyntaxToPartsAndMap = ({ syntax, onstaticpart, onbracepart })
 
         // Don't need to create static text node if empty
         if (textBeforeParam) {
-            let staticPartHandlerReturnValue = onstaticpart(textBeforeParam);
-            if (staticPartHandlerReturnValue.value !== undefined) {
+            let staticPartHandlerReturnValue = onstaticpart && onstaticpart(textBeforeParam);
+            if (staticPartHandlerReturnValue && staticPartHandlerReturnValue.value !== undefined) {
                 parts.push(staticPartHandlerReturnValue.value);
             } else {
                 parts.push(textBeforeParam);

@@ -10,7 +10,7 @@ To use ooml, just drop in the JS library. There's no environment to set up, buil
 You only need to understand JSON and basic object orientation in order to use ooml. ooml is very declarative, and does not require you to learn any special languages or tools. Unlike most other frameworks, you can start creating scalable, advanced apps with knowledge picked up quickly, and learn the more advanced stuff when you need to.
 
 ### Very fast
-ooml has no virtual DOM, because it is already the most efficient it can be. There are no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and its performance linearly scales with its use. All of this comes in a tiny 11 KB, gzipped, CDN-delivered [ooml.js](https://wilsonl.in/ooml.js) file.
+ooml has no virtual DOM, because it is already the most efficient it can be. There are no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and its performance linearly scales with its use. All of this comes in a tiny 11 KB, gzipped, CDN-delivered [ooml.js](https://wilsonl.in/ooml.latest.js) file.
 
 As an example, compared to React + Redux, [ooml's raw performance is 4x better](https://wilsonl.in/ooml/comparisons/raw-performance/react-redux.html).
 
@@ -33,7 +33,7 @@ Let's create a to-do list app. No long instructions, just quickly scan through t
 <html>
     <head>
         <title>My to-do list</title>
-        <script src="https://wilsonl.in/ooml.js"></script>
+        <script src="https://wilsonl.in/ooml.latest.js"></script>
     </head>
 
     <body>
@@ -163,7 +163,7 @@ Now, lets quickly add some controls so the user can actually modify and save the
 <html>
     <head>
         <title>My to-do list</title>
-        <script src="https://wilsonl.in/ooml.js"></script>
+        <script src="https://wilsonl.in/ooml.latest.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.6/marked.min.js"></script>
     </head>
 

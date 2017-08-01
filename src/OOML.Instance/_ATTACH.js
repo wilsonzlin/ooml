@@ -1,4 +1,4 @@
-OOMLElementProto[OOML_INSTANCE_PROPNAME_ATTACH] = function(settings) {
+OOMLInstanceProto[OOML_INSTANCE_PROPNAME_ATTACH] = function(settings) {
     let instance = this;
     let instanceDom = instance[OOML_INSTANCE_PROPNAME_DOMELEM];
     let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];

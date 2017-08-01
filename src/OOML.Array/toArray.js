@@ -1,9 +1,10 @@
 OOMLArrayProto.toArray = function(startIdx, endIdx) {
+    let oomlArray = this;
 
-    let arr = this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
+    let arr = oomlArray[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
 
     startIdx = startIdx || 0;
-    endIdx = endIdx == undefined ? this.length : endIdx;
+    endIdx = endIdx == undefined ? arr.length : endIdx;
 
     let ret = [];
 

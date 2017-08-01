@@ -1,8 +1,10 @@
-Utils.createOOMLClass = ({ namespace, classMetadata }) => {
+Utils.createOOMLClass = config => {
     let oomlClass;
+    let namespace = config.namespace;
+    let classMetadata = config.classMetadata;
 
     // *******************************
-    // IMPORT FROM classMetadata START
+    // DESTRUCTURING FROM classMetadata START
     // *******************************
 
     let className = classMetadata.name;
@@ -17,7 +19,7 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
     let classMethods = classMetadata.methods;
 
     // *****************************
-    // IMPORT FROM classMetadata END
+    // DESTRUCTURING FROM classMetadata END
     // *****************************
 
     let classPropertyNames = new StringSet(Object.keys(classProperties));
@@ -42,7 +44,7 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
 
             // Call abstract factory and assert it returned an OOML instance
             let ret = instance.abstractFactory(initState);
-            if (!(ret instanceof OOML.Element)) {
+            if (!(ret instanceof OOML.Instance)) {
                 throw new TypeError(`Abstract factory returned a value that is not an OOML element instance`);
             }
 
@@ -64,7 +66,7 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
 
             if (initState) {
                 Object.keys(initState).forEach(propName => {
-                    if (classPropertyNames.indexOf(propName) < 0) {
+                    if (!classPropertyNames.has(propName)) {
                         throw new ReferenceError(`The property "${propName}" provided in an instance property's initial value does not exist`);
                     }
                 });
@@ -93,6 +95,7 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
                     instancePropertyObject.bindingId = undefined;
                     if (bindingIsDynamic) {
                         instancePropertyObject.bindingParts = classPropertyObject.bindingParts.slice();
+                        instancePropertyObject.bindingState = BINDING_STATE_INIT;
 
                         // Associate this binding's dependent properties to this property
                         Object.keys(instancePropertyObject.bindingPropertyToPartMap).forEach(dependencyPropertyName => {
@@ -120,8 +123,10 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
 
             let instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
             let instanceDom = Utils.constructInstanceDomFromShape({
-                instance, instanceProperties, instanceExposedDOMElems,
-                node: classViewShape
+                instance: instance,
+                instanceProperties: instanceProperties,
+                instanceExposedDOMElems: instanceExposedDOMElems,
+                shape: classViewShape
             });
 
             let instanceObjectProperties = Utils.createCleanObject();
@@ -136,7 +141,7 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
 
             // Apply local properties
             for (let p in instanceObjectProperties) {
-                Object.defineProperty(instance, p, { value: instanceObjectProperties });
+                Object.defineProperty(instance, p, { value: instanceObjectProperties[p] });
             }
 
             // Prevent assigning to non-existent properties
@@ -168,9 +173,9 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
             });
 
             // It's possible that this class and no ancestor has a constructor
-            if (instance[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS].length) {
+            if (instance.constructor[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS].length) {
                 // Build constructor chain and call it
-                instance[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS]
+                instance.constructor[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS]
                     .reduce((previous, c) => c.bind(instance, previous), undefined)();
             }
 
@@ -252,7 +257,7 @@ Utils.createOOMLClass = ({ namespace, classMetadata }) => {
     let ancestorConstructors = [];
     let currentProto = oomlClass.prototype;
 
-    while (currentProto !== OOML.Element.prototype) {
+    while (currentProto !== OOML.Instance.prototype) {
         let ancestorConstructor = currentProto.constructor[OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR];
         if (ancestorConstructor) {
             ancestorConstructors.unshift(OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR);

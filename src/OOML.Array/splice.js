@@ -9,7 +9,7 @@ OOMLArrayProtoMutation.splice = function(start, deleteCount) {
         toAppend = [];
 
     for (let i = 2; i < arguments.length; i++) {
-        arguments[i] = Utils.constructOOMLElementInstance(elemConstructor, arguments[i]);
+        arguments[i] = Utils.constructOOMLInstance(elemConstructor, arguments[i]);
         toAppend.push(arguments[i]);
     }
 

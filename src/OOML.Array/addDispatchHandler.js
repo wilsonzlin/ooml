@@ -7,14 +7,16 @@ OOMLArrayProto.addDispatchHandler = function(eventName, handler) {
         throw new TypeError(`The handler for the dispatch event "${ eventName }" is not a function`);
     }
 
+    let oomlArray = this;
+
     eventName = eventName.toLocaleLowerCase();
 
-    let arrayDispatchHandlers = this[OOML_ARRAY_PROPNAME_DISPATCH_HANDLERS];
+    let arrayDispatchHandlers = oomlArray[OOML_ARRAY_PROPNAME_DISPATCH_HANDLERS];
 
     if (!arrayDispatchHandlers[eventName]) {
         arrayDispatchHandlers[eventName] = [];
     }
     arrayDispatchHandlers[eventName].push(handler);
 
-    return this;
+    return oomlArray;
 };

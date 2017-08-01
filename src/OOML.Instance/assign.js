@@ -1,4 +1,4 @@
-OOMLElementProto.assign = function() {
+OOMLInstanceProto.assign = function() {
     let oomlInstance = this;
 
     for (let i = 0; i < arguments.length; i++) {

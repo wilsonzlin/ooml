@@ -1,4 +1,4 @@
-OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, newVal) {
+OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, newVal) {
     // Let constructors handle newVal's type
     if (newVal === undefined) {
         throw new TypeError(`Undefined provided as element substitution property value for "${prop}"`);
@@ -35,7 +35,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, ne
 
     // Attach first to ensure that element is attachable
     if (newVal !== null) {
-        newVal = Utils.constructOOMLElementInstance(classProperty.types, newVal);
+        newVal = Utils.constructOOMLInstance(classProperty.types, newVal);
         newVal[OOML_INSTANCE_PROPNAME_ATTACH]({
             insertAfter: instanceProperty.insertAfter,
             parent: instance,

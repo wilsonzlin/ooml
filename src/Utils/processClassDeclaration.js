@@ -1,4 +1,7 @@
-Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
+Utils.processClassDeclaration = config => {
+    let otherClasses = config.otherClasses;
+    let templateElem = config.templateElem;
+
     let className;
     let classIsAbstract;
     let classParentName; // `undefined` default
@@ -58,7 +61,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
     if (classParentName) {
         classParent = Utils.getClassFromString(otherClasses, classParentName);
     } else {
-        classParent = OOML.Element;
+        classParent = OOML.Instance;
     }
 
     // Get all nodes in template to process
@@ -269,7 +272,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
 
                     // Classes cannot have bars or the same name as a primitive type, so this is safe
                     let oomlClass =
-                            propTypesDeclaration == 'OOML.Element' ? OOML.Element :
+                            propTypesDeclaration == 'OOML.Instance' ? OOML.Instance :
                                 otherClasses[propTypesDeclaration];
 
                     // Type matches an OOML class, so it must be an array or instance substitution
@@ -312,6 +315,9 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                     if (isAttribute) {
                         throw new SyntaxError(`The array or instance property "${ propName }" is an attribute`);
                     }
+                    if (onchangeListener) {
+                        throw new SyntaxError(`The array or instance property "${ propName }" has a change listener`);
+                    }
                 }
 
                 if (isArraySubstitution) {
@@ -335,7 +341,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                     }
 
                     let oomlClass = propTypes;
-                    if (oomlClass == OOML.Element || !oomlClass[OOML_CLASS_PROPNAME_PROPNAMES].has(passthroughPropName)) {
+                    if (oomlClass == OOML.Instance || !oomlClass[OOML_CLASS_PROPNAME_PROPNAMES].has(passthroughPropName)) {
                         throw new ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
                     }
                 }
@@ -351,7 +357,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
                     bindingOnMissing: propBindingOnMissing,
 
                     types: propTypes,
-                    defaultValue: propValue,
+                    defaultValue: propDefaultValue,
 
                     isArray: isArraySubstitution,
                     isInstance: isInstanceSubstitution,
@@ -433,7 +439,7 @@ Utils.processClassDeclaration = ({ otherClasses, templateElem }) => {
         }
     });
 
-    // OOML.Element doesn't have OOML_CLASS_PROPNAME_PROPERTIES
+    // OOML.Instance doesn't have OOML_CLASS_PROPNAME_PROPERTIES
     if (classParent[OOML_CLASS_PROPNAME_PROPERTIES]) {
         // Should not need to clone as all classProperties objects are 1) frozen and 2) are never/shouldn't be mutated
         // Shouldn't need to run checks on inherit properties (e.g. whether method exists, binding properties are valid,

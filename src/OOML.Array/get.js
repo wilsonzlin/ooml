@@ -1,9 +1,11 @@
 OOMLArrayProto.get = function(idx) {
-    let arr = this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
+    let oomlArray = this;
+
+    let arr = oomlArray[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
 
     let realIdx = idx;
     if (idx < 0) {
-        realIdx = this.length + idx;
+        realIdx = oomlArray.length + idx;
     }
 
     let instance = arr[realIdx];

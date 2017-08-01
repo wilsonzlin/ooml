@@ -3,9 +3,12 @@ OOMLArrayProto[OOML_INSTANCE_PROPNAME_DISPATCH] = function(_, eventName, eventDa
         throw new TypeError(`Event name isn't a string`);
     }
 
+    let oomlArray = this;
+
     eventName = eventName.toLocaleLowerCase();
 
     let prevented = false;
+    let dispatchEventHandlers = oomlArray[OOML_ARRAY_PROPNAME_DISPATCH_HANDLERS];
 
     if (dispatchEventHandlers[eventName]) {
         dispatchEventHandlers[eventName].forEach(handler => {
@@ -16,13 +19,15 @@ OOMLArrayProto[OOML_INSTANCE_PROPNAME_DISPATCH] = function(_, eventName, eventDa
                 data: eventData,
             };
 
-            if (handler.call(_this, eventObject) === false) {
+            if (handler.call(oomlArray, eventObject) === false) {
                 prevented = true;
             }
         });
     }
 
     if (!prevented) {
+        let attachedToInstance = oomlArray[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE];
+        let attachedToProperty = oomlArray[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_PROPERTY];
         attachedToInstance[OOML_INSTANCE_PROPNAME_DISPATCH](attachedToProperty, eventName, eventData);
     }
 };

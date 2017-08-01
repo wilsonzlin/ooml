@@ -1,4 +1,4 @@
-OOMLElementProto.toObject = function() {
+OOMLInstanceProto.toObject = function() {
 
     let instance = this;
     let obj = Utils.createCleanObject();
@@ -14,7 +14,7 @@ OOMLElementProto.toObject = function() {
         // Use instanceof; don't read from classArrayProperties or whatever
         if (value instanceof OOML.Array) {
             obj[propName] = value.toArray();
-        } else if (value instanceof OOML.Element) {
+        } else if (value instanceof OOML.Instance) {
             if (Utils.typeOf(value.serialise, TYPEOF_FUNCTION)) {
                 let serialised = value.serialise();
                 if (serialised !== undefined) {

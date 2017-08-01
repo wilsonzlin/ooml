@@ -18,7 +18,39 @@ let TYPEOF_STRING = 'string';
 let TYPEOF_BOOLEAN = 'boolean';
 let TYPEOF_NUMBER = 'number';
 
-<ZC-IMPORT[utils.DOM]>
+// <!-- ZC-IMPORT[Utils/__main__.js] -->
+<ZC-IMPORT[Utils/concat.js]>
+<ZC-IMPORT[Utils/constructOOMLInstance.js]>
+<ZC-IMPORT[Utils/constructInstanceDomFromShape.js]>
+<ZC-IMPORT[Utils/createCleanObject.js]>
+<ZC-IMPORT[Utils/createOOMLClass.js]>
+<ZC-IMPORT[Utils/deepClone.js]>
+<ZC-IMPORT[Utils/deepFreeze.js]>
+<ZC-IMPORT[Utils/DOM.find.js]>
+<ZC-IMPORT[Utils/DOM.hasAncestorOrDescendantNamespace.js]>
+<ZC-IMPORT[Utils/DOM.setData.js]>
+<ZC-IMPORT[Utils/DOM.writeValue.js]>
+<ZC-IMPORT[Utils/getClassFromString.js]>
+<ZC-IMPORT[Utils/getDefaultPrimitiveValueForTypes.js]>
+<ZC-IMPORT[Utils/getEvalValue.js]>
+<ZC-IMPORT[Utils/hasOwnProperty.js]>
+<ZC-IMPORT[Utils/isNotOrBlankString.js]>
+<ZC-IMPORT[Utils/isObjectLiteral.js]>
+<ZC-IMPORT[Utils/isOOMLClass.js]>
+<ZC-IMPORT[Utils/isPrimitiveValue.js]>
+<ZC-IMPORT[Utils/isType.js]>
+<ZC-IMPORT[Utils/isValidPropertyName.js]>
+<ZC-IMPORT[Utils/iterate.js]>
+<ZC-IMPORT[Utils/parseBindingDeclaration.js]>
+<ZC-IMPORT[Utils/parseMethodLinkingDeclaration.js]>
+<ZC-IMPORT[Utils/parsePropertySubstitution.js]>
+<ZC-IMPORT[Utils/parseTypeDeclaration.js]>
+<ZC-IMPORT[Utils/processBracesSyntaxToPartsAndMap.js]>
+<ZC-IMPORT[Utils/processClassDeclaration.js]>
+<ZC-IMPORT[Utils/toDashCase.js]>
+<ZC-IMPORT[Utils/transformClassRawDomToShape.js]>
+<ZC-IMPORT[Utils/typeOf.js]>
+<ZC-IMPORT[Utils/unserialiseInitState.js]>
 
 let BINDING_STATE_INIT = 1;
 let BINDING_STATE_EXISTS = 2;
@@ -28,11 +60,12 @@ let BINDING_STATE_MISSING = 3;
 let OOMLCompatSymbolExists = !!window.Symbol;
 let OOMLCompatSetExists = !!window.Set;
 let OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
-let OOMLCompatDatasetExists = !!HTMLElement.prototype.dataset;
+// Can't use `!!HTMLElement.prototype.dataset` because "illegal invocation"
+// Can't use `!!document.body.dataset` because <body> may have not been loaded yet
+let OOMLCompatDatasetExists = !!document.head.dataset;
 
-
-<ZC-IMPORT[NodeSet]>
-<ZC-IMPORT[StringSet]>
+<ZC-IMPORT[Set/NodeSet.js]>
+<ZC-IMPORT[Set/StringSet.js]>
 
 let OOMLNodesWithUnwrittenChanges = new NodeSet();
 let OOMLWriteChangesSetTimeout;
@@ -150,14 +183,55 @@ OOML.import = () => {
     }
 };
 
-<ZC-IMPORT[hive]>
-<ZC-IMPORT[array]>
-<ZC-IMPORT[array-methods-core]>
-<ZC-IMPORT[array-methods-mutation]>
-<ZC-IMPORT[array-methods-access]>
-<ZC-IMPORT[array-methods-iteration]>
-<ZC-IMPORT[element]>
-<ZC-IMPORT[init]>
+<ZC-IMPORT[OOML.Hive/__main__.js]>
+
+<ZC-IMPORT[OOML.Array/__main__.js]>
+<ZC-IMPORT[OOML.Array/addDispatchHandler.js]>
+<ZC-IMPORT[OOML.Array/addMutationObserver.js]>
+<ZC-IMPORT[OOML.Array/detach.js]>
+<ZC-IMPORT[OOML.Array/get.js]>
+<ZC-IMPORT[OOML.Array/includes.js]>
+<ZC-IMPORT[OOML.Array/indexOf and lastIndexOf.js]>
+<ZC-IMPORT[OOML.Array/iteration.js]>
+<ZC-IMPORT[OOML.Array/length.js]>
+<ZC-IMPORT[OOML.Array/pop.js]>
+<ZC-IMPORT[OOML.Array/push.js]>
+<ZC-IMPORT[OOML.Array/reverse.js]>
+<ZC-IMPORT[OOML.Array/shift.js]>
+<ZC-IMPORT[OOML.Array/slice.js]>
+<ZC-IMPORT[OOML.Array/sort.js]>
+<ZC-IMPORT[OOML.Array/splice.js]>
+<ZC-IMPORT[OOML.Array/toArray.js]>
+<ZC-IMPORT[OOML.Array/toJSON.js]>
+<ZC-IMPORT[OOML.Array/toString.js]>
+<ZC-IMPORT[OOML.Array/unshift.js]>
+<ZC-IMPORT[OOML.Array/_ATTACH.js]>
+<ZC-IMPORT[OOML.Array/_HANDLE_DISPATCH.js]>
+<ZC-IMPORT[OOML.Array/_REMOVE_ATTACHMENT_CONFIG.js]>
+<ZC-IMPORT[OOML.Array/__after__.js]>
+
+<ZC-IMPORT[OOML.Instance/__main__.js]>
+<ZC-IMPORT[OOML.Instance/addDispatchHandler.js]>
+<ZC-IMPORT[OOML.Instance/addMutationObserver.js]>
+<ZC-IMPORT[OOML.Instance/assign.js]>
+<ZC-IMPORT[OOML.Instance/detach.js]>
+<ZC-IMPORT[OOML.Instance/dispatch.js]>
+<ZC-IMPORT[OOML.Instance/keys.js]>
+<ZC-IMPORT[OOML.Instance/Symbol.iterator.js]>
+<ZC-IMPORT[OOML.Instance/toJSON.js]>
+<ZC-IMPORT[OOML.Instance/toObject.js]>
+<ZC-IMPORT[OOML.Instance/_ATTACH.js]>
+<ZC-IMPORT[OOML.Instance/_GET_EXPOSED_DOM_ELEM.js]>
+<ZC-IMPORT[OOML.Instance/_GET_PROPERTY.js]>
+<ZC-IMPORT[OOML.Instance/_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE.js]>
+<ZC-IMPORT[OOML.Instance/_HANDLE_DISPATCH.js]>
+<ZC-IMPORT[OOML.Instance/_REBIND_BINDING.js]>
+<ZC-IMPORT[OOML.Instance/_REMOVE_ATTACHMENT_CONFIG.js]>
+<ZC-IMPORT[OOML.Instance/_SET_ARRAY_PROPERTY.js]>
+<ZC-IMPORT[OOML.Instance/_SET_ELEMENT_PROPERTY.js]>
+<ZC-IMPORT[OOML.Instance/_SET_NORMAL_PROPERTY.js]>
+
+<ZC-IMPORT[OOML.Namespace/__main__.js]>
 
 if (typeof exports == TYPEOF_OBJECT) {
     module.exports = OOML;

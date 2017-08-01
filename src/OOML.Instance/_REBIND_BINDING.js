@@ -1,5 +1,5 @@
 // TODO Rename as initially all bindings (even fixed ones) are "rebinded"
-OOMLElementProto[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING] = function(property) {
+OOMLInstanceProto[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING] = function(property) {
     let instance = this;
 
     let instanceProperties = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];

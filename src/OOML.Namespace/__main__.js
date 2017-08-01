@@ -59,7 +59,7 @@ OOML.Namespace = function(namespace, settings) {
 
         switch (settingName) {
             case 'imports':
-                // `imports` looks like `{ ImportName: Function OOML.Element, AnotherImportName: Function OOML.Element }`
+                // `imports` looks like `{ ImportName: Function OOML.Instance, AnotherImportName: Function OOML.Instance }`
                 // Note that the import name does not have to be the actual name of the class
                 if (!Utils.isObjectLiteral(settingValue)) {
                     throw new TypeError(`Invalid namespace imports`);

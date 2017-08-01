@@ -1,5 +1,5 @@
 Utils.parseBindingDeclaration = declaration => {
-    let { parts, map } = Utils.processBracesSyntaxToPartsAndMap({
+    let _ = Utils.processBracesSyntaxToPartsAndMap({
         onbracepart: param => {
             let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
             // TODO Check property is valid (can only be primitive or transient)
@@ -10,6 +10,8 @@ Utils.parseBindingDeclaration = declaration => {
         },
         syntax: declaration,
     });
+    let parts = _.parts;
+    let map = _.map;
 
     let isDynamic = parts.length > 1;
     if (isDynamic) {

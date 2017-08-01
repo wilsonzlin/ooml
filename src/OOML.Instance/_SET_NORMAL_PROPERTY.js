@@ -1,5 +1,5 @@
 // TODO Rename as not limited to primitives (transient properties can have any non-undefined type)
-OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = function(prop, newVal) {
+OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = function(prop, newVal) {
     if (newVal === undefined) {
         throw new TypeError(`Undefined provided as property value for "${prop}"`);
     }
@@ -50,7 +50,7 @@ OOMLElementProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = f
         // Write changes only if value changed
         Utils.DOM.writeValue('text', prop, instanceProperty.nodes, newVal, customHtml);
 
-        instanceProperty.value = newVal;
+        instanceProperty.currentValue = newVal;
 
         // This should run initially as well (rebinding is really just binding)
         let dependentBindings = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS][prop];

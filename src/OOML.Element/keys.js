@@ -1,3 +1,0 @@
-OOMLElementProto.keys = function() {
-    // TODO
-};

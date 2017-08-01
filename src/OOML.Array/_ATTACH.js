@@ -2,6 +2,9 @@ OOMLArrayProto[OOML_ARRAY_PROPNAME_ATTACH] = function(parent, property, realDomA
     let arrayAnchor = this[OOML_ARRAY_PROPNAME_DOM_ANCHOR];
 
     if (this[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE]) {
+        // Even though this is an internal function, it is called when assigning this to a
+        // property, which is external logic, so this exception should have an appropriate
+        // type and message
         throw new ReferenceError(`This array is already attached`);
     }
 

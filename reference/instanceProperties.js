@@ -7,7 +7,8 @@ const INSTANCE_PROPERTIES_OBJECT_STRUCTURE = {
 
         // "bindingId" only exists if there is a binding
         bindingId: 5 || undefined,
-        // "bindingParts" only exists if there is a binding and it is dynamic
+        // "bindingParts" and "bindingState" only exist if there is a binding and it is dynamic
+        bindingState: 0 || 1 || 2,
         bindingParts: ["users.", "", ".age"] || undefined,
 
         // It's possible for an instance to have an OOML.Array property but not substitute it into the view
