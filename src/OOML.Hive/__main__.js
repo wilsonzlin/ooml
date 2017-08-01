@@ -42,20 +42,17 @@ let hiveSetup = (() => {
         let currentValue = internalHive[key];
 
         let newValueIsObjectLiteral = Utils.isObjectLiteral(value);
-        let newValueIsArray = Array.isArray(value);
 
         // If new value is object/array, need to delete current value,
         // because primitive -> object/array is basically primitive -> undefined
         // as you can't bind to objects/arrays
-        if (isHiveObjectOrHiveArray(currentValue) ||
-            newValueIsObjectLiteral || newValueIsArray) {
+        if (isHiveObject(currentValue) ||
+            newValueIsObjectLiteral) {
             _this.delete(key);
         }
 
         if (newValueIsObjectLiteral) {
             internalHive[key] = new HiveObject(propertyKeypath, value);
-        } else if (newValueIsArray) {
-            internalHive[key] = new HiveArray(propertyKeypath)
         } else if (Utils.isPrimitiveValue(value)) {
             if (currentValue !== value) {
                 // Only update if necessary
@@ -84,7 +81,7 @@ let hiveSetup = (() => {
         let value = internalHive[key];
         delete internalHive[key];
 
-        if (isHiveObjectOrHiveArray(value)) {
+        if (isHiveObject(value)) {
             value.deleteAll();
         } else {
             let bindings = hive[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH][propertyKeypath];
@@ -116,8 +113,6 @@ let hiveSetup = (() => {
 
             if (value instanceof HiveObject) {
                 value = value.toObject();
-            } else if (value instanceof HiveArray) {
-                value = value.toArray();
             }
 
             obj[k] = value;
@@ -159,12 +154,8 @@ let hiveSetup = (() => {
         };
     }
 
-    let HiveArray = function() {
-        this[OOML_HIVE_PROPNAME_INTERNALARRAY] = [];
-    };
-
-    let isHiveObjectOrHiveArray = thing => {
-        return thing instanceof HiveObject || thing instanceof HiveArray;
+    let isHiveObject = thing => {
+        return thing instanceof HiveObjectg;
     };
 
     let HiveSubscriber = function(channel) {
@@ -220,8 +211,8 @@ let hiveSetup = (() => {
         }
         bindingsByKeypath[keypath][bindingId] = binding;
 
-        let currentValue = splitKeypath.reduce((prev, curr) => isHiveObjectOrHiveArray(prev) ? prev.get(curr) : undefined, hive);
-        if (isHiveObjectOrHiveArray(currentValue)) {
+        let currentValue = splitKeypath.reduce((prev, curr) => isHiveObject(prev) ? prev.get(curr) : undefined, hive);
+        if (isHiveObject(currentValue)) {
             currentValue = undefined;
         }
         object[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE](property, currentValue);

@@ -111,7 +111,6 @@ let OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE = '__oomlAttachmentParentInst
 let OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_PROPERTY = '__oomlAttachmentParentProperty';
 
 let OOML_HIVE_PROPNAME_INTERNALHIVE = '__oomlHiveInternalHive';
-let OOML_HIVE_PROPNAME_INTERNALARRAY = '__oomlHiveInternalArray';
 let OOML_HIVE_PROPNAME_SUBSCRIPTIONS = '__oomlHiveSubscriptions';
 let OOML_HIVE_PROPNAME_SUBSCRIBE = '__oomlHiveSubscribe';
 let OOML_HIVE_PROPNAME_KEYPATH_PREFIX = '__oomlHiveKeypath';

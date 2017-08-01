@@ -10,7 +10,7 @@ To use ooml, just drop in the JS library. There's no environment to set up, buil
 You only need to understand JSON and basic object orientation in order to use ooml. ooml is very declarative, and does not require you to learn any special languages or tools. Unlike most other frameworks, you can start creating scalable, advanced apps with knowledge picked up quickly, and learn the more advanced stuff when you need to.
 
 ### Very fast
-ooml has no virtual DOM, because it is already the most efficient it can be. There are no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and its performance linearly scales with its use. All of this comes in a tiny 11 KB, gzipped, CDN-delivered [ooml.js](https://wilsonl.in/ooml.latest.js) file.
+ooml has no virtual DOM, because it is already the most efficient it can be. There are no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and its performance linearly scales with its use. All of this comes in a tiny 10 KB, gzipped, CDN-delivered [ooml.js](https://wilsonl.in/ooml.latest.js) file.
 
 As an example, compared to React + Redux, [ooml has 4x better raw performance, and uses 60% less RAM](https://wilsonl.in/ooml/comparisons/react-redux#performance-and-efficiency).
 
