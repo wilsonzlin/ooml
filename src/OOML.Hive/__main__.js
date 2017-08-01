@@ -261,5 +261,7 @@ let hiveSetup = (() => {
         HiveSubscriber: HiveSubscriber,
     };
 })();
-OOML.hive = hiveSetup.hive;
-OOML.HiveSubscriber = hiveSetup.HiveSubscriber;
+let hive = hiveSetup.hive;
+let HiveSubscriber = hiveSetup.HiveSubscriber;
+OOML.hive = hive;
+OOML.HiveSubscriber = HiveSubscriber;
