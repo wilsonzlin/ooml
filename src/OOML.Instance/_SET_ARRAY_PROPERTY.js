@@ -7,11 +7,13 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY] = function(prop, ne
     }
 
     if (instanceProperty.currentValue) {
-        instanceProperty[OOML_ARRAY_PROPNAME_DETACH]();
+        instanceProperty.currentValue[OOML_ARRAY_PROPNAME_DETACH]();
     }
 
-    let newOomlArray = new OOML.Array(classProperty.types, newVal);
-    newOomlArray[OOML_ARRAY_PROPNAME_ATTACH](this, prop, instanceProperty.insertAfter);
+    if (newVal) {
+        newVal = new OOML.Array(classProperty.types, newVal);
+        newVal[OOML_ARRAY_PROPNAME_ATTACH](this, prop, instanceProperty.insertAfter);
+    }
 
-    instanceProperty.currentValue = newOomlArray;
+    instanceProperty.currentValue = newVal;
 };
