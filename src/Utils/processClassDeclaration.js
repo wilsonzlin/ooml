@@ -449,8 +449,37 @@ Utils.processClassDeclaration = config => {
         // Should not need to clone as all classProperties objects are 1) frozen and 2) are never/shouldn't be mutated
         // Shouldn't need to run checks on inherit properties (e.g. whether method exists, binding properties are valid,
         // passthrough is correct, etc.), as if they passed on the parent, they should pass here
-        // TODO Implement inheritance code, rules, and restrictions to ensure the above statement is correct
-        classProperties = Utils.concat(classParent[OOML_CLASS_PROPNAME_PROPERTIES], classProperties);
+        let parentClassProperties = classParent[OOML_CLASS_PROPNAME_PROPERTIES];
+        Object.keys(classProperties).forEach(propName => {
+            let thisClassProperty = classProperties[propName];
+            let parentClassProperty = parentClassProperties[propName];
+
+            if (parentClassProperty) {
+                let thisTypes = thisClassProperty.types;
+                let parentTypes = parentClassProperty.types;
+
+                // If the parent has no types or has primitive types, this property must have exactly the same
+                // If the parent has an OOML class as its type, this property must have the same class or a descendant
+                if (
+                    parentTypes == undefined && thisTypes != undefined ||
+                    Utils.typeOf(parentTypes, TYPEOF_FUNCTION) && !(thisTypes != parentTypes && !(thisTypes.prototype instanceof parentTypes)) ||
+                    parentTypes.slice().sort().join("|") != thisTypes.slice().sort().join("|")
+                ) {
+                    throw new TypeError(`Types for property "${ propName }" on class "${ className }" is incompatible with its parent`);
+                }
+
+                // If the parent property is an array, transient, or attribute, it must be the same on this property
+                // Everything else can be overriden
+                if (
+                    parentClassProperty.isArray && !thisClassProperty.isArray ||
+                    parentClassProperty.isTransient && !thisClassProperty.isTransient ||
+                    parentClassProperty.isAttribute && !thisClassProperty.isAttribute
+                ) {
+                    throw new TypeError(`Property "${ propName }" on class "${ className }" is incompatible with its parent`);
+                }
+            }
+        });
+        classProperties = Utils.concat(parentClassProperties, classProperties);
     }
 
     // Check that methods linked to have been declared
