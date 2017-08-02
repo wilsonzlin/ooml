@@ -3,9 +3,9 @@ Utils.createOOMLClass = config => {
     let namespace = config.namespace;
     let classMetadata = config.classMetadata;
 
-    // *******************************
+    // **************************************
     // DESTRUCTURING FROM classMetadata START
-    // *******************************
+    // **************************************
 
     let className = classMetadata.name;
     let classIsAbstract = classMetadata.isAbstract;
@@ -18,11 +18,34 @@ Utils.createOOMLClass = config => {
     let classProperties = classMetadata.properties;
     let classMethods = classMetadata.methods;
 
-    // *****************************
+    // ************************************
     // DESTRUCTURING FROM classMetadata END
-    // *****************************
+    // ************************************
 
+    let classPropertiesToDependentBindings = Utils.createCleanObject();
+    let classPropertiesThatNeedInitialBinding = [];
     let classPropertyNames = new StringSet(Object.keys(classProperties));
+
+    classPropertyNames.forEach(propName => {
+        let classPropertyObject = classProperties[propName];
+
+        let bindingIsDynamic = classPropertyObject.bindingIsDynamic;
+        if (bindingIsDynamic != undefined) {
+            if (bindingIsDynamic) {
+                // Associate this binding's dependent properties to this property
+                Object.keys(classPropertyObject.bindingPropertyToPartMap).forEach(dependencyPropertyName => {
+                    if (!classPropertiesToDependentBindings[dependencyPropertyName]) {
+                        classPropertiesToDependentBindings[dependencyPropertyName] = [];
+                    }
+                    classPropertiesToDependentBindings[dependencyPropertyName].push(propName);
+                });
+            } else {
+                // Non-dynamic bindings need to be bound when instance is contructed
+                // Dynamic bindings don't need to, because the initial setting of property values will cause rebind
+                classPropertiesThatNeedInitialBinding.push(propName);
+            }
+        }
+    });
 
     if (classIsAbstract) {
         // Create a simpler class if it's abstract
@@ -76,13 +99,12 @@ Utils.createOOMLClass = config => {
             let instanceProperties = Utils.createCleanObject();
 
             // Map from property names to an array of properties that have a dynamic binding dependent on it
-            let propertiesToDependentBindings = Utils.createCleanObject();
             let propertyRebindSetTimeouts = Utils.createCleanObject();
 
             let dispatchEventHandlers = Utils.createCleanObject();
             let mutationEventHandlers = Utils.createCleanObject();
 
-            Object.keys(classProperties).forEach(propName => {
+            classPropertyNames.forEach(propName => {
                 let classPropertyObject = classProperties[propName];
 
                 let instancePropertyObject = {
@@ -93,17 +115,10 @@ Utils.createOOMLClass = config => {
                 let bindingIsDynamic = classPropertyObject.bindingIsDynamic;
                 if (bindingIsDynamic != undefined) {
                     instancePropertyObject.bindingId = undefined;
+                    instancePropertyObject.bindingState = BINDING_STATE_INIT;
+
                     if (bindingIsDynamic) {
                         instancePropertyObject.bindingParts = classPropertyObject.bindingParts.slice();
-                        instancePropertyObject.bindingState = BINDING_STATE_INIT;
-
-                        // Associate this binding's dependent properties to this property
-                        Object.keys(instancePropertyObject.bindingPropertyToPartMap).forEach(dependencyPropertyName => {
-                            if (!propertiesToDependentBindings[dependencyPropertyName]) {
-                                propertiesToDependentBindings[dependencyPropertyName] = [];
-                            }
-                            propertiesToDependentBindings[dependencyPropertyName].push(propName);
-                        });
                     }
                 }
 
@@ -135,7 +150,6 @@ Utils.createOOMLClass = config => {
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION] = mutationEventHandlers;
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT] = instanceIsAttachedTo;
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT] = instanceProperties;
-            instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS] = propertiesToDependentBindings;
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS] = propertyRebindSetTimeouts;
             instanceObjectProperties[OOML_INSTANCE_PROPNAME_EXPOSED_DOM_ELEMS] = instanceExposedDOMElems;
 
@@ -179,6 +193,12 @@ Utils.createOOMLClass = config => {
                     .reduce((previous, c) => c.bind(instance, previous), undefined)();
             }
 
+            classPropertiesThatNeedInitialBinding.forEach(propName => {
+                // This is safe to do here, as it is async
+                // This needs to be done at the end, after properties (that this function depends on) have been defined
+                instance[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING](propName);
+            });
+
             // Update attribute nodes with parameter handlebars that have just been changed
             OOMLWriteChanges();
         };
@@ -190,6 +210,7 @@ Utils.createOOMLClass = config => {
     oomlClass[OOML_CLASS_PROPNAME_VIEW_SHAPE] = classViewShapePathToExtensionPoint && classViewShape;
     oomlClass[OOML_CLASS_PROPNAME_EXTENSIONPOINT_PATH] = classViewShapePathToExtensionPoint;
     oomlClass[OOML_CLASS_PROPNAME_ROOTELEMTAGNAME] = classViewShape && classViewShape.name;
+    oomlClass[OOML_CLASS_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS] = classPropertiesToDependentBindings;
 
     Object.defineProperty(oomlClass, "name", { value: className });
     Object.defineProperty(oomlClass, "prototype", { value: Object.create(classParent.prototype) });

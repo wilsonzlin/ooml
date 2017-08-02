@@ -27,7 +27,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE]
 
         if (stateChangeHandler) {
             let eventObject = { preventDefault: () => preventChange = true };
-            let returnValue = stateChangeHandler.call(instance, key, currentStoreValue, currentBindingStateIsInitial, eventObject);
+            let returnValue = instance[stateChangeHandler](key, currentStoreValue, currentBindingStateIsInitial, eventObject);
             if (returnValue === false) {
                 preventChange = true;
             }

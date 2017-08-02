@@ -13,7 +13,7 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
     properties: {
         nameOfProp: {
             types: ["string", "natural", "null"] || class SomeOOMLClass {} || undefined,
-            defaultValue: "the default value" || [] || {},
+            defaultValue: "the default value" || 4.35 || true || null || [] || {},
 
             isArray: true || false,
             isInstance: true || false,
@@ -28,6 +28,7 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
             passthroughProperty: "propName" || undefined,
             dispatchEventHandlers: {}, // TODO
 
+            // "bindingIsDynamic" is undefined if there is no binding
             bindingIsDynamic: true || false || undefined,
             bindingParts: ["users.", "", ".age"] || undefined,
             bindingPropertyToPartMap: {

@@ -1,9 +1,13 @@
-/demo/
 /src/
-/compile.js
-/update.sh
+/reference/
+
+*.iml
+/.idea/
 /.gitignore
 /.npmignore
-/.idea/
+
+/compile.js
+/update.sh
+
 /tmp/
 npm-debug.log

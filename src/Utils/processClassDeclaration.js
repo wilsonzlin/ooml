@@ -278,7 +278,7 @@ Utils.processClassDeclaration = config => {
                     // Type matches an OOML class, so it must be an array or instance substitution
                     if (oomlClass) {
                         if (isArraySubstitution) {
-                            if (!Array.isArray(propDefaultValue)) {
+                            if (propDefaultValue !== null && !Array.isArray(propDefaultValue)) {
                                 throw new TypeError(`Invalid default value for array substitution "${ propName }"`);
                             }
                         } else {

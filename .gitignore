@@ -4,4 +4,4 @@ npm-debug.log
 node_modules/
 /tmp/
 *.iml
-package-lock.json
+package-lock.json*

@@ -53,7 +53,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
         instanceProperty.currentValue = newVal;
 
         // This should run initially as well (rebinding is really just binding)
-        let dependentBindings = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS][prop];
+        let dependentBindings = instance.constructor[OOML_CLASS_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS][prop];
         if (dependentBindings) {
             dependentBindings.forEach(dependentProperty => {
                 classProperties[dependentProperty].bindingPropertyToPartMap[prop].forEach(idx => {

@@ -2,23 +2,28 @@
 OOMLInstanceProto[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING] = function(property) {
     let instance = this;
 
-    let instanceProperties = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT];
+    let instanceProperty = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT][property];
+    let classProperty = instance.constructor[OOML_CLASS_PROPNAME_PROPERTIES][property];
+
     let propertyRebindSetTimeouts = instance[OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS];
 
     clearTimeout(propertyRebindSetTimeouts[property]);
 
     propertyRebindSetTimeouts[property] = setTimeout(() => {
-        let internalObject = instanceProperties[property];
-        let currentBindingId = internalObject.bindingId;
+        let currentBindingId = instanceProperty.bindingId;
 
-        if (internalObject.bindingIsDynamic) {
-            internalObject.bindingKeypath = internalObject.bindingParts.join("");
+        let keypath;
+
+        if (instanceProperty.bindingParts) {
+            keypath = instanceProperty.bindingParts.join("");
+        } else {
+            keypath = classProperty.bindingKeypath;
         }
 
-        if (currentBindingId != undefined) {
+        if (currentBindingId) {
             hive.unbind(currentBindingId);
         }
 
-        internalObject.bindingId = hive.bind(internalObject.bindingKeypath, instance, property);
+        instanceProperty.bindingId = hive.bind(keypath, instance, property);
     }, 50);
 };

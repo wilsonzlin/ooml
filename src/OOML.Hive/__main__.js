@@ -155,7 +155,7 @@ let hiveSetup = (() => {
     }
 
     let isHiveObject = thing => {
-        return thing instanceof HiveObjectg;
+        return thing instanceof HiveObject;
     };
 
     let HiveSubscriber = function(channel) {
@@ -200,7 +200,7 @@ let hiveSetup = (() => {
             throw new SyntaxError(`Invalid keypath "${keypath}"`);
         }
 
-        let bindingId = bindings.length;
+        let bindingId = bindings.length || 1; // Avoid zero as it is falsey (array will be sparse anyway)
         bindings[bindingId] = keypath; // This works beautifully
         let binding = {
             object: object,
