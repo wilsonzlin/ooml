@@ -1,4 +1,4 @@
-OOMLArrayProto[OOML_INSTANCE_PROPNAME_DISPATCH] = function(_, eventName, eventData) {
+OOMLArrayProto[OOML_INSTANCE_PROPNAME_HANDLE_DISPATCH] = function(_, eventName, eventData) {
     if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
         throw new TypeError(`Event name isn't a string`);
     }
@@ -28,6 +28,6 @@ OOMLArrayProto[OOML_INSTANCE_PROPNAME_DISPATCH] = function(_, eventName, eventDa
     if (!prevented) {
         let attachedToInstance = oomlArray[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE];
         let attachedToProperty = oomlArray[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_PROPERTY];
-        attachedToInstance[OOML_INSTANCE_PROPNAME_DISPATCH](attachedToProperty, eventName, eventData);
+        attachedToInstance[OOML_INSTANCE_PROPNAME_HANDLE_DISPATCH](attachedToProperty, eventName, eventData);
     }
 };

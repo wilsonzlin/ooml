@@ -1,4 +1,3 @@
-// TODO Rename as not limited to primitives (transient properties can have any non-undefined type)
 OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = function(prop, newVal) {
     if (newVal === undefined) {
         throw new TypeError(`Undefined provided as property value for "${prop}"`);
@@ -35,8 +34,14 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
         }
     }
 
-    if (!Utils.isPrimitiveValue(newVal)) {
-        throw new TypeError(`Cannot set new property value for "${ prop }"; unrecognised type`);
+    if (!classProperty.isTransient) {
+        if (!Utils.isPrimitiveValue(newVal)) {
+            throw new TypeError(`Cannot set new property value for "${ prop }"; unrecognised type`);
+        }
+    } else {
+        if (newVal === undefined) {
+            throw new TypeError(`Cannot set new property value for "${ prop }" to undefined`);
+        }
     }
 
     let acceptableTypes = classProperty.types;
@@ -48,7 +53,11 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
 
     if (initial || oldVal !== newVal) {
         // Write changes only if value changed
-        Utils.DOM.writeValue('text', prop, instanceProperty.nodes, newVal, customHtml);
+        Utils.DOM.writeValue(prop, instanceProperty.nodes, newVal, customHtml);
+
+        if (classProperty.isAttribute) {
+            Utils.DOM.setData(instance[OOML_INSTANCE_PROPNAME_DOMELEM], prop, newVal);
+        }
 
         instanceProperty.currentValue = newVal;
 
@@ -59,7 +68,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
                 classProperties[dependentProperty].bindingPropertyToPartMap[prop].forEach(idx => {
                     instanceProperties[dependentProperty].bindingParts[idx] = newVal;
                 });
-                instance[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING](dependentProperty);
+                instance[OOML_INSTANCE_PROPNAME_REBIND_BINDING](dependentProperty);
             });
         }
 

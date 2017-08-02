@@ -4,11 +4,16 @@ OOMLInstanceProto.dispatch = function(eventName, eventData) {
         throw new TypeError(`Event name isn't a string`);
     }
 
+    let instance = this;
+
     let prevented = false;
     eventName = eventName.toLocaleLowerCase();
 
-    if (instanceEventHandlers.dispatch[eventName]) {
-        instanceEventHandlers.dispatch[eventName].forEach(handler => {
+    let instanceEventHandlers = instance[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH];
+    let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
+
+    if (instanceEventHandlers[eventName]) {
+        instanceEventHandlers[eventName].forEach(handler => {
             let eventObject = {
                 preventDefault: () => { prevented = true },
                 data: eventData,
@@ -23,7 +28,7 @@ OOMLInstanceProto.dispatch = function(eventName, eventData) {
     }
 
     if (!prevented && instanceIsAttachedTo.parent) {
-        instanceIsAttachedTo.parent[OOML_INSTANCE_PROPNAME_DISPATCH](instanceIsAttachedTo.property, eventName, eventData);
+        instanceIsAttachedTo.parent[OOML_INSTANCE_PROPNAME_HANDLE_DISPATCH](instanceIsAttachedTo.property, eventName, eventData);
     }
 
 };

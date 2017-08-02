@@ -5,7 +5,7 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
 
     constructor: function unbindedConstructor() {} || undefined,
 
-    viewShape: {}, // TODO
+    viewShape: ViewShape,
     viewShapePathToExtensionPoint: [0, 5, 3] || undefined,
 
     exposeKeys: StringSet,
@@ -22,11 +22,13 @@ const CLASS_METADATA_OBJECT_STRUCTURE = {
             setter: "someOwnMethod" || undefined,
             onChange: "someOwnMethod" || undefined,
 
-            isTransient: false,
-            isAttribute: true,
+            isTransient: true || false,
+            isAttribute: true || false,
 
             passthroughProperty: "propName" || undefined,
-            dispatchEventHandlers: {}, // TODO
+            dispatchEventHandlers: {
+                "click": "someOwnMethod",
+            },
 
             // "bindingIsDynamic" is undefined if there is no binding
             bindingIsDynamic: true || false || undefined,

@@ -1,4 +1,8 @@
 OOMLArrayProtoMutation.unshift = function(newVal) {
+    if (newVal === undefined) {
+        throw new TypeError(`Attempted to add undefined into OOML.Array`);
+    }
+
     let oomlArray = this;
 
     let arr = oomlArray[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY],

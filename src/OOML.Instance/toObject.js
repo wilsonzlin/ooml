@@ -3,10 +3,11 @@ OOMLInstanceProto.toObject = function() {
     let instance = this;
     let obj = Utils.createCleanObject();
 
-    let klass = instance.constructor;
+    let classProperties = instance.constructor[OOML_CLASS_PROPNAME_PROPERTIES];
+    let classPropertyNames = instance.constructor[OOML_CLASS_PROPNAME_PROPNAMES];
 
-    klass[OOML_CLASS_PROPNAME_PROPNAMES].forEach((propName) => {
-        if (klass[OOML_CLASS_PROPNAME_SUPPRESSEDPROPNAMES].has(propName)) {
+    classPropertyNames.forEach(propName => {
+        if (classProperties[propName].isTransient) {
             return;
         }
 

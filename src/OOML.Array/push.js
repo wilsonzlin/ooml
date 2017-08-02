@@ -1,4 +1,8 @@
 OOMLArrayProtoMutation.push = function(newVal) {
+    if (newVal === undefined) {
+        throw new TypeError(`Attempted to add undefined into OOML.Array`);
+    }
+
     let _this = this;
     let arr = _this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
     let insertAfter = arr.length ?

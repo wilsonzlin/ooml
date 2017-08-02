@@ -196,7 +196,7 @@ Utils.createOOMLClass = config => {
             classPropertiesThatNeedInitialBinding.forEach(propName => {
                 // This is safe to do here, as it is async
                 // This needs to be done at the end, after properties (that this function depends on) have been defined
-                instance[OOML_INSTANCE_PROPNAME_REBIND_DYNAMIC_BINDING](propName);
+                instance[OOML_INSTANCE_PROPNAME_REBIND_BINDING](propName);
             });
 
             // Update attribute nodes with parameter handlebars that have just been changed
@@ -249,7 +249,7 @@ Utils.createOOMLClass = config => {
             };
 
         } else {
-            // Primitive or transitive substitution
+            // Primitive or transient substitution
             setter = function(newValue) {
                 // .bind is more expensive (in terms of initial speed and memory usage) than closure
                 // Also, .bind would prevent "this" value from being auto applied

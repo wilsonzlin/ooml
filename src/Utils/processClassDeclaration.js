@@ -189,7 +189,7 @@ Utils.processClassDeclaration = config => {
                             bindingConfig = Utils.parseBindingDeclaration(domAttrValue.trim());
                             propBindingIsDynamic = bindingConfig.isDynamic;
                             propBindingParts = bindingConfig.parts;
-                            // TODO Check that binding's dependent properties exist are are primitive or transitive
+                            // TODO Check that binding's dependent properties exist are are primitive or transient
                             propBindingPropertyToPartMap = bindingConfig.propertyToPartMap;
                             propBindingKeypath = bindingConfig.keypath;
                             break;
@@ -272,8 +272,8 @@ Utils.processClassDeclaration = config => {
 
                     // Classes cannot have bars or the same name as a primitive type, so this is safe
                     let oomlClass =
-                            propTypesDeclaration == 'OOML.Instance' ? OOML.Instance :
-                                otherClasses[propTypesDeclaration];
+                        propTypesDeclaration == 'OOML.Instance' ? OOML.Instance :
+                            otherClasses[propTypesDeclaration];
 
                     // Type matches an OOML class, so it must be an array or instance substitution
                     if (oomlClass) {
@@ -289,7 +289,7 @@ Utils.processClassDeclaration = config => {
                         }
                         propTypes = oomlClass;
 
-                    // Otherwise, it must be primitive type(s)
+                        // Otherwise, it must be primitive type(s)
                     } else {
                         if (isArraySubstitution) {
                             throw new TypeError(`The array property "${ propName }" has a non-OOML class type`);
@@ -297,7 +297,7 @@ Utils.processClassDeclaration = config => {
                         propTypes = Utils.parseTypeDeclaration(propTypesDeclaration);
                     }
 
-                // Has no type declaration
+                    // Has no type declaration
                 } else {
                     // Array properties must have at least, and at most, one OOML class as its type
                     if (isArraySubstitution) {
@@ -341,6 +341,11 @@ Utils.processClassDeclaration = config => {
                     }
 
                     let oomlClass = propTypes;
+
+                    if (oomlClass == OOML.Instance) {
+                        throw new ReferenceError(`Can't use passthrough on a property with OOML.Instance type`);
+                    }
+
                     if (oomlClass == OOML.Instance || !oomlClass[OOML_CLASS_PROPNAME_PROPNAMES].has(passthroughPropName)) {
                         throw new ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
                     }

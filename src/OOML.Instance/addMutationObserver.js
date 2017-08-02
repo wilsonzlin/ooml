@@ -15,5 +15,6 @@ OOMLInstanceProto.addMutationObserver = function(eventName, observer) {
         instanceEventHandlers[eventName] = [];
     }
     instanceEventHandlers[eventName].push(observer);
+
     return this;
 };

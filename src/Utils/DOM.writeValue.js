@@ -1,4 +1,4 @@
-Utils.DOM.writeValue = (type, name, nodes, value, customHtml) => {
+Utils.DOM.writeValue = (name, nodes, value, customHtml) => {
     let customDom;
     let useCustomHtml = Utils.typeOf(customHtml, TYPEOF_STRING);
 
