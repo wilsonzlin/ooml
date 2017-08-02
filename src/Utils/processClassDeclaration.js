@@ -69,7 +69,8 @@ Utils.processClassDeclaration = config => {
         templateElem.content :
         templateElem;
 
-    let linkedMethods = [];
+    let linkedMethods = new StringSet();
+    let linkedProperties = new StringSet();
 
     Utils.iterate(templateContent.childNodes, node => {
 
@@ -189,8 +190,9 @@ Utils.processClassDeclaration = config => {
                             bindingConfig = Utils.parseBindingDeclaration(domAttrValue.trim());
                             propBindingIsDynamic = bindingConfig.isDynamic;
                             propBindingParts = bindingConfig.parts;
-                            // TODO Check that binding's dependent properties exist are are primitive or transient
                             propBindingPropertyToPartMap = bindingConfig.propertyToPartMap;
+                            Object.keys(propBindingPropertyToPartMap).forEach(propName => linkedProperties.add(propName));
+
                             propBindingKeypath = bindingConfig.keypath;
                             break;
 
@@ -204,7 +206,7 @@ Utils.processClassDeclaration = config => {
                             }
 
                             let methodName = Utils.parseMethodLinkingDeclaration(domAttrValue);
-                            linkedMethods.push(methodName);
+                            linkedMethods.add(methodName);
 
                             switch (domAttrName) {
                                 case 'get':
@@ -237,7 +239,7 @@ Utils.processClassDeclaration = config => {
                                 let eventName = domAttrName.slice(7);
 
                                 let methodName = Utils.parseMethodLinkingDeclaration(domAttrValue);
-                                linkedMethods.push(methodName);
+                                linkedMethods.add(methodName);
                                 dispatchEventHandlers[eventName] = methodName;
 
                             } else {
@@ -444,6 +446,7 @@ Utils.processClassDeclaration = config => {
         }
     });
 
+    // Inherit properties before continuing
     // OOML.Instance doesn't have OOML_CLASS_PROPNAME_PROPERTIES
     if (classParent[OOML_CLASS_PROPNAME_PROPERTIES]) {
         // Should not need to clone as all classProperties objects are 1) frozen and 2) are never/shouldn't be mutated
@@ -486,6 +489,14 @@ Utils.processClassDeclaration = config => {
     linkedMethods.forEach(methodName => {
         if (!classMethods[methodName]) {
             throw new ReferenceError(`The method "${ methodName }" is linked to, but has not been declared`);
+        }
+    });
+
+    // Check that properties dependent by bindings are valid
+    linkedProperties.forEach(propName => {
+        let classProperty = classProperties[propName];
+        if (!classProperty || classProperty.isArray || classProperty.isInstance) {
+            throw new ReferenceError(`A property has a binding dependent on "${ propName }", but "${ propName }" does not exist, or is an array/instance property`);
         }
     });
 
