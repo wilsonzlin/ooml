@@ -191,7 +191,9 @@ Utils.processClassDeclaration = config => {
                             propBindingIsDynamic = bindingConfig.isDynamic;
                             propBindingParts = bindingConfig.parts;
                             propBindingPropertyToPartMap = bindingConfig.propertyToPartMap;
-                            Object.keys(propBindingPropertyToPartMap).forEach(propName => linkedProperties.add(propName));
+                            if (propBindingPropertyToPartMap) {
+                                Object.keys(propBindingPropertyToPartMap).forEach(propName => linkedProperties.add(propName));
+                            }
 
                             propBindingKeypath = bindingConfig.keypath;
                             break;
