@@ -21,7 +21,11 @@ OOML.Namespace = function(namespace, settings) {
             domParser.innerHTML = namespace;
             namespace = domParser;
         } else {
+            let namespaceSelector = namespace;
             namespace = document.querySelector(namespace);
+            if (!namespace) {
+                throw new ReferenceError(`Namespace DOM element not found using selector ${ namespaceSelector }`);
+            }
         }
 
         // Otherwise, must provide an element
