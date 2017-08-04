@@ -12,10 +12,13 @@ You only need to understand JSON and basic object orientation in order to use oo
 ### Very fast
 ooml has no virtual DOM, because it is already the most efficient it can be. There are no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and its performance linearly scales with its use. All of this comes in a tiny 12 KB, gzipped, CDN-delivered [ooml.js](https://wilsonl.in/ooml.latest.js) file.
 
-As an example, compared to React + Redux, [ooml has 4x better raw performance, and uses 60% less RAM](https://wilsonl.in/ooml/comparisons/react-redux#performance-and-efficiency).
+As an example, compared to React + Redux, [ooml has 6x better raw performance, and uses 60% less RAM](https://wilsonl.in/ooml/comparisons/react-redux#performance-and-efficiency).
 
 ### Have it your way
 ooml has a global store, message broker, and event system. Additionally, take advantage of abstract classes, union type checking, inheritance, constructors, getters and setters, mutation observers, serialisers and unserialisers, and so much more, to create your perfect app or library, your way. And because of the way it's designed, you can already use almost every existing web library out there.
+
+### High safety
+Features like type checking can help reduce and prevent bugs in your code. And a big proportion of ooml's code is dedicated to checking and validating, whether its syntax, state, or external data. In fact, [ooml-nano](https://wilsonl.in/ooml-nano), the version of ooml without checks, is around 40% smaller.
 
 ### So much more
 Don't mistake ooml's simplicity for lack of features or scalability. Check out [ooml's guides](https://wilsonl.in/ooml/guides) or [documentation](https://wilsonl.in/docs/ooml) to see the all the neat stuff about ooml.
