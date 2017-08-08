@@ -186,8 +186,10 @@ Utils.createOOMLClass = config => {
                 }
             });
 
+            // TODO Future optimisation: Check if a constructor does in fact call the parent constructor,
+            // so that only a slice of the constructors need to be chained
             // It's possible that this class and no ancestor has a constructor
-            if (instance.constructor[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS].length) {
+            if (instance.constructor[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS]) {
                 // Build constructor chain and call it
                 instance.constructor[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS]
                     .reduce((previous, c) => c.bind(instance, previous), undefined)();
@@ -286,7 +288,10 @@ Utils.createOOMLClass = config => {
         currentProto = Object.getPrototypeOf(currentProto);
     }
 
-    oomlClass[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS] = ancestorConstructors;
+    if (ancestorConstructors.length) {
+        // Save memory -- don't store an empty array
+        oomlClass[OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS] = ancestorConstructors;
+    }
 
     return oomlClass;
 };
