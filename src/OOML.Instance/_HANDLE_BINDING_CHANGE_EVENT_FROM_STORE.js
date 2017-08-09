@@ -17,7 +17,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE]
         newState = BINDING_STATE_EXISTS;
         stateChangeHandler = classProperty.bindingOnExist;
     } else {
-        valueToApplyLocally = Utils.getDefaultPrimitiveValueForTypes(instanceProperty.types);
+        valueToApplyLocally = classProperty.defaultValue;
         newState = BINDING_STATE_MISSING;
         stateChangeHandler = classProperty.bindingOnMissing;
     }

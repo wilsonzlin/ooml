@@ -42,9 +42,13 @@ readdir(SRC_DIR).forEach(file => {
 /*
  OPTIMISATION: Make all Utils methods their own functions (i.e. as a variable, not a property)
 */
+let without_utils_obj_import = fs.readFileSync(SRC_DIR + '/ooml.js', 'utf8').replace(/<ZC-IMPORT\[Utils\/__main__.js\]>/, '');
+fs.writeFileSync(SRC_DIR + '/ooml.js', without_utils_obj_import);
 readdir(SRC_DIR + "/Utils").forEach(file => {
-    let with_var_declaration = 'let ' + fs.readFileSync(file, 'utf8');
-    fs.writeFileSync(file, with_var_declaration);
+    if (!/__main__\.js$/.test(file)) {
+        let with_var_declaration = 'let ' + fs.readFileSync(file, 'utf8');
+        fs.writeFileSync(file, with_var_declaration);
+    }
 });
 readdir(SRC_DIR).forEach(file => {
     let without_utils_obj = fs.readFileSync(file, 'utf8').replace(/Utils(\.(?!apply)[a-zA-Z]+)+/g, str => {

@@ -18,7 +18,7 @@ let TYPEOF_STRING = 'string';
 let TYPEOF_BOOLEAN = 'boolean';
 let TYPEOF_NUMBER = 'number';
 
-// <!-- ZC-IMPORT[Utils/__main__.js] -->
+<ZC-IMPORT[Utils/__main__.js]>
 <ZC-IMPORT[Utils/concat.js]>
 <ZC-IMPORT[Utils/constructOOMLInstance.js]>
 <ZC-IMPORT[Utils/constructInstanceDomFromShape.js]>
@@ -31,7 +31,6 @@ let TYPEOF_NUMBER = 'number';
 <ZC-IMPORT[Utils/DOM.setData.js]>
 <ZC-IMPORT[Utils/DOM.writeValue.js]>
 <ZC-IMPORT[Utils/getClassFromString.js]>
-<ZC-IMPORT[Utils/getDefaultPrimitiveValueForTypes.js]>
 <ZC-IMPORT[Utils/getEvalValue.js]>
 <ZC-IMPORT[Utils/hasOwnProperty.js]>
 <ZC-IMPORT[Utils/isNotOrBlankString.js]>
