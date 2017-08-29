@@ -12,7 +12,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function(prop, n
     let currentlyInitialised = currentValue != undefined;
 
     if (classProperty.setter) {
-        let setterReturnVal = instance[classProperty.setter](prop, currentValue, newVal);
+        let setterReturnVal = instance[classProperty.setter](newVal, currentValue, prop);
         if (setterReturnVal === false) {
             return;
         }

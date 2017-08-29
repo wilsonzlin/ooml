@@ -11,10 +11,10 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
 
     let customHtml;
     let oldVal = instanceProperty.currentValue;
-    let initial = oldVal === undefined;
+    let isInitial = oldVal === undefined;
 
     if (classProperty.setter) {
-        let setterReturnVal = instance[classProperty.setter](prop, oldVal, newVal, initial);
+        let setterReturnVal = instance[classProperty.setter](newVal, oldVal, isInitial, prop);
         if (setterReturnVal === false) {
             return;
         }
@@ -51,7 +51,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
         }
     }
 
-    if (initial || oldVal !== newVal) {
+    if (isInitial || oldVal !== newVal) {
         // Write changes only if value changed
         Utils.DOM.writeValue(prop, instanceProperty.nodes, newVal, customHtml);
 
@@ -73,7 +73,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
         }
 
         if (classProperty.onChange) {
-            classProperty.onChange.call(instance, prop, newVal, initial);
+            instance[classProperty.onChange](newVal, isInitial, prop);
         }
 
         let propertyValueChangeMutationHandler = instance[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION].propertyvaluechange;
@@ -83,7 +83,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
                     property: prop,
                     oldValue: oldVal,
                     newValue: newVal,
-                    initial: initial,
+                    initial: isInitial,
                 };
 
                 handler.call(instance, eventObject);

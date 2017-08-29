@@ -5,7 +5,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_GET_PROPERTY] = function(prop) {
 
     let currentValue = instanceProperty.currentValue;
     if (classProperty.getter) {
-        return instance[classProperty.getter](prop, currentValue);
+        return instance[classProperty.getter](currentValue, prop);
     }
     return currentValue;
 };
