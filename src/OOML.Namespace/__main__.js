@@ -49,8 +49,8 @@ OOML.Namespace = function(namespace, settings) {
 
     // Prepare an object to store classes (parsed and imported); fill with global imports initially
     let classes = Utils.concat(OOMLGlobalImports);
-    // To hold bootstrapped objects
-    let objects = Utils.createCleanObject();
+    // To hold bootstrapped instances
+    let instances = Utils.createCleanObject();
 
     // Iterate settings object rather than directly accessing properties
     // to check for non-existent settings that have been provided
@@ -106,7 +106,7 @@ OOML.Namespace = function(namespace, settings) {
         let className = instDetails[0];
         let instanceName = instDetails[1];
 
-        if (objects[instanceName]) {
+        if (instances[instanceName]) {
             throw new ReferenceError(`An object already exists with the name "${ instanceName }"`);
         }
 
@@ -141,11 +141,11 @@ OOML.Namespace = function(namespace, settings) {
         // Remove after attaching constructed elem
         instanceInstantiationElem.parentNode.removeChild(instanceInstantiationElem);
 
-        objects[instanceName] = instance;
+        instances[instanceName] = instance;
     });
 
     this.classes = Object.freeze(classes);
-    this.objects = Object.freeze(objects);
+    this.instances = Object.freeze(instances);
 
     Object.freeze(this);
 };
