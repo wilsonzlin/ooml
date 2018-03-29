@@ -1,3 +1,3 @@
-OOMLArrayProto.includes = function(elem, fromIdx) {
-    return this.indexOf(elem, fromIdx) > -1;
+OOMLArrayProto.includes = function (elem, fromIdx) {
+  return this.indexOf(elem, fromIdx) > -1;
 };

@@ -1,19 +1,19 @@
-OOMLInstanceProto.addDispatchHandler = function(eventName, handler) {
-    if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-        throw new TypeError(`Event name is not a string`);
-    }
+OOMLInstanceProto.addDispatchHandler = function (eventName, handler) {
+  if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
+    throw new TypeError(`Event name is not a string`);
+  }
 
-    if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
-        throw new TypeError(`The handler for the dispatch event "${ eventName }" is not a function`);
-    }
+  if (!Utils.typeOf(handler, TYPEOF_FUNCTION)) {
+    throw new TypeError(`The handler for the dispatch event "${ eventName }" is not a function`);
+  }
 
-    eventName = eventName.toLocaleLowerCase();
+  eventName = eventName.toLocaleLowerCase();
 
-    let instanceEventHandlers = this[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH];
+  let instanceEventHandlers = this[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH];
 
-    if (!instanceEventHandlers[eventName]) {
-        instanceEventHandlers[eventName] = [];
-    }
-    instanceEventHandlers[eventName].push(handler);
-    return this;
+  if (!instanceEventHandlers[eventName]) {
+    instanceEventHandlers[eventName] = [];
+  }
+  instanceEventHandlers[eventName].push(handler);
+  return this;
 };

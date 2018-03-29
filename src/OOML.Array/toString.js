@@ -1,3 +1,3 @@
-OOMLArrayProto.toString = function() {
-    return this.toJSON();
+OOMLArrayProto.toString = function () {
+  return this.toJSON();
 };

@@ -1,22 +1,22 @@
-OOMLArrayProto.addMutationObserver = function(eventName, observer) {
-    if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-        throw new TypeError(`Event name is not a string`);
-    }
+OOMLArrayProto.addMutationObserver = function (eventName, observer) {
+  if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
+    throw new TypeError(`Event name is not a string`);
+  }
 
-    if (!Utils.typeOf(observer, TYPEOF_FUNCTION)) {
-        throw new TypeError(`The observer for the mutation event "${ eventName }" is not a function`);
-    }
+  if (!Utils.typeOf(observer, TYPEOF_FUNCTION)) {
+    throw new TypeError(`The observer for the mutation event "${ eventName }" is not a function`);
+  }
 
-    let oomlArray = this;
+  let oomlArray = this;
 
-    eventName = eventName.toLocaleLowerCase();
+  eventName = eventName.toLocaleLowerCase();
 
-    let arrayMutationObservers = oomlArray[OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS];
+  let arrayMutationObservers = oomlArray[OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS];
 
-    if (!arrayMutationObservers[eventName]) {
-        arrayMutationObservers[eventName] = [];
-    }
-    arrayMutationObservers[eventName].push(observer);
+  if (!arrayMutationObservers[eventName]) {
+    arrayMutationObservers[eventName] = [];
+  }
+  arrayMutationObservers[eventName].push(observer);
 
-    return oomlArray;
+  return oomlArray;
 };

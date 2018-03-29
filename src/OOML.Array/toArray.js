@@ -1,26 +1,28 @@
-OOMLArrayProto.toArray = function(startIdx, endIdx) {
-    let oomlArray = this;
+OOMLArrayProto.toArray = function (startIdx, endIdx) {
+  let oomlArray = this;
 
-    let arr = oomlArray[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
+  let arr = oomlArray[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY];
 
-    startIdx = startIdx || 0;
-    endIdx = endIdx == undefined ? arr.length : endIdx;
+  startIdx = startIdx || 0;
+  endIdx = endIdx == undefined ?
+    arr.length :
+    endIdx;
 
-    let ret = [];
+  let ret = [];
 
-    for (let i = startIdx; i < endIdx; i++) {
-        if (Utils.typeOf(arr[i].serialise, TYPEOF_FUNCTION)) {
-            let serialised = arr[i].serialise();
-            if (serialised !== undefined) {
-                if (!Utils.isPrimitiveValue(serialised)) {
-                    throw new TypeError(`Value returned from serialise function is not primitive`);
-                }
-                ret.push(serialised);
-            }
-        } else {
-            ret.push(arr[i].toObject());
+  for (let i = startIdx; i < endIdx; i++) {
+    if (Utils.typeOf(arr[i].serialise, TYPEOF_FUNCTION)) {
+      let serialised = arr[i].serialise();
+      if (serialised !== undefined) {
+        if (!Utils.isPrimitiveValue(serialised)) {
+          throw new TypeError(`Value returned from serialise function is not primitive`);
         }
+        ret.push(serialised);
+      }
+    } else {
+      ret.push(arr[i].toObject());
     }
+  }
 
-    return ret;
+  return ret;
 };
