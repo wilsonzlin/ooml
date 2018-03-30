@@ -1,49 +1,54 @@
 const CLASS_METADATA_OBJECT_STRUCTURE = {
-    name: "NameOfClass",
-    isAbstract: true || false,
-    parent: class SomeOOMLClass {} || undefined,
+  name: "NameOfClass",
+  isAbstract: true || false,
+  parent: class SomeOOMLClass {} || undefined,
 
-    constructor: function unbindedConstructor() {} || undefined,
+  constructor: function unbindedConstructor () {} || undefined,
+  fields: {
+    static_var: 1,
+    static_var_2: "test",
+    static_var_3: function () {}.bind(class ThisOOMLClass {}),
+  },
 
-    viewShape: ViewShape,
-    viewShapePathToExtensionPoint: [0, 5, 3] || undefined,
+  viewShape: ViewShape,
+  viewShapePathToExtensionPoint: [0, 5, 3] || undefined,
 
-    exposeKeys: StringSet,
+  exposeKeys: StringSet,
 
-    properties: {
-        nameOfProp: {
-            types: ["string", "natural", "null"] || class SomeOOMLClass {} || undefined,
-            defaultValue: "the default value" || 4.35 || true || null || [] || {},
+  properties: {
+    nameOfProp: {
+      types: ["string", "natural", "null"] || class SomeOOMLClass {} || undefined,
+      defaultValue: "the default value" || 4.35 || true || null || [] || {},
 
-            isArray: true || false,
-            isInstance: true || false,
+      isArray: true || false,
+      isInstance: true || false,
 
-            getter: "someOwnMethod" || undefined,
-            setter: "someOwnMethod" || undefined,
-            onChange: "someOwnMethod" || undefined,
+      getter: "someOwnMethod" || undefined,
+      setter: "someOwnMethod" || undefined,
+      onChange: "someOwnMethod" || undefined,
 
-            isTransient: true || false,
-            isAttribute: true || false,
+      isTransient: true || false,
+      isAttribute: true || false,
 
-            passthroughProperty: "propName" || undefined,
-            dispatchEventHandlers: {
-                "click": "someOwnMethod",
-            },
+      passthroughProperty: "propName" || undefined,
+      dispatchEventHandlers: {
+        "click": "someOwnMethod",
+      },
 
-            // "bindingIsDynamic" is undefined if there is no binding
-            bindingIsDynamic: true || false || undefined,
-            bindingParts: ["users.", "", ".age"] || undefined,
-            bindingPropertyToPartMap: {
-                "userID": [1],
-            } || undefined,
-            bindingKeypath: undefined || "fixed.path.to.store.value",
-            bindingOnExist: "someOwnMethod" || undefined,
-            bindingOnMissing: "someOwnMethod" || undefined,
-        },
+      // "bindingIsDynamic" is undefined if there is no binding
+      bindingIsDynamic: true || false || undefined,
+      bindingParts: ["users.", "", ".age"] || undefined,
+      bindingPropertyToPartMap: {
+        "userID": [1],
+      } || undefined,
+      bindingKeypath: undefined || "fixed.path.to.store.value",
+      bindingOnExist: "someOwnMethod" || undefined,
+      bindingOnMissing: "someOwnMethod" || undefined,
     },
-    methods: {
-        nameOfMethod: {
-            fn: function realFn() {},
-        },
+  },
+  methods: {
+    nameOfMethod: {
+      fn: function realFn () {},
     },
+  },
 };

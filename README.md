@@ -1,5 +1,5 @@
 # ooml
-An object orientated, declarative, modern web UI anti-framework. Fast, easy to use, advanced, lightweight, and compatible with IE 9.
+An object orientated web UI framework. Fast, easy to use, advanced, lightweight, and compatible with IE 9.
 
 ## Features
 
@@ -114,7 +114,7 @@ The next example adds controls so the user can actually modify and save the list
 - [Examples](https://wilsonl.in/ooml/examples/)
 - [Documentation](https://wilsonl.in/docs/ooml/)
 
-
+## Start using
 
 - [npm](https://www.npmjs.com/package/ooml)
 - [yarn](https://yarn.fyi/ooml)
