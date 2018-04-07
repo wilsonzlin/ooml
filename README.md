@@ -4,67 +4,85 @@ An object orientated web UI framework. Fast, easy to use, advanced, lightweight,
 ## Features
 
 ### Easy setup
-To use ooml, just drop in the JS library. There's no environment to set up, build systems to use, or dependencies to manage. Get all of the benefits of an advanced framework with none of the baggage. Also, being so independent, it has no requirements or limitations on the tools and environments you use, so you can reuse most existing common toolchains, or make your own perfect one.
+- Single, drop-in 12 KB [ooml.js](https://wilsonl.in/ooml.js) file.
+- No dependencies or toolchain/environment requirements.
 
 ### Incredibly simple
-You only need to understand JSON and basic object orientation in order to use ooml. ooml is very declarative, and does not require you to learn any special languages or tools. Unlike most other frameworks, you can start creating scalable, advanced apps with knowledge picked up quickly, and learn the more advanced stuff when you need to.
+- Only need to understand JSON and basic object orientation.
+- API is designed to be identical to vanilla JavaScript.
+- Gradual learning curve&mdash;create large, scalable apps with only a few concepts.
 
 ### Very fast
-ooml has no virtual DOM, because it is already the most efficient it can be. There are no hidden performance costs or traps to be avoided. ooml's DOM abstraction is simple, so it's very easy to understand, and its performance linearly scales with its use. All of this comes in a tiny 12 KB, gzipped, CDN-delivered [ooml.js](https://wilsonl.in/ooml.latest.js) file.
+- No virtual DOM.
+- Up to [6x faster](https://wilsonl.in/ooml/comparisons/react/) than React.
+- Optionally precompile to bytecode, and get bonus static checks and optimisations.
 
 ### Have it your way
-ooml has a global store, message broker, and event system. Additionally, take advantage of abstract classes, union type checking, inheritance, constructors, getters and setters, mutation observers, serialisers and unserialisers, and so much more, to create your perfect app or library, your way. Because of the way it's designed, you can already use almost every existing web library out there.
+- Integrated with a global store, message broker, and event system.
+- Collect and traverse history without immutable structures.
+- Abstract classes, type hinting, mutation observers, automatic serialisers&mdash;all are available, and more.
+- HTML in JS, JS in HTML, or both? ooml says: yes.
+
+### Ready for packages
+- Due to its design, almost every existing JS library out there is already usable.
+- Publish modules to [ooml.store](https://ooml.store) with strictly-enforced [semver](#https://semver.org).
+- Import [ooml.store](https://ooml.store) modules with a `<script>` to get them optimised, CDN delivered, and highly cacheable.
 
 ### High safety
-Features like type checking can help reduce and prevent bugs in your code. A big proportion of ooml's code is dedicated to checking and validating, whether its syntax, state, or external data. In fact, [ooml-nano](https://wilsonl.in/ooml-nano/), the version of ooml without checks, is around 40% smaller.
+- Type hinting and strict syntax helps reduce and prevent bugs.
+- Large amounts of code dedicated to checking and validating.
+- [ooml-nano](https://wilsonl.in/ooml-nano/), the version without checks, is 40% smaller and 20% faster.
 
-### So much more
-Don't mistake ooml's simplicity for lack of features or scalability. Check out the [guides](https://wilsonl.in/ooml/guides/) or [documentation](https://wilsonl.in/docs/ooml/) to see the all the neat stuff about ooml.
+There's so much more&mdash;check out the documentation](https://wilsonl.in/docs/ooml/) or [guides](https://wilsonl.in/ooml/guides/).
 
 ## Quick example
 
 Here's a simple to-do list app ([view it live in your browser](https://wilsonl.in/ooml/examples/to-do-list-1/code.html)):
 
 ```html
-<script src="https://wilsonl.in/ooml.latest.js"></script>
+<script src="https://wilsonl.in/ooml.js"></script>
 
-<!-- Use <template> to declare classes -->
-<template ooml-class="Item">
-  <!-- A class property can be declared like so: -->
-  <ooml-property name="label">""</ooml-property>
+<div ooml="namespace">
 
-  <!-- Declare the view of the class at the end -->
-  <li>{{ this.label }}</li>
-</template>
+  <!-- Use <template> to declare classes -->
+  <template ooml="class" name="Item">
+    <!-- A class property can be declared like so: -->
+    <p name="label">""</p>
 
-<template ooml-class="List">
-  <!-- The value inside the ooml-property tag is its default value -->
-  <ooml-property name="name" type="string">""</ooml-property>
-  <ooml-property name="items" type="Item" array>[]</ooml-property>
+    <!-- Declare the view of the class at the end -->
+    <li>{{ this.label }}</li>
+  </template>
 
-  <div>
-    <!-- Use braces to substitute property values into the view -->
-    <!-- If the value is updated, so will this part of the view -->
-    <h2>{{ this.name }}</h2>
-    <ul>
-      <!-- You can even substitute other instances or arrays of them -->
-      {{ this.items }}
-    </ul>
-  </div>
-</template>
+  <template ooml="class" name="List">
+    <!-- The value inside the p (short for property) tag is its default value -->
+    <p name="name" type="string">""</p>
+    <p name="items" type="Item" array>[]</p>
 
-<template ooml-class="App">
-  <ooml-property name="list" type="List">null</ooml-property>
+    <div>
+      <!-- Use braces to substitute property values into the view -->
+      <!-- If the value is updated, so will this part of the view -->
+      <h2>{{ this.name }}</h2>
+      <ul>
+        <!-- You can even substitute other instances or arrays of them -->
+        {{ this.items }}
+      </ul>
+    </div>
+  </template>
 
-  <div id="app">
-    <h1>Open your console and try adding items to this list</h1>
-    {{ this.list }}
-  </div>
-</template>
+  <template ooml="class" name="App">
+    <p name="list" type="List">null</p>
+
+    <div id="app">
+      <h1>Open your console and try adding items to this list</h1>
+      {{ this.list }}
+    </div>
+  </template>
+
+</div>
 
 <!-- Quickly bootstrap by declaring an initial instantiation -->
 <!-- ooml will create an App instance called `app` and put it here -->
-<div ooml-instantiate="App app"></div>
+<div ooml="instantiate" type="App" name="app"></div>
 
 <script>
   // Start your engines!
@@ -74,7 +92,8 @@ Here's a simple to-do list app ([view it live in your browser](https://wilsonl.i
 </script>
 ```
 
-Running the above HTML page in your browser, try these in your browser's console and notice the similarity to plain JavaScript syntax:
+Running the above HTML page in your browser, try these in your browser's console
+and notice the similarity to plain JavaScript syntax:
 
 ```javascript
 // Every instance is modelled as a basic object (think JSON)
@@ -99,6 +118,12 @@ app.list.items.unshift(firstItem);
 // Most of your code will look like vanilla JS
 // This gives you more flexibility, very readable code, and nearly no learning curve
 app.list.items.get(0).label = "1st item";
+
+// With one method, get your entire app in JSON...
+var json = app.toJSON();
+app.list = null; // To test out the next part, delete something
+// ...and with two methods, restore your entire app from JSON
+app.assign( JSON.parse(json) ); // or Object.assign( app, JSON.parse(json) )
 ```
 
 Open up the console, tinker with the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays, and more objects, which makes it extremely easy to traverse, manipulate, and serialise at any level.
@@ -118,4 +143,4 @@ The next example adds controls so the user can actually modify and save the list
 
 - [npm](https://www.npmjs.com/package/ooml)
 - [yarn](https://yarn.fyi/ooml)
-- [ooml.js latest version](https://wilsonl.in/ooml.latest.js)
+- [ooml.js latest version](https://wilsonl.in/ooml.js)
