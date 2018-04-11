@@ -1,1 +1,1 @@
-Utils.DOM.find = (rootElem, sel) => Utils.concat(rootElem.querySelectorAll(sel));
+let Utils_DOM_find = (rootElem, sel) => Utils_concat(rootElem.querySelectorAll(sel));

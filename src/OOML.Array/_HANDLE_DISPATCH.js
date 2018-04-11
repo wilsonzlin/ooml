@@ -1,6 +1,6 @@
 OOMLArrayProto[OOML_INSTANCE_PROPNAME_HANDLE_DISPATCH] = function (_, eventName, eventData) {
-  if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-    throw new TypeError(`Event name isn't a string`);
+  if (!Utils_typeOf(eventName, TYPEOF_STRING)) {
+    throw TypeError(`Event name isn't a string`);
   }
 
   let oomlArray = this;

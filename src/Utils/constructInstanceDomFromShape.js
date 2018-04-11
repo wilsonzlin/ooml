@@ -1,4 +1,4 @@
-Utils.constructInstanceDomFromShape = config => {
+let Utils_constructInstanceDomFromShape = config => {
   let instance = config.instance;
   let instanceProperties = config.instanceProperties;
   let instanceExposedDOMElems = config.instanceExposedDOMElems;
@@ -53,7 +53,7 @@ Utils.constructInstanceDomFromShape = config => {
     });
 
     shape.childNodes.forEach(childNode => {
-      cloned.appendChild(Utils.constructInstanceDomFromShape({
+      cloned.appendChild(Utils_constructInstanceDomFromShape({
         instance: instance,
         instanceProperties: instanceProperties,
         instanceExposedDOMElems: instanceExposedDOMElems,
@@ -83,7 +83,7 @@ Utils.constructInstanceDomFromShape = config => {
 
   default:
     // Defensive coding
-    throw new Error(`Invalid class view shape type to process`);
+    throw Error(`Invalid class view shape type to process`);
   }
 
   return cloned;

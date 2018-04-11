@@ -1,7 +1,7 @@
 OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function (prop, newVal) {
   // Let constructors handle newVal's type
   if (newVal === undefined) {
-    throw new TypeError(`Undefined provided as element substitution property value for "${prop}"`);
+    throw TypeError(`Undefined provided as element substitution property value for "${prop}"`);
   }
   let instance = this;
   let instanceProperty = instance[OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT][prop];
@@ -18,11 +18,11 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function (prop, 
     }
 
     if (setterReturnVal !== undefined) {
-      if (!Utils.isObjectLiteral(setterReturnVal)) {
-        throw new TypeError(`Invalid setter return value`);
+      if (!Utils_isObjectLiteral(setterReturnVal)) {
+        throw TypeError(`Invalid setter return value`);
       }
 
-      if (Utils.hasOwnProperty(setterReturnVal, "value")) {
+      if (Utils_hasOwnProperty(setterReturnVal, "value")) {
         newVal = setterReturnVal.value;
       }
     }
@@ -35,7 +35,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY] = function (prop, 
 
   // Attach first to ensure that element is attachable
   if (newVal !== null) {
-    newVal = Utils.constructOOMLInstance(classProperty.types, newVal);
+    newVal = Utils_constructOOMLInstance(classProperty.types, newVal);
     newVal[OOML_INSTANCE_PROPNAME_ATTACH]({
       insertAfter: instanceProperty.insertAfter,
       parent: instance,

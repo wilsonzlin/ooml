@@ -10,7 +10,7 @@ OOMLArrayProto.get = function (idx) {
 
   let instance = arr[realIdx];
   if (!instance) {
-    throw new RangeError(`The offset at index ${ idx } is not a valid offset`);
+    throw RangeError(`The offset at index ${ idx } is not a valid offset`);
   }
 
   return instance;

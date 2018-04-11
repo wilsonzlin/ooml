@@ -4,7 +4,7 @@ OOMLInstanceProto.detach = function () {
   let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
 
   if (!instanceIsAttachedTo.parent) {
-    throw new ReferenceError(`This instance is not in use`);
+    throw ReferenceError(`This instance is not in use`);
   }
 
   let parent = instanceIsAttachedTo.parent;
@@ -12,7 +12,7 @@ OOMLInstanceProto.detach = function () {
   if (parent instanceof OOML.Array) {
     let indexOfThis = parent.indexOf(instance);
     if (indexOfThis < 0) {
-      throw new Error(`This instance could not be found in its parent array`);
+      throw Error(`This instance could not be found in its parent array`);
     }
     // This will call __oomlDetach
     parent.splice(indexOfThis, 1);
@@ -20,7 +20,7 @@ OOMLInstanceProto.detach = function () {
     // This will call __oomlDetach
     parent[instanceIsAttachedTo.property] = null;
   } else {
-    throw new Error(`Unrecognised parent`);
+    throw Error(`Unrecognised parent`);
   }
 
   return instance;

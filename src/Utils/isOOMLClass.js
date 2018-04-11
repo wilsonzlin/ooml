@@ -1,1 +1,1 @@
-Utils.isOOMLClass = c => Utils.typeOf(c, TYPEOF_FUNCTION) && c.prototype instanceof OOML.Instance;
+let Utils_isOOMLClass = c => Utils_typeOf(c, TYPEOF_FUNCTION) && c.prototype instanceof OOML.Instance;

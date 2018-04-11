@@ -1,6 +1,6 @@
 OOMLArrayProtoMutation.push = function (newVal) {
   if (newVal === undefined) {
-    throw new TypeError(`Attempted to add undefined into OOML.Array`);
+    throw TypeError(`Attempted to add undefined into OOML.Array`);
   }
 
   let _this = this;
@@ -10,7 +10,7 @@ OOMLArrayProtoMutation.push = function (newVal) {
     _this[OOML_ARRAY_PROPNAME_DOM_ANCHOR];
 
   let elemConstructor = _this[OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR];
-  let newElem = Utils.constructOOMLInstance(elemConstructor, newVal);
+  let newElem = Utils_constructOOMLInstance(elemConstructor, newVal);
   newElem[OOML_INSTANCE_PROPNAME_ATTACH]({insertAfter: insertAfter, parent: _this});
 
   arr.push(newElem);

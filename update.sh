@@ -2,8 +2,12 @@
 
 set -e
 
-cd "$(dirname "$0")"
+pushd "$(dirname "$0")" > /dev/null
+
 node compile.js
 npm --no-git-tag-version version $1
 npm publish
-git push
+
+popd > /dev/null
+
+exit 0

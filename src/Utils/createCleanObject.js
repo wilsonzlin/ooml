@@ -1,1 +1,1 @@
-Utils.createCleanObject = () => Object.create(null);
+let Utils_createCleanObject = () => Object.create(null);

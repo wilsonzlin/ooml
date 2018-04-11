@@ -7,7 +7,7 @@ OOMLArrayProto[OOML_ARRAY_PROPNAME_DETACH] = function () {
   let instanceIsAttachedTo = oomlArray[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE];
 
   if (!instanceIsAttachedTo) {
-    throw new Error(`This array is not attached to anything`);
+    throw Error(`This array is not attached to anything`);
   }
 
   let arrayAnchor = oomlArray[OOML_ARRAY_PROPNAME_DOM_ANCHOR];

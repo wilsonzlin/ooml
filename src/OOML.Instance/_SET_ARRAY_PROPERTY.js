@@ -3,7 +3,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY] = function (prop, n
   let classProperty = this.constructor[OOML_CLASS_PROPNAME_PROPERTIES][prop];
 
   if (newVal !== null && !Array.isArray(newVal)) {
-    throw new TypeError(`Non-array provided to element array substitution property "${prop}"`);
+    throw TypeError(`Non-array provided to element array substitution property "${prop}"`);
   }
 
   if (instanceProperty.currentValue) {

@@ -11,11 +11,11 @@ OOMLArrayProto.toArray = function (startIdx, endIdx) {
   let ret = [];
 
   for (let i = startIdx; i < endIdx; i++) {
-    if (Utils.typeOf(arr[i].serialise, TYPEOF_FUNCTION)) {
+    if (Utils_typeOf(arr[i].serialise, TYPEOF_FUNCTION)) {
       let serialised = arr[i].serialise();
       if (serialised !== undefined) {
-        if (!Utils.isPrimitiveValue(serialised)) {
-          throw new TypeError(`Value returned from serialise function is not primitive`);
+        if (!Utils_isPrimitiveValue(serialised)) {
+          throw TypeError(`Value returned from serialise function is not primitive`);
         }
         ret.push(serialised);
       }

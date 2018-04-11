@@ -1,4 +1,4 @@
-Utils.createOOMLClass = config => {
+let Utils_createOOMLClass = config => {
   let oomlClass;
   let namespace = config.namespace;
   let classMetadata = config.classMetadata;
@@ -22,7 +22,7 @@ Utils.createOOMLClass = config => {
   // DESTRUCTURING FROM classMetadata END
   // ************************************
 
-  let classPropertiesToDependentBindings = Utils.createCleanObject();
+  let classPropertiesToDependentBindings = Utils_createCleanObject();
   let classPropertiesThatNeedInitialBinding = [];
   let classPropertyNames = new StringSet(Object.keys(classProperties));
 
@@ -55,21 +55,21 @@ Utils.createOOMLClass = config => {
 
       // Must use `new` keyword
       if (!(instance instanceof oomlClass)) {
-        throw new ReferenceError(`OOML instances need to be constructed`);
+        throw ReferenceError(`OOML instances need to be constructed`);
       }
 
       // If no abstract factory available, throw error
-      if (!Utils.typeOf(instance.abstractFactory, TYPEOF_FUNCTION)) {
-        throw new TypeError(`Unable to construct new instance; "${ className }" is an abstract class`);
+      if (!Utils_typeOf(instance.abstractFactory, TYPEOF_FUNCTION)) {
+        throw TypeError(`Unable to construct new instance; "${ className }" is an abstract class`);
       }
 
       // Unserialise initState
-      initState = Utils.unserialiseInitState(instance, initState);
+      initState = Utils_unserialiseInitState(instance, initState);
 
       // Call abstract factory and assert it returned an OOML instance
       let ret = instance.abstractFactory(initState);
       if (!(ret instanceof OOML.Instance)) {
-        throw new TypeError(`Abstract factory returned a value that is not an OOML element instance`);
+        throw TypeError(`Abstract factory returned a value that is not an OOML element instance`);
       }
 
       // Return the factory-built instance
@@ -83,28 +83,28 @@ Utils.createOOMLClass = config => {
       let instanceIsAttachedTo = {};
 
       if (!(instance instanceof oomlClass)) {
-        throw new ReferenceError(`OOML instances need to be constructed`);
+        throw ReferenceError(`OOML instances need to be constructed`);
       }
 
-      initState = Utils.unserialiseInitState(instance, initState);
+      initState = Utils_unserialiseInitState(instance, initState);
 
       if (initState) {
         Object.keys(initState)
           .forEach(propName => {
             if (!classPropertyNames.has(propName)) {
-              throw new ReferenceError(`The property "${propName}" provided in an instance property's initial value does not exist`);
+              throw ReferenceError(`The property "${propName}" provided in an instance property's initial value does not exist`);
             }
           });
       }
 
       // Internal object to hold state of properties
-      let instanceProperties = Utils.createCleanObject();
+      let instanceProperties = Utils_createCleanObject();
 
       // Map from property names to an array of properties that have a dynamic binding dependent on it
-      let propertyRebindSetTimeouts = Utils.createCleanObject();
+      let propertyRebindSetTimeouts = Utils_createCleanObject();
 
-      let dispatchEventHandlers = Utils.createCleanObject();
-      let mutationEventHandlers = Utils.createCleanObject();
+      let dispatchEventHandlers = Utils_createCleanObject();
+      let mutationEventHandlers = Utils_createCleanObject();
 
       classPropertyNames.forEach(propName => {
         let classPropertyObject = classProperties[propName];
@@ -138,15 +138,15 @@ Utils.createOOMLClass = config => {
       // Defensive coding
       Object.seal(instanceProperties);
 
-      let instanceExposedDOMElems = Utils.createCleanObject(); // { "key": HTMLElement }
-      let instanceDom = Utils.constructInstanceDomFromShape({
+      let instanceExposedDOMElems = Utils_createCleanObject(); // { "key": HTMLElement }
+      let instanceDom = Utils_constructInstanceDomFromShape({
         instance: instance,
         instanceProperties: instanceProperties,
         instanceExposedDOMElems: instanceExposedDOMElems,
         shape: classViewShape
       });
 
-      let instanceObjectProperties = Utils.createCleanObject();
+      let instanceObjectProperties = Utils_createCleanObject();
       instanceObjectProperties[OOML_INSTANCE_PROPNAME_DOMELEM] = instanceDom;
       instanceObjectProperties[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH] = dispatchEventHandlers;
       instanceObjectProperties[OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION] = mutationEventHandlers;
@@ -166,7 +166,7 @@ Utils.createOOMLClass = config => {
       classPropertyNames.forEach(propName => {
         let defaultValue = classProperties[propName].defaultValue;
 
-        if (Utils.hasOwnProperty(initState, propName)) {
+        if (Utils_hasOwnProperty(initState, propName)) {
           let passthroughProperty = classProperties[propName].passthroughProperty;
           if (passthroughProperty) {
             // If passthrough, initialise instance with initState built-in (to prevent it counting as a change,
@@ -174,7 +174,7 @@ Utils.createOOMLClass = config => {
             let unserialised = {};
             unserialised[passthroughProperty] = initState[propName];
             // defaultValue could be null
-            instance[propName] = Utils.concat(defaultValue || Utils.createCleanObject(), unserialised);
+            instance[propName] = Utils_concat(defaultValue || Utils_createCleanObject(), unserialised);
 
           } else {
             // Otherwise, just use provided value
@@ -220,7 +220,7 @@ Utils.createOOMLClass = config => {
   Object.defineProperty(oomlClass, "name", {value: className});
   Object.defineProperty(oomlClass, "prototype", {value: Object.create(classParent.prototype)});
 
-  let classProtoPropertiesConfig = Utils.createCleanObject();
+  let classProtoPropertiesConfig = Utils_createCleanObject();
 
   // Set the constructor property
   classProtoPropertiesConfig.constructor = {value: oomlClass};

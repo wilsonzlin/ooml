@@ -1,6 +1,6 @@
 OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = function (prop, newVal) {
   if (newVal === undefined) {
-    throw new TypeError(`Undefined provided as property value for "${prop}"`);
+    throw TypeError(`Undefined provided as property value for "${prop}"`);
   }
 
   let instance = this;
@@ -20,43 +20,43 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] = 
     }
 
     if (setterReturnVal !== undefined) {
-      if (!Utils.isObjectLiteral(setterReturnVal)) {
-        throw new TypeError(`Invalid setter return value`);
+      if (!Utils_isObjectLiteral(setterReturnVal)) {
+        throw TypeError(`Invalid setter return value`);
       }
 
-      if (Utils.hasOwnProperty(setterReturnVal, "value")) {
+      if (Utils_hasOwnProperty(setterReturnVal, "value")) {
         newVal = setterReturnVal.value;
       }
 
-      if (Utils.hasOwnProperty(setterReturnVal, "HTML")) {
+      if (Utils_hasOwnProperty(setterReturnVal, "HTML")) {
         customHtml = setterReturnVal.HTML;
       }
     }
   }
 
   if (!classProperty.isTransient) {
-    if (!Utils.isPrimitiveValue(newVal)) {
-      throw new TypeError(`Cannot set new property value for "${ prop }"; unrecognised type`);
+    if (!Utils_isPrimitiveValue(newVal)) {
+      throw TypeError(`Cannot set new property value for "${ prop }"; unrecognised type`);
     }
   } else {
     if (newVal === undefined) {
-      throw new TypeError(`Cannot set new property value for "${ prop }" to undefined`);
+      throw TypeError(`Cannot set new property value for "${ prop }" to undefined`);
     }
   }
 
   let acceptableTypes = classProperty.types;
   if (acceptableTypes) {
-    if (!Utils.isType(acceptableTypes, newVal)) {
-      throw new TypeError(`Cannot set new property value for "${ prop }"; expected type to be one of: ${ acceptableTypes.join(", ") }`);
+    if (!Utils_isType(acceptableTypes, newVal)) {
+      throw TypeError(`Cannot set new property value for "${ prop }"; expected type to be one of: ${ acceptableTypes.join(", ") }`);
     }
   }
 
   if (isInitial || oldVal !== newVal) {
     // Write changes only if value changed
-    Utils.DOM.writeValue(prop, instanceProperty.nodes, newVal, customHtml);
+    Utils_DOM_writeValue(prop, instanceProperty.nodes, newVal, customHtml);
 
     if (classProperty.isAttribute) {
-      Utils.DOM.setData(instance[OOML_INSTANCE_PROPNAME_DOMELEM], prop, newVal);
+      Utils_DOM_setData(instance[OOML_INSTANCE_PROPNAME_DOMELEM], prop, newVal);
     }
 
     instanceProperty.currentValue = newVal;

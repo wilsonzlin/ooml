@@ -1,1 +1,1 @@
-Utils.getEvalValue = codeStr => Function(`"use strict";return ${ codeStr.trim() || undefined }`)();
+let Utils_getEvalValue = codeStr => Function(`"use strict";return ${ codeStr.trim() || undefined }`)();

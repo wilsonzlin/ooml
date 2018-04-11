@@ -1,1 +1,1 @@
-Utils.isPrimitiveValue = val => Utils.isType(JavaScriptNativePrimitiveTypes, val);
+let Utils_isPrimitiveValue = val => Utils_isType(JavaScriptNativePrimitiveTypes, val);

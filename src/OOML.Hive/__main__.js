@@ -1,6 +1,6 @@
 let hiveSetup = (() => {
   let isValidKey = key => {
-    if (!Utils.typeOf(key, TYPEOF_STRING) && !Utils.typeOf(key, TYPEOF_NUMBER)) {
+    if (!Utils_typeOf(key, TYPEOF_STRING) && !Utils_typeOf(key, TYPEOF_NUMBER)) {
       return false;
     }
     key = "" + key;
@@ -8,7 +8,7 @@ let hiveSetup = (() => {
   };
   let assertValidKey = key => {
     if (!isValidKey(key)) {
-      throw new SyntaxError(`Invalid hive key name "${key}"`);
+      throw SyntaxError(`Invalid hive key name "${key}"`);
     }
   };
 
@@ -17,7 +17,7 @@ let hiveSetup = (() => {
     let _this = this;
     // Don't add dot suffix if first keypath ("")
     _this[OOML_HIVE_PROPNAME_KEYPATH_PREFIX] = keypath && `${keypath}.`;
-    _this[OOML_HIVE_PROPNAME_INTERNALHIVE] = Utils.createCleanObject();
+    _this[OOML_HIVE_PROPNAME_INTERNALHIVE] = Utils_createCleanObject();
     Object.freeze(_this);
 
     if (initialState) {
@@ -42,7 +42,7 @@ let hiveSetup = (() => {
     let propertyKeypath = _this[OOML_HIVE_PROPNAME_KEYPATH_PREFIX] + key;
     let currentValue = internalHive[key];
 
-    let newValueIsObjectLiteral = Utils.isObjectLiteral(value);
+    let newValueIsObjectLiteral = Utils_isObjectLiteral(value);
 
     // If new value is object/array, need to delete current value,
     // because primitive -> object/array is basically primitive -> undefined
@@ -54,7 +54,7 @@ let hiveSetup = (() => {
 
     if (newValueIsObjectLiteral) {
       internalHive[key] = new HiveObject(propertyKeypath, value);
-    } else if (Utils.isPrimitiveValue(value)) {
+    } else if (Utils_isPrimitiveValue(value)) {
       if (currentValue !== value) {
         // Only update if necessary
         internalHive[key] = value;
@@ -69,7 +69,7 @@ let hiveSetup = (() => {
         }
       }
     } else {
-      throw new TypeError(`Invalid hive value for key "${propertyKeypath}"`);
+      throw TypeError(`Invalid hive value for key "${propertyKeypath}"`);
     }
   };
   HiveObjectPrototype.delete = function (key) {
@@ -109,7 +109,7 @@ let hiveSetup = (() => {
     let _this = this;
     let internalHive = _this[OOML_HIVE_PROPNAME_INTERNALHIVE];
 
-    let obj = Utils.createCleanObject();
+    let obj = Utils_createCleanObject();
     Object.keys(internalHive)
       .forEach(k => {
         let value = internalHive[k];
@@ -187,9 +187,9 @@ let hiveSetup = (() => {
   let Hive = function () {
     this.store = new HiveObject("");
     this[OOML_HIVE_PROPNAME_BINDINGS] = [];
-    this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH] = Utils.createCleanObject();
+    this[OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH] = Utils_createCleanObject();
 
-    this[OOML_HIVE_PROPNAME_SUBSCRIPTIONS] = Utils.createCleanObject();
+    this[OOML_HIVE_PROPNAME_SUBSCRIPTIONS] = Utils_createCleanObject();
     Object.freeze(this);
   };
   let HiveProto = Hive.prototype;
@@ -200,8 +200,8 @@ let hiveSetup = (() => {
 
     let splitKeypath;
 
-    if (!Utils.typeOf(keypath, TYPEOF_STRING) || !(splitKeypath = keypath.split(".")).every(k => isValidKey(k))) {
-      throw new SyntaxError(`Invalid keypath "${keypath}"`);
+    if (!Utils_typeOf(keypath, TYPEOF_STRING) || !(splitKeypath = keypath.split(".")).every(k => isValidKey(k))) {
+      throw SyntaxError(`Invalid keypath "${keypath}"`);
     }
 
     let bindingId = bindings.length || 1; // Avoid zero as it is falsey (array will be sparse anyway)

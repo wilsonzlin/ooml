@@ -1,4 +1,4 @@
-Utils.constructOOMLInstance = (elemConstructor, obj) => {
+let Utils_constructOOMLInstance = (elemConstructor, obj) => {
   if (obj instanceof elemConstructor) {
     return obj;
   }

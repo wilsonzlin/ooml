@@ -33,7 +33,7 @@ An object orientated web UI framework. Fast, easy to use, advanced, lightweight,
 - Large amounts of code dedicated to checking and validating.
 - [ooml-nano](https://wilsonl.in/ooml-nano/), the version without checks, is 40% smaller and 20% faster.
 
-There's so much more&mdash;check out the documentation](https://wilsonl.in/docs/ooml/) or [guides](https://wilsonl.in/ooml/guides/).
+There's so much more&mdash;check out the [documentation](https://wilsonl.in/docs/ooml/), or read the [quick start](https://wilsonl.in/ooml/quick-start/).
 
 ## Quick example
 
@@ -70,7 +70,7 @@ Here's a simple to-do list app ([view it live in your browser](https://wilsonl.i
   </template>
 
   <template ooml="class" name="App">
-    <p name="list" type="List">null</p>
+    <p name="list" type="List">{}</p>
 
     <div id="app">
       <h1>Open your console and try adding items to this list</h1>

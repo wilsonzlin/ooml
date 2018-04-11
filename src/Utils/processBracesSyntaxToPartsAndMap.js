@@ -1,10 +1,10 @@
-Utils.processBracesSyntaxToPartsAndMap = config => {
+let Utils_processBracesSyntaxToPartsAndMap = config => {
   let syntax = config.syntax;
   let onstaticpart = config.onstaticpart;
   let onbracepart = config.onbracepart;
 
   let parts = [];
-  let map = Utils.createCleanObject();
+  let map = Utils_createCleanObject();
 
   let toProcess = syntax;
 
@@ -37,7 +37,7 @@ Utils.processBracesSyntaxToPartsAndMap = config => {
     // Therefore the index of the closing brace can't be less than 3
     let indexOfClosingBrace = toProcess.indexOf("}}");
     if (indexOfClosingBrace < 3) {
-      throw new SyntaxError(`Matching closing brace not found around:\n\n${ toProcess.slice(0, 200) }\n`);
+      throw SyntaxError(`Matching closing brace not found around:\n\n${ toProcess.slice(0, 200) }\n`);
     }
     // Remove opening and closing braces:
     // "{{ whatever }}" becomes " whatever "

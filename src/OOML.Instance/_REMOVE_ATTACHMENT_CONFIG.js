@@ -7,7 +7,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_DETACH] = function () {
   let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
 
   if (!instanceIsAttachedTo.parent) {
-    throw new Error(`This instance is not in use`);
+    throw Error(`This instance is not in use`);
   }
 
   instanceIsAttachedTo.parent = undefined;

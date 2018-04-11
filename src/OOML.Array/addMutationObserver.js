@@ -1,10 +1,10 @@
 OOMLArrayProto.addMutationObserver = function (eventName, observer) {
-  if (!Utils.typeOf(eventName, TYPEOF_STRING)) {
-    throw new TypeError(`Event name is not a string`);
+  if (!Utils_typeOf(eventName, TYPEOF_STRING)) {
+    throw TypeError(`Event name is not a string`);
   }
 
-  if (!Utils.typeOf(observer, TYPEOF_FUNCTION)) {
-    throw new TypeError(`The observer for the mutation event "${ eventName }" is not a function`);
+  if (!Utils_typeOf(observer, TYPEOF_FUNCTION)) {
+    throw TypeError(`The observer for the mutation event "${ eventName }" is not a function`);
   }
 
   let oomlArray = this;

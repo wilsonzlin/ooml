@@ -4,7 +4,7 @@ OOMLArrayProto.detach = function () {
   let instanceIsAttachedTo = oomlArray[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE];
 
   if (!instanceIsAttachedTo) {
-    throw new ReferenceError(`This array is not attached to anything`);
+    throw ReferenceError(`This array is not attached to anything`);
   }
 
   // This will call __oomlArrayDetach

@@ -1,4 +1,4 @@
-Utils.processClassDeclaration = config => {
+let Utils_processClassDeclaration = config => {
   let otherClasses = config.otherClasses;
   let templateElem = config.templateElem;
 
@@ -7,8 +7,8 @@ Utils.processClassDeclaration = config => {
   let classParentName; // `undefined` default
   let classParent;
 
-  let classProperties = Utils.createCleanObject();
-  let classMethods = Utils.createCleanObject();
+  let classProperties = Utils_createCleanObject();
+  let classMethods = Utils_createCleanObject();
   let classExposeKeys = new StringSet();
 
   let classConstructor;
@@ -19,7 +19,7 @@ Utils.processClassDeclaration = config => {
 
   // ooml-(abstract)?-class definitely exists as this function is only called via querySelectorAll
   // Don't need to check for duplicate attribute names
-  Utils.iterate(templateElem.attributes, attribute => {
+  Utils_iterate(templateElem.attributes, attribute => {
     let domAttrName = attribute.name;
     let domAttrValue = attribute.value;
 
@@ -27,12 +27,12 @@ Utils.processClassDeclaration = config => {
     case "ooml-class":
     case "ooml-abstract-class":
       if (className) {
-        throw new ReferenceError(`Duplicate class declaration attribute`);
+        throw ReferenceError(`Duplicate class declaration attribute`);
       }
 
       let classDeclarationParts = /^([a-zA-Z][a-zA-Z.0-9]*)(?: extends ([a-zA-Z][a-zA-Z.0-9]*))?$/.exec(domAttrValue);
       if (!classDeclarationParts) {
-        throw new SyntaxError(`Malformed attribute value for attribute "${ domAttrName }": "${ domAttrValue }"`);
+        throw SyntaxError(`Malformed attribute value for attribute "${ domAttrName }": "${ domAttrValue }"`);
       }
 
       className = classDeclarationParts[1];
@@ -40,26 +40,26 @@ Utils.processClassDeclaration = config => {
       classParentName = classDeclarationParts[2] || undefined;
 
       if (OOMLPrimitiveTypes.has(className)) {
-        throw new SyntaxError(`Class names cannot be the same as a primitive type`);
+        throw SyntaxError(`Class names cannot be the same as a primitive type`);
       }
       break;
 
     default:
-      throw new ReferenceError(`Unrecognised "${ domAttrName }" attribute on class declaration`);
+      throw ReferenceError(`Unrecognised "${ domAttrName }" attribute on class declaration`);
     }
   });
 
   if (!className) {
-    throw new SyntaxError(`Class declaration does not have a name`);
+    throw SyntaxError(`Class declaration does not have a name`);
   }
 
   // Check that class name is unique
   if (otherClasses[className]) {
-    throw new ReferenceError(`The class "${ className }" already exists`);
+    throw ReferenceError(`The class "${ className }" already exists`);
   }
 
   if (classParentName) {
-    classParent = Utils.getClassFromString(otherClasses, classParentName);
+    classParent = Utils_getClassFromString(otherClasses, classParentName);
   } else {
     classParent = OOML.Instance;
   }
@@ -72,7 +72,7 @@ Utils.processClassDeclaration = config => {
   let linkedMethods = new StringSet();
   let linkedProperties = new StringSet();
 
-  Utils.iterate(templateContent.childNodes, node => {
+  Utils_iterate(templateContent.childNodes, node => {
 
     if (node instanceof Comment) {
       return;
@@ -80,21 +80,21 @@ Utils.processClassDeclaration = config => {
 
     if (node instanceof Text) {
       if (/\S/.test(node.data)) {
-        throw new TypeError(`Illegal text node in class declaration with value "${node.data}"`);
+        throw TypeError(`Illegal text node in class declaration with value "${node.data}"`);
       }
       return;
     }
 
     if (!(node instanceof Element)) {
-      throw new TypeError(`Illegal top-level node in class declaration`);
+      throw TypeError(`Illegal top-level node in class declaration`);
     }
 
     if (classRawDom) {
-      throw new SyntaxError(`The class "${ className }" has more than one root element`);
+      throw SyntaxError(`The class "${ className }" has more than one root element`);
     }
 
     switch (node.nodeName) {
-    case "OOML-PROPERTY":
+    case "P":
 
       let propName;
       let propTypes; // `undefined` as default
@@ -107,7 +107,7 @@ Utils.processClassDeclaration = config => {
       let isArraySubstitution = false;
       let isInstanceSubstitution = false;
 
-      let dispatchEventHandlers = Utils.createCleanObject();
+      let dispatchEventHandlers = Utils_createCleanObject();
       let passthroughPropName;
 
       let propBindingParts;
@@ -127,12 +127,12 @@ Utils.processClassDeclaration = config => {
       let attributeNames = new StringSet();
 
       // Process DOM attributes
-      Utils.iterate(node.attributes, attr => {
+      Utils_iterate(node.attributes, attr => {
         let domAttrName = attr.name;
         let domAttrValue = attr.value;
 
         if (attributeNames.has(domAttrName)) {
-          throw new SyntaxError(`Duplicate "${ domAttrName }" declaration on ooml-property tag`);
+          throw SyntaxError(`Duplicate "${ domAttrName }" declaration on ooml-property tag`);
         }
 
         switch (domAttrName) {
@@ -142,8 +142,8 @@ Utils.processClassDeclaration = config => {
           break;
 
         case "type":
-          if (Utils.isNotOrBlankString(domAttrValue)) {
-            throw new SyntaxError(`Invalid type declaration for attribute declared by ooml-property tag`);
+          if (Utils_isNotOrBlankString(domAttrValue)) {
+            throw SyntaxError(`Invalid type declaration for attribute declared by ooml-property tag`);
           }
 
           propTypesDeclaration = domAttrValue;
@@ -151,7 +151,7 @@ Utils.processClassDeclaration = config => {
 
         case "transient":
           if (domAttrValue !== "") {
-            throw new SyntaxError(`Invalid "transient" value for attribute declared by ooml-property tag`);
+            throw SyntaxError(`Invalid "transient" value for attribute declared by ooml-property tag`);
           }
 
           isSuppressed = true;
@@ -159,7 +159,7 @@ Utils.processClassDeclaration = config => {
 
         case "attribute":
           if (domAttrValue !== "") {
-            throw new SyntaxError(`Invalid "attribute" value for attribute declared by ooml-property tag`);
+            throw SyntaxError(`Invalid "attribute" value for attribute declared by ooml-property tag`);
           }
 
           isAttribute = true;
@@ -167,15 +167,15 @@ Utils.processClassDeclaration = config => {
 
         case "array":
           if (domAttrValue !== "") {
-            throw new SyntaxError(`Invalid "array" attribute value for element substitution property`);
+            throw SyntaxError(`Invalid "array" attribute value for element substitution property`);
           }
 
           isArraySubstitution = true;
           break;
 
         case "passthrough":
-          if (Utils.isNotOrBlankString(domAttrValue)) {
-            throw new SyntaxError(`Invalid passthrough property name`);
+          if (Utils_isNotOrBlankString(domAttrValue)) {
+            throw SyntaxError(`Invalid passthrough property name`);
           }
 
           // Passthrough validity is checked later
@@ -183,11 +183,11 @@ Utils.processClassDeclaration = config => {
           break;
 
         case "binding":
-          if (Utils.isNotOrBlankString(domAttrValue)) {
-            throw new SyntaxError(`Empty binding key`);
+          if (Utils_isNotOrBlankString(domAttrValue)) {
+            throw SyntaxError(`Empty binding key`);
           }
 
-          bindingConfig = Utils.parseBindingDeclaration(domAttrValue.trim());
+          bindingConfig = Utils_parseBindingDeclaration(domAttrValue.trim());
           propBindingIsDynamic = bindingConfig.isDynamic;
           propBindingParts = bindingConfig.parts;
           propBindingPropertyToPartMap = bindingConfig.propertyToPartMap;
@@ -204,11 +204,11 @@ Utils.processClassDeclaration = config => {
         case "change":
         case "binding-exist":
         case "binding-missing":
-          if (!Utils.isValidPropertyName(domAttrValue)) {
-            throw new SyntaxError(`Invalid ${ domAttrName } method link`);
+          if (!Utils_isValidPropertyName(domAttrValue)) {
+            throw SyntaxError(`Invalid ${ domAttrName } method link`);
           }
 
-          let methodName = Utils.parseMethodLinkingDeclaration(domAttrValue);
+          let methodName = Utils_parseMethodLinkingDeclaration(domAttrValue);
           linkedMethods.add(methodName);
 
           switch (domAttrName) {
@@ -241,38 +241,38 @@ Utils.processClassDeclaration = config => {
             // Don't need to check if already exists, because attributes are checked for duplicates
             let eventName = domAttrName.slice(7);
 
-            let methodName = Utils.parseMethodLinkingDeclaration(domAttrValue);
+            let methodName = Utils_parseMethodLinkingDeclaration(domAttrValue);
             linkedMethods.add(methodName);
             dispatchEventHandlers[eventName] = methodName;
 
           } else {
-            throw new ReferenceError(`Unrecognised attribute "${ domAttrName }" on ooml-property tag`);
+            throw ReferenceError(`Unrecognised attribute "${ domAttrName }" on ooml-property tag`);
           }
         }
       });
 
       // All properties must have a valid name
-      if (!Utils.isValidPropertyName(propName)) {
-        throw new SyntaxError(`The property name "${ propName }" is invalid`);
+      if (!Utils_isValidPropertyName(propName)) {
+        throw SyntaxError(`The property name "${ propName }" is invalid`);
       }
 
       if (classProperties[propName] || classMethods[propName]) {
-        throw new ReferenceError(`A property or method called "${ propName }" already exists`);
+        throw ReferenceError(`A property or method called "${ propName }" already exists`);
       }
 
       // Can't have binding handlers on a property that isn't bound to anything
       if ((propBindingOnMissing || propBindingOnExist) && !bindingConfig) {
-        throw new SyntaxError(`Binding missing/exist handler exists on unbound property`);
+        throw SyntaxError(`Binding missing/exist handler exists on unbound property`);
       }
 
       // getEvalValue will trim code
-      propDefaultValue = Utils.getEvalValue(node.textContent);
+      propDefaultValue = Utils_getEvalValue(node.textContent);
 
       // Has type declaration
       if (propTypesDeclaration) {
         // Transient properties may not have types
         if (isSuppressed) {
-          throw new SyntaxError(`The transient property "${ propName }" has types`);
+          throw SyntaxError(`The transient property "${ propName }" has types`);
         }
 
         // Classes cannot have bars or the same name as a primitive type, so this is safe
@@ -285,11 +285,11 @@ Utils.processClassDeclaration = config => {
         if (oomlClass) {
           if (isArraySubstitution) {
             if (propDefaultValue !== null && !Array.isArray(propDefaultValue)) {
-              throw new TypeError(`Invalid default value for array substitution "${ propName }"`);
+              throw TypeError(`Invalid default value for array substitution "${ propName }"`);
             }
           } else {
-            if (propDefaultValue !== null && !Utils.isObjectLiteral(propDefaultValue)) {
-              throw new TypeError(`Invalid default value for instance substitution "${ propName }"`);
+            if (propDefaultValue !== null && !Utils_isObjectLiteral(propDefaultValue)) {
+              throw TypeError(`Invalid default value for instance substitution "${ propName }"`);
             }
             isInstanceSubstitution = true;
           }
@@ -298,62 +298,62 @@ Utils.processClassDeclaration = config => {
           // Otherwise, it must be primitive type(s)
         } else {
           if (isArraySubstitution) {
-            throw new TypeError(`The array property "${ propName }" has a non-OOML class type`);
+            throw TypeError(`The array property "${ propName }" has a non-OOML class type`);
           }
-          propTypes = Utils.parseTypeDeclaration(propTypesDeclaration);
+          propTypes = Utils_parseTypeDeclaration(propTypesDeclaration);
         }
 
         // Has no type declaration
       } else {
         // Array properties must have at least, and at most, one OOML class as its type
         if (isArraySubstitution) {
-          throw new TypeError(`The array property "${ propName }" has no type declaration`);
+          throw TypeError(`The array property "${ propName }" has no type declaration`);
         }
       }
 
       if (isArraySubstitution || isInstanceSubstitution) {
         if (bindingConfig) {
-          throw new SyntaxError(`The array or instance property "${ propName }" has a binding`);
+          throw SyntaxError(`The array or instance property "${ propName }" has a binding`);
         }
         if (isSuppressed) {
-          throw new SyntaxError(`The array or instance property "${ propName }" is transient`);
+          throw SyntaxError(`The array or instance property "${ propName }" is transient`);
         }
         if (isAttribute) {
-          throw new SyntaxError(`The array or instance property "${ propName }" is an attribute`);
+          throw SyntaxError(`The array or instance property "${ propName }" is an attribute`);
         }
         if (onchangeListener) {
-          throw new SyntaxError(`The array or instance property "${ propName }" has a change listener`);
+          throw SyntaxError(`The array or instance property "${ propName }" has a change listener`);
         }
       }
 
       if (isArraySubstitution) {
         if (propGetter || propSetter) {
-          throw new SyntaxError(`The array property "${ propName }" has a getter or setter`);
+          throw SyntaxError(`The array property "${ propName }" has a getter or setter`);
         }
       } else if (isInstanceSubstitution) {
         // Nothing additional to check
       } else {
-        if (!Utils.isPrimitiveValue(propDefaultValue) || (propTypes && !Utils.isType(propTypes, propDefaultValue))) {
-          throw new TypeError(`The value for the property "${ propName }" is invalid`);
+        if (!Utils_isPrimitiveValue(propDefaultValue) || (propTypes && !Utils_isType(propTypes, propDefaultValue))) {
+          throw TypeError(`The value for the property "${ propName }" is invalid`);
         }
         if (dispatchEventHandlers.length) {
-          throw new SyntaxError(`A primitive or transient property has handlers`);
+          throw SyntaxError(`A primitive or transient property has handlers`);
         }
       }
 
       if (passthroughPropName != undefined) {
         if (!isInstanceSubstitution) {
-          throw new SyntaxError(`A non-instance property has a passthrough declaration`);
+          throw SyntaxError(`A non-instance property has a passthrough declaration`);
         }
 
         let oomlClass = propTypes;
 
         if (oomlClass == OOML.Instance) {
-          throw new ReferenceError(`Can't use passthrough on a property with OOML.Instance type`);
+          throw ReferenceError(`Can't use passthrough on a property with OOML.Instance type`);
         }
 
         if (oomlClass == OOML.Instance || !oomlClass[OOML_CLASS_PROPNAME_PROPNAMES].has(passthroughPropName)) {
-          throw new ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
+          throw ReferenceError(`"${ passthroughPropName }" is not a valid passthrough property`);
         }
       }
 
@@ -387,19 +387,19 @@ Utils.processClassDeclaration = config => {
 
       break;
 
-    case "OOML-METHOD":
+    case "M":
 
       let methodName;
 
       // Don't need to check for duplicates
-      Utils.iterate(node.attributes, attr => {
+      Utils_iterate(node.attributes, attr => {
         let domAttrName = attr.name;
         let domAttrValue = attr.value;
 
         switch (domAttrName) {
         case "name":
           if (methodName != undefined) {
-            throw new SyntaxError(`ooml-method tag has more than one name declaration`);
+            throw SyntaxError(`ooml-method tag has more than one name declaration`);
           }
 
           // Validity is checked after
@@ -407,34 +407,34 @@ Utils.processClassDeclaration = config => {
           break;
 
         default:
-          throw new ReferenceError(`Unrecognised attribute "${ domAttrName }" on ooml-method tag`);
+          throw ReferenceError(`Unrecognised attribute "${ domAttrName }" on ooml-method tag`);
         }
       });
 
-      if (!Utils.isValidPropertyName(methodName)) {
-        throw new SyntaxError(`The method name "${ methodName }" is invalid`);
+      if (!Utils_isValidPropertyName(methodName)) {
+        throw SyntaxError(`The method name "${ methodName }" is invalid`);
       }
 
       let textContent = node.textContent.trim();
 
       if (!/^function *\((?:[a-zA-Z_][a-zA-Z0-9_]*,)*(?:[a-zA-Z_][a-zA-Z0-9_]*)*\)\s*\{/.test(textContent) ||
           !/\}$/.test(textContent)) {
-        throw new SyntaxError(`The "${ methodName }" method for the class "${ className }" is not a valid function declaration`);
+        throw SyntaxError(`The "${ methodName }" method for the class "${ className }" is not a valid function declaration`);
       }
 
-      let realFn = Utils.getEvalValue(textContent);
+      let realFn = Utils_getEvalValue(textContent);
 
       // Abstract methods can also have constructors, as descendant classes can call it
       if (methodName == "constructor") {
         if (classConstructor) {
-          throw new ReferenceError(`Multiple constructors are defined for the class "${ className }"`);
+          throw ReferenceError(`Multiple constructors are defined for the class "${ className }"`);
         }
 
         classConstructor = realFn;
 
       } else {
         if (classMethods[methodName] || classProperties[methodName]) {
-          throw new ReferenceError(`A method or property called "${ methodName }" already exists`);
+          throw ReferenceError(`A method or property called "${ methodName }" already exists`);
         }
         Object.defineProperty(realFn, "name", {value: methodName});
 
@@ -471,7 +471,7 @@ Utils.processClassDeclaration = config => {
           // If the parent has an OOML class as its type, this property must have the same class or a descendant
           if (
             parentTypes == undefined && thisTypes != undefined ||
-            Utils.typeOf(parentTypes, TYPEOF_FUNCTION) &&
+            Utils_typeOf(parentTypes, TYPEOF_FUNCTION) &&
             !(thisTypes != parentTypes && !(thisTypes.prototype instanceof parentTypes)) ||
             parentTypes.slice()
               .sort()
@@ -479,7 +479,7 @@ Utils.processClassDeclaration = config => {
               .sort()
               .join("|")
           ) {
-            throw new TypeError(`Types for property "${ propName }" on class "${ className }" is incompatible with its parent`);
+            throw TypeError(`Types for property "${ propName }" on class "${ className }" is incompatible with its parent`);
           }
 
           // If the parent property is an array, transient, or attribute, it must be the same on this property
@@ -489,17 +489,17 @@ Utils.processClassDeclaration = config => {
             parentClassProperty.isTransient && !thisClassProperty.isTransient ||
             parentClassProperty.isAttribute && !thisClassProperty.isAttribute
           ) {
-            throw new TypeError(`Property "${ propName }" on class "${ className }" is incompatible with its parent`);
+            throw TypeError(`Property "${ propName }" on class "${ className }" is incompatible with its parent`);
           }
         }
       });
-    classProperties = Utils.concat(parentClassProperties, classProperties);
+    classProperties = Utils_concat(parentClassProperties, classProperties);
   }
 
   // Check that methods linked to have been declared
   linkedMethods.forEach(methodName => {
     if (!classMethods[methodName]) {
-      throw new ReferenceError(`The method "${ methodName }" is linked to, but has not been declared`);
+      throw ReferenceError(`The method "${ methodName }" is linked to, but has not been declared`);
     }
   });
 
@@ -507,18 +507,18 @@ Utils.processClassDeclaration = config => {
   linkedProperties.forEach(propName => {
     let classProperty = classProperties[propName];
     if (!classProperty || classProperty.isArray || classProperty.isInstance) {
-      throw new ReferenceError(`A property has a binding dependent on "${ propName }", but "${ propName }" does not exist, or is an array/instance property`);
+      throw ReferenceError(`A property has a binding dependent on "${ propName }", but "${ propName }" does not exist, or is an array/instance property`);
     }
   });
 
   if (classRawDom) {
     if (classRawDom.nodeName == "OOML-EXTENSION-POINT") {
-      throw new SyntaxError(`The extension point cannot be the root`);
+      throw SyntaxError(`The extension point cannot be the root`);
     }
   } else {
     // Non-abstract classes must have a DOM
     if (!classIsAbstract) {
-      throw new SyntaxError(`The class "${ className }" does not have a view`);
+      throw SyntaxError(`The class "${ className }" does not have a view`);
     }
   }
 
@@ -528,9 +528,9 @@ Utils.processClassDeclaration = config => {
   }
 
   // Prevent data-* attributes on the root element (as attribute properties should be used)
-  Utils.iterate(classRawDom.attributes, attr => {
+  Utils_iterate(classRawDom.attributes, attr => {
     if (/^data-/i.test(attr.name)) {
-      throw new SyntaxError(`Data attributes are not allowed on the root element (class "${className}")`);
+      throw SyntaxError(`Data attributes are not allowed on the root element (class "${className}")`);
     }
   });
 
@@ -539,15 +539,15 @@ Utils.processClassDeclaration = config => {
       found: false,
     };
     // Since array and instance substitutions can only occur once per property, keep track of them
-    let arrayOrInstanceSubstitutionsCount = Utils.createCleanObject();
-    classViewShape = Utils.transformClassRawDomToViewShape(classProperties, classMethods, classRawDom, arrayOrInstanceSubstitutionsCount, classExposeKeys, [], realPathToExtensionPoint);
+    let arrayOrInstanceSubstitutionsCount = Utils_createCleanObject();
+    classViewShape = Utils_transformClassRawDomToViewShape(classProperties, classMethods, classRawDom, arrayOrInstanceSubstitutionsCount, classExposeKeys, [], realPathToExtensionPoint);
     classViewShapePathToExtensionPoint = realPathToExtensionPoint.path;
   }
 
   // Inherit shape
   if (classParent[OOML_CLASS_PROPNAME_EXTENSIONPOINT_PATH]) {
     let parentClassViewShape = classParent[OOML_CLASS_PROPNAME_VIEW_SHAPE];
-    let extendedViewShape = Utils.deepClone(parentClassViewShape);
+    let extendedViewShape = Utils_deepClone(parentClassViewShape);
 
     let pathToExtensionPoint = classParent[OOML_CLASS_PROPNAME_EXTENSIONPOINT_PATH].slice();
     let childNoOfExtensionPoint = pathToExtensionPoint.pop();

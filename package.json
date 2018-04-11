@@ -1,33 +1,32 @@
 {
-    "name": "ooml",
-    "version": "13.0.1",
-    "description": "Object-orientated modern web UI anti-framework",
-    "main": "dist/ooml.js",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/lerouche/ooml.git"
-    },
-    "keywords": [
-        "ooml",
-        "dynamic",
-        "templating",
-        "ui",
-        "json"
-    ],
-    "author": "Wilson Lin",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/lerouche/ooml/issues"
-    },
-    "homepage": "https://github.com/lerouche/ooml#readme",
-    "devDependencies": {
-        "babel-core": "6.x",
-        "babel-plugin-transform-es2015-arrow-functions": "6.x",
-        "babel-plugin-transform-es2015-block-scoping": "6.x",
-        "babel-plugin-transform-es2015-template-literals": "6.x",
-        "fs-extra": "4.x",
-        "recursive-readdir-sync": "1.x",
-        "zcompile": "4.x"
-    },
-    "dependencies": {}
+  "name": "ooml",
+  "version": "13.0.1",
+  "description": "Object orientated web UI framework",
+  "main": "dist/ooml.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lerouche/ooml.git"
+  },
+  "keywords": [
+    "ooml",
+    "dynamic",
+    "templating",
+    "ui",
+    "json"
+  ],
+  "author": "Wilson Lin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lerouche/ooml/issues"
+  },
+  "homepage": "https://github.com/lerouche/ooml#readme",
+  "devDependencies": {
+    "babel-core": "6.x",
+    "babel-plugin-transform-es2015-arrow-functions": "6.x",
+    "babel-plugin-transform-es2015-block-scoping": "6.x",
+    "babel-plugin-transform-es2015-template-literals": "6.x",
+    "recursive-readdir-sync": "1.x",
+    "zcompile": "4.x"
+  },
+  "dependencies": {}
 }

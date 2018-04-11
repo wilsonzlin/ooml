@@ -1,5 +1,5 @@
-Utils.isValidPropertyName = name =>
-  Utils.typeOf(name, TYPEOF_STRING) &&
+let Utils_isValidPropertyName = name =>
+  Utils_typeOf(name, TYPEOF_STRING) &&
   name.length >= 1 &&
   name[0] != "$" &&
   // Double underscore prefix

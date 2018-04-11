@@ -1,6 +1,6 @@
 // declaredProperties is required to check that substitutions reference existing properties
 // declaredMethods is required to check that handlers reference existing methods
-Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, current, arrayOrInstanceSubstitutionsCount, exposeKeys, pathFromRoot, realPathToExtensionPoint) => {
+let Utils_transformClassRawDomToViewShape = (declaredProperties, declaredMethods, current, arrayOrInstanceSubstitutionsCount, exposeKeys, pathFromRoot, realPathToExtensionPoint) => {
 
   if (current instanceof Element) {
     // The name of the tag
@@ -12,7 +12,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
     }
 
     let elemExposeKey; // `undefined` default
-    let elemDomEventHandlers = Utils.createCleanObject();
+    let elemDomEventHandlers = Utils_createCleanObject();
     let elemAttributes = [];
     let elemChildNodes = [];
 
@@ -20,7 +20,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
     let attrNames = new StringSet();
 
     // Process DOM attributes
-    Utils.iterate(current.attributes, attr => {
+    Utils_iterate(current.attributes, attr => {
 
       // DOM attributes should be case-insensitive
       let attrName = attr.name.toLocaleLowerCase();
@@ -28,7 +28,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
       // Check if already declared
       if (attrNames.has(attrName)) {
-        throw new ReferenceError(`Duplicate attribute "${ attrName }"`);
+        throw ReferenceError(`Duplicate attribute "${ attrName }"`);
       }
       attrNames.add(attrName);
 
@@ -39,42 +39,42 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
         // Attribute name is unique, so don't need to check for duplicates
 
-        let methodName = Utils.parseMethodLinkingDeclaration(attrValue);
+        let methodName = Utils_parseMethodLinkingDeclaration(attrValue);
         if (!declaredMethods[methodName]) {
-          throw new ReferenceError(`The method "${ methodName }" is linked to, but has not been declared`);
+          throw ReferenceError(`The method "${ methodName }" is linked to, but has not been declared`);
         }
         elemDomEventHandlers[eventName] = methodName;
 
         // Native syntax is not allowed
       } else if (/^on/.test(attrName)) {
-        throw new TypeError(`Native DOM event handlers using on* syntax are not allowed ("${ attrName }")`);
+        throw TypeError(`Native DOM event handlers using on* syntax are not allowed ("${ attrName }")`);
 
       } else if (attrName == "ooml-expose") {
-        if (!Utils.isValidPropertyName(attrValue)) {
-          throw new SyntaxError(`ooml-expose value is invalid ("${attrValue}")`);
+        if (!Utils_isValidPropertyName(attrValue)) {
+          throw SyntaxError(`ooml-expose value is invalid ("${attrValue}")`);
         }
         elemExposeKey = attrValue;
         if (exposeKeys.has(elemExposeKey)) {
-          throw new ReferenceError(`More than one element has been exposed with "${ elemExposeKey }"`);
+          throw ReferenceError(`More than one element has been exposed with "${ elemExposeKey }"`);
         }
         exposeKeys.add(elemExposeKey);
 
         // Normal HTML attribute
       } else {
-        elemAttributes.push(Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, attr));
+        elemAttributes.push(Utils_transformClassRawDomToViewShape(declaredProperties, declaredMethods, attr));
       }
     });
 
     // Process child nodes
-    Utils.iterate(current.childNodes, childNode => {
+    Utils_iterate(current.childNodes, childNode => {
       let parsed;
       let nextPathFromRoot;
 
       if (pathFromRoot && !realPathToExtensionPoint.found && childNode instanceof Element) {
         nextPathFromRoot = pathFromRoot.concat(elemChildNodes.length);
-        parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, arrayOrInstanceSubstitutionsCount, exposeKeys, nextPathFromRoot, realPathToExtensionPoint);
+        parsed = Utils_transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, arrayOrInstanceSubstitutionsCount, exposeKeys, nextPathFromRoot, realPathToExtensionPoint);
       } else {
-        parsed = Utils.transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, arrayOrInstanceSubstitutionsCount);
+        parsed = Utils_transformClassRawDomToViewShape(declaredProperties, declaredMethods, childNode, arrayOrInstanceSubstitutionsCount);
       }
 
       if (Array.isArray(parsed)) {
@@ -86,11 +86,11 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
         if (parsed.type == "element" && parsed.name == "ooml-extension-point") {
           if (realPathToExtensionPoint.found) {
-            throw new SyntaxError(`Multiple extension points declared`);
+            throw SyntaxError(`Multiple extension points declared`);
           }
 
           if (parsed.childNodes.length || parsed.attributes.length) {
-            throw new SyntaxError(`ooml-extension-point tag has attributes or contents`);
+            throw SyntaxError(`ooml-extension-point tag has attributes or contents`);
           }
 
           realPathToExtensionPoint.found = true;
@@ -111,13 +111,13 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
 
 
   if (current instanceof Text) {
-    let processed = Utils.processBracesSyntaxToPartsAndMap({
+    let processed = Utils_processBracesSyntaxToPartsAndMap({
       onbracepart: param => {
-        let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
+        let propertyToSubstituteIn = Utils_parsePropertySubstitution(param);
         let declaredProperty = declaredProperties[propertyToSubstituteIn];
 
         if (!declaredProperty) {
-          throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
+          throw ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
         }
 
         let isArrayOrInstance = declaredProperty.isArray || declaredProperty.isInstance;
@@ -126,7 +126,7 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
           if (!arrayOrInstanceSubstitutionsCount[propertyToSubstituteIn]) {
             arrayOrInstanceSubstitutionsCount[propertyToSubstituteIn] = true;
           } else {
-            throw new ReferenceError(`Array and instance properties may only be substituted at most once`);
+            throw ReferenceError(`Array and instance properties may only be substituted at most once`);
           }
         }
 
@@ -177,17 +177,17 @@ Utils.transformClassRawDomToViewShape = (declaredProperties, declaredMethods, cu
       });
 
     } else {
-      let processed = Utils.processBracesSyntaxToPartsAndMap({
+      let processed = Utils_processBracesSyntaxToPartsAndMap({
         onbracepart: param => {
-          let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
+          let propertyToSubstituteIn = Utils_parsePropertySubstitution(param);
 
           let declaredProperty = declaredProperties[propertyToSubstituteIn];
 
           if (!declaredProperty) {
-            throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
+            throw ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in the view, but has not been declared`);
           }
           if (declaredProperty.isArray || declaredProperty.isInstance) {
-            throw new ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in an attribute in the view, but is an array or instance`);
+            throw ReferenceError(`The property "${ propertyToSubstituteIn }" is substituted in an attribute in the view, but is an array or instance`);
           }
 
           return {

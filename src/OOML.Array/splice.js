@@ -1,6 +1,6 @@
 OOMLArrayProtoMutation.splice = function (start, deleteCount) {
-  if (!Utils.isType("natural", start) || !Utils.isType("natural", deleteCount)) {
-    throw new TypeError(`Invalid arguments provided to .splice`);
+  if (!Utils_isType("natural", start) || !Utils_isType("natural", deleteCount)) {
+    throw TypeError(`Invalid arguments provided to .splice`);
   }
 
   let _this = this;
@@ -16,10 +16,10 @@ OOMLArrayProtoMutation.splice = function (start, deleteCount) {
     let arg = arguments[i];
 
     if (arg === undefined) {
-      throw new TypeError(`Attempted to add undefined into OOML.Array`);
+      throw TypeError(`Attempted to add undefined into OOML.Array`);
     }
 
-    let constructedArg = Utils.constructOOMLInstance(elemConstructor, arg);
+    let constructedArg = Utils_constructOOMLInstance(elemConstructor, arg);
     argsToApply.push(constructedArg);
     toAppend.push(constructedArg);
   }

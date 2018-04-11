@@ -1,4 +1,4 @@
-Utils.DOM.hasAncestorOrDescendantNamespace = rootElem => {
+let Utils_DOM_hasAncestorOrDescendantNamespace = rootElem => {
   let toCheck, current;
 
   toCheck = rootElem;

@@ -8,7 +8,7 @@ if (OOMLCompatSetExists) {
     let _this = this;
 
     _this[STRINGSET_PROPNAME_INTERNALARRAY] = [];
-    _this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils.createCleanObject();
+    _this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils_createCleanObject();
 
     if (initialValues) {
       initialValues.forEach(v => _this.add(v));
@@ -23,7 +23,7 @@ if (OOMLCompatSetExists) {
   };
   StringSetProto.clear = function () {
     this[STRINGSET_PROPNAME_INTERNALARRAY] = [];
-    this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils.createCleanObject();
+    this[STRINGSET_PROPNAME_INTERNALOBJECT] = Utils_createCleanObject();
   };
   StringSetProto.delete = function (str) {
     if (this[STRINGSET_PROPNAME_INTERNALOBJECT][str] != undefined) {

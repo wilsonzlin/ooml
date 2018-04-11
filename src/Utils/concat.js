@@ -1,11 +1,11 @@
-Utils.concat = function () {
+let Utils_concat = function () {
   let ret;
 
-  if (Utils.isObjectLiteral(arguments[0])) {
-    ret = Utils.createCleanObject();
+  if (Utils_isObjectLiteral(arguments[0])) {
+    ret = Utils_createCleanObject();
     for (let i = 0; i < arguments.length; i++) {
       let obj = arguments[i];
-      if (Utils.isObjectLiteral(obj)) {
+      if (Utils_isObjectLiteral(obj)) {
         Object.keys(obj)
           .forEach(function (prop) {
             ret[prop] = obj[prop];

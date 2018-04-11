@@ -1,13 +1,13 @@
-Utils.DOM.writeValue = (name, nodes, value, customHtml) => {
+let Utils_DOM_writeValue = (name, nodes, value, customHtml) => {
   let customDom;
-  let useCustomHtml = Utils.typeOf(customHtml, TYPEOF_STRING);
+  let useCustomHtml = Utils_typeOf(customHtml, TYPEOF_STRING);
 
   // customHtml may be empty, which means that custom HTML is still wanted (i.e. don't write text value), but remove any current custom HTML
   if (useCustomHtml) {
     let dom = document.createElement("div");
     dom.innerHTML = customHtml.trim();
     if (dom.children.length > 1) {
-      throw new SyntaxError(`Custom HTML has more than one root element`);
+      throw SyntaxError(`Custom HTML has more than one root element`);
     }
     customDom = dom.children[0];
   }

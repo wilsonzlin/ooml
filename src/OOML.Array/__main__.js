@@ -9,7 +9,7 @@ OOML.Array = function (elementConstructor, initialElems) {
 
   let internalArr;
   if (initialElems) {
-    internalArr = initialElems.map(elem => Utils.constructOOMLInstance(elementConstructor, elem));
+    internalArr = initialElems.map(elem => Utils_constructOOMLInstance(elementConstructor, elem));
     internalArr.reduce((previousElem, elemToAttach) => {
       elemToAttach[OOML_INSTANCE_PROPNAME_ATTACH]({insertAfter: previousElem, parent: _this});
       return elemToAttach[OOML_INSTANCE_PROPNAME_DOMELEM];
@@ -18,8 +18,8 @@ OOML.Array = function (elementConstructor, initialElems) {
     internalArr = [];
   }
 
-  let dispatchEventHandlers = Utils.createCleanObject();
-  let mutationEventHandlers = Utils.createCleanObject();
+  let dispatchEventHandlers = Utils_createCleanObject();
+  let mutationEventHandlers = Utils_createCleanObject();
 
   // Use defineProperty for properties to prevent enumeration
   Object.defineProperty(_this, OOML_ARRAY_PROPNAME_INTERNAL_ARRAY, {
@@ -55,4 +55,4 @@ OOML.Array = function (elementConstructor, initialElems) {
   Object.preventExtensions(_this);
 };
 let OOMLArrayProto = OOML.Array.prototype;
-let OOMLArrayProtoMutation = Utils.createCleanObject();
+let OOMLArrayProtoMutation = Utils_createCleanObject();

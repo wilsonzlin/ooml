@@ -1,8 +1,8 @@
-Utils.parseBindingDeclaration = declaration => {
-  let _ = Utils.processBracesSyntaxToPartsAndMap({
+let Utils_parseBindingDeclaration = declaration => {
+  let _ = Utils_processBracesSyntaxToPartsAndMap({
     onbracepart: param => {
       // Whether this property is valid or not is checked by the caller
-      let propertyToSubstituteIn = Utils.parsePropertySubstitution(param);
+      let propertyToSubstituteIn = Utils_parsePropertySubstitution(param);
 
       return {
         key: propertyToSubstituteIn,

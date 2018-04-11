@@ -4,7 +4,7 @@ OOMLInstanceProto[OOML_INSTANCE_PROPNAME_ATTACH] = function (settings) {
   let instanceIsAttachedTo = instance[OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT];
 
   if (instanceIsAttachedTo.parent) {
-    throw new ReferenceError(`This instance is already in use`);
+    throw ReferenceError(`This instance is already in use`);
   }
 
   instanceIsAttachedTo.parent = settings.parent;

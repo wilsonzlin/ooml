@@ -1,13 +1,13 @@
-Utils.parsePropertySubstitution = code => {
+let Utils_parsePropertySubstitution = code => {
   let regexpMatches = /^ this\.(.+?) $/.exec(code);
   if (!regexpMatches) {
-    throw new SyntaxError(`Invalid property substitution around "${ code }"`);
+    throw SyntaxError(`Invalid property substitution around "${ code }"`);
   }
 
   let propName = regexpMatches[1];
 
-  if (!Utils.isValidPropertyName(propName)) {
-    throw new SyntaxError(`"${ propName }" is not a valid property name`);
+  if (!Utils_isValidPropertyName(propName)) {
+    throw SyntaxError(`"${ propName }" is not a valid property name`);
   }
 
   return propName;

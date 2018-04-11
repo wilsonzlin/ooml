@@ -5,7 +5,7 @@ OOMLArrayProto[OOML_ARRAY_PROPNAME_ATTACH] = function (parent, property, realDom
     // Even though this is an internal function, it is called when assigning this to a
     // property, which is external logic, so this exception should have an appropriate
     // type and message
-    throw new ReferenceError(`This array is already attached`);
+    throw ReferenceError(`This array is already attached`);
   }
 
   this[OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE] = parent;
