@@ -1,7 +1,9 @@
 /dist/
-npm-debug.log
-/.idea/
-node_modules/
-/tmp/
+
+.idea/
 *.iml
-package-lock.json*
+.vscode/
+
+node_modules/
+package-lock*
+npm-debug.log

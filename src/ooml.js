@@ -1,231 +1,191 @@
-(function(Object, TypeError, SyntaxError, ReferenceError, RangeError, Error, undefined) {
+(function (Object, TypeError, SyntaxError, ReferenceError, RangeError, Error, undefined) {
   "use strict";
-  // Alias typeof values to prevent typos and minify better
-  let TYPEOF_FUNCTION = "function";
-  let TYPEOF_OBJECT = "object";
-  let TYPEOF_STRING = "string";
-  let TYPEOF_BOOLEAN = "boolean";
-  let TYPEOF_NUMBER = "number";
 
-  __zc_import("Utils/concat.js");
-  __zc_import("Utils/constructOOMLInstance.js");
-  __zc_import("Utils/constructInstanceDomFromShape.js");
-  __zc_import("Utils/createCleanObject.js");
-  __zc_import("Utils/createOOMLClass.js");
-  __zc_import("Utils/deepClone.js");
-  __zc_import("Utils/deepFreeze.js");
-  __zc_import("Utils/DOM.find.js");
-  __zc_import("Utils/DOM.hasAncestorOrDescendantNamespace.js");
-  __zc_import("Utils/DOM.setData.js");
-  __zc_import("Utils/DOM.writeValue.js");
-  __zc_import("Utils/getClassFromString.js");
-  __zc_import("Utils/getEvalValue.js");
-  __zc_import("Utils/hasOwnProperty.js");
-  __zc_import("Utils/isNotOrBlankString.js");
-  __zc_import("Utils/isObjectLiteral.js");
-  __zc_import("Utils/isOOMLClass.js");
-  __zc_import("Utils/isPrimitiveValue.js");
-  __zc_import("Utils/isType.js");
-  __zc_import("Utils/isValidPropertyName.js");
-  __zc_import("Utils/iterate.js");
-  __zc_import("Utils/parseBindingDeclaration.js");
-  __zc_import("Utils/parseMethodLinkingDeclaration.js");
-  __zc_import("Utils/parsePropertySubstitution.js");
-  __zc_import("Utils/parseTypeDeclaration.js");
-  __zc_import("Utils/processBracesSyntaxToPartsAndMap.js");
-  __zc_import("Utils/processClassDeclaration.js");
-  __zc_import("Utils/toDashCase.js");
-  __zc_import("Utils/transformClassRawDomToShape.js");
-  __zc_import("Utils/typeOf.js");
-  __zc_import("Utils/unserialiseInitState.js");
+  __zc_import("./const/IP_OOML_INST_PROTO.js");
+  __zc_import("./const/BC_CLASSVIEW.js");
+  __zc_import("./const/TYPEOF.js");
+  __zc_import("./const/BC_CLASSPROP.js");
+  __zc_import("./const/IP_OOML_PROPERTIES_STATE.js");
+  __zc_import("./const/IP_OOML_INST_OWN.js");
+  __zc_import("./const/BC_CLASSVIEW_NODE.js");
+  __zc_import("./const/IP_OOML_EVENTSOURCE_OWN.js");
+  __zc_import("./const/IP_BUILDER.js");
+  __zc_import("./const/BC_CLASSMETHOD.js");
+  __zc_import("./const/IP_OOML_ARRAY_OWN.js");
+  __zc_import("./const/BC_NS.js");
+  __zc_import("./const/IP_OOML_EVENTSOURCE_PROTO.js");
+  __zc_import("./const/BC_CLASSFIELD.js");
+  __zc_import("./const/BC_MOD.js");
+  __zc_import("./const/BC_CLASS.js");
+  __zc_import("./const/IP_OOML_CLASS_OWN.js");
+  __zc_import("./const/IP_OOML_EMUL_ATTR.js");
+  __zc_import("./const/BC_CLASSVIEW_ATTR.js");
+  __zc_import("./const/IP_OOML_CUSTOM_HTML.js");
+  __zc_import("./const/IP_OOML_ARRAY_PROTO.js");
 
-  let BINDING_STATE_INIT = 1;
-  let BINDING_STATE_EXISTS = 2;
-  let BINDING_STATE_MISSING = 3;
+  __zc_import("./compat/Set.js");
+  __zc_import("./compat/HTMLTemplateElement.js");
+  __zc_import("./compat/Symbol.js");
 
-  // Feature detection
-  let OOMLCompatSymbolExists = !!window.Symbol;
-  let OOMLCompatSetExists = !!window.Set;
-  let OOMLCompatTemplateExists = !!window.HTMLTemplateElement;
-  // Can't use `!!HTMLElement.prototype.dataset` because "illegal invocation"
-  // Can't use `!!document.body.dataset` because <body> may have not been loaded yet
-  let OOMLCompatDatasetExists = !!document.head.dataset;
+  __zc_import("./polyfill/NodeSet.js");
+  __zc_import("./polyfill/StringSet.js");
 
-  __zc_import("Set/NodeSet.js");
-  __zc_import("Set/StringSet.js");
+  __zc_import("./type/primitive_types_js.js");
+  __zc_import("./type/primitive_number_types_ooml.js");
+  __zc_import("./type/primitive_types_ooml.js");
 
-  let OOMLNodesWithUnwrittenChanges = new NodeSet();
-  let OOMLWriteChangesSetTimeout;
-  let OOMLWriteChanges = () => {
+  __zc_import("./rule/reserved_prop_method_names_s.js");
+  __zc_import("./rule/reserved_field_names_s.js");
+  __zc_import("./rule/reserved_class_names_s.js");
 
-    if (!OOMLNodesWithUnwrittenChanges.size) {
-      return;
-    }
+  __zc_import("./util/u_validate_object.js");
+  __zc_import("./util/u_has_own_property.js");
+  __zc_import("./util/u_enumerate.js");
+  __zc_import("./util/u_new_clean_object.js");
+  __zc_import("./util/u_map.js");
+  __zc_import("./util/u_typeof.js");
+  __zc_import("./util/u_is_type.js");
+  __zc_import("./util/u_is_a_type.js");
+  __zc_import("./util/u_deep_clone.js");
+  __zc_import("./util/u_iterate.js");
+  __zc_import("./util/u_keys.js");
+  __zc_import("./util/u_assign.js");
 
-    clearTimeout(OOMLWriteChangesSetTimeout);
+  __zc_import("./validator/identifier/valid_class_name.js");
+  __zc_import("./validator/identifier/valid_namespace_name.js");
+  __zc_import("./validator/identifier/valid_property_or_method_name.js");
+  __zc_import("./validator/identifier/valid_module_name.js");
+  __zc_import("./validator/identifier/valid_dispatch_event_name.js");
+  __zc_import("./validator/identifier/valid_group_name.js");
+  __zc_import("./validator/identifier/valid_field_name.js");
+  __zc_import("./validator/reference/valid_property_or_method_reference.js");
+  __zc_import("./validator/reference/valid_class_reference.js");
+  __zc_import("./validator/data/valid_covariant_ooml_type.js");
+  __zc_import("./validator/data/valid_ooml_type.js");
+  __zc_import("./validator/data/valid_covariant_ooml_subtype.js");
+  __zc_import("./validator/data/valid_class_of_base.js");
+  __zc_import("./validator/data/valid_non_empty_string.js");
+  __zc_import("./validator/data/valid_empty_object.js");
+  __zc_import("./validator/data/valid_object_literal.js");
+  __zc_import("./validator/data/valid_ooml_class.js");
+  __zc_import("./validator/data/valid_array.js");
+  __zc_import("./validator/json/valid_json_array.js");
+  __zc_import("./validator/json/valid_json_object.js");
+  __zc_import("./validator/json/valid_json_value.js");
 
-    OOMLWriteChangesSetTimeout = setTimeout(() => {
-      OOMLNodesWithUnwrittenChanges.forEach(attr => {
-        attr.ownerElement.setAttribute(attr.name, attr.valueFormat.join(""));
-      });
+  __zc_import("./assert/assert_typeof_r.js");
+  __zc_import("./assert/assert_set.js");
+  __zc_import("./assert/assert_unique_in_array_of_objs.js");
+  __zc_import("./assert/assert_instanceof_r.js");
+  __zc_import("./assert/assert_is_type_r.js");
+  __zc_import("./assert/assert_valid_r.js");
+  __zc_import("./assert/assert_valid_prop_or_method_reference_p_r.js");
+  __zc_import("./assert/assert_unique_in_stringset_s_r.js");
+  __zc_import("./assert/assert_not_undefined_r.js");
+  __zc_import("./assert/assert_undefined_obj_prop.js");
 
-      OOMLNodesWithUnwrittenChanges.clear();
-    }, 50);
+  __zc_import("./parse/DOM/collect_dom_attrs.js");
+  __zc_import("./parse/DOM/eval_dom_js.js");
 
-  };
+  __zc_import("./parse/DOM/parse_dom.js");
+  __zc_import("./parse/DOM/parse_dom_class.js");
+  __zc_import("./parse/DOM/parse_dom_class_property.js");
+  __zc_import("./parse/DOM/parse_dom_group.js");
+  __zc_import("./parse/DOM/parse_dom_inst.js");
+  __zc_import("./parse/DOM/parse_dom_module.js");
+  __zc_import("./parse/DOM/parse_dom_namespace.js");
 
-  let dashCaseCache = Utils_createCleanObject();
+  __zc_import("./create/create_class.js");
+  __zc_import("./create/create_class_property.js");
 
-  // NOTE: "Property" in this case refers to JavaScript object properties, so neither OOML methods nor properties may use these
-  let OOMLReservedPropertyNames = new StringSet(["constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString", "valueOf", "toObject", "toJSON", "assign", "on", "detach", "attributes", "namespace", "handle", "keys"]);
+  __zc_import("./build/util/generate_bc_from_builder.js");
+  __zc_import("./build/util/stream_substitution_parts.js");
 
-  let JavaScriptNativePrimitiveTypes = ["null", "number", "boolean", "string"];
-  let OOMLPrimitiveNumberTypes = new StringSet(["natural", "integer", "float", "number"]);
-  // Duplicate entry "number" will be removed automatically
-  let OOMLPrimitiveTypes = new StringSet(Utils_concat(JavaScriptNativePrimitiveTypes, OOMLPrimitiveNumberTypes.values()));
+  __zc_import("./build/resolve/find_bc_class_from_ns.js");
+  __zc_import("./build/resolve/find_bc_method_from_class.js");
+  __zc_import("./build/resolve/find_bc_mod_from_group.js");
+  __zc_import("./build/resolve/find_bc_ns_from_mod.js");
+  __zc_import("./build/resolve/find_bc_prop_from_class.js");
+  __zc_import("./build/resolve/resolve_bc_class_reference.js");
+  __zc_import("./build/resolve/resolve_prop_type_bc_class_reference.js");
 
-  let OOML_ARRAY_PROPNAME_INTERNAL_ARRAY = "__oomlInternalArray";
-  let OOML_ARRAY_PROPNAME_ELEMCONSTRUCTOR = "__oomlElementConstructor";
-  let OOML_ARRAY_PROPNAME_DOM_ANCHOR = "__oomlAnchorDOMElem";
-  let OOML_ARRAY_PROPNAME_INTERNAL_DOM_PARENT = "__oomlArrayAnchorPlaceholderParent";
+  __zc_import("./build/ClassBuilder.js");
+  __zc_import("./build/ClassFieldBuilder.js");
+  __zc_import("./build/ClassMethodBuilder.js");
+  __zc_import("./build/ClassPropertyBuilder.js");
+  __zc_import("./build/ClassViewBuilder.js");
+  __zc_import("./build/ModuleBuilder.js");
+  __zc_import("./build/NamespaceBuilder.js");
 
-  let OOML_ARRAY_PROPNAME_MUTATION_OBSERVERS = "__oomlMutationEventListeners";
-  let OOML_ARRAY_PROPNAME_DISPATCH_HANDLERS = "__oomlDispatchEventListeners";
+  __zc_import("./execute/runtime.js");
 
-  let OOML_ARRAY_PROPNAME_ATTACH = "__oomlArrayAttach";
-  let OOML_ARRAY_PROPNAME_DETACH = "__oomlArrayDetach";
-  let OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_INSTANCE = "__oomlAttachmentParentInstance";
-  let OOML_ARRAY_PROPNAME_ATTACHMENT_PARENT_PROPERTY = "__oomlAttachmentParentProperty";
+  __zc_import("./execute/util/construct_ooml_instance.js");
+  __zc_import("./execute/util/get_default_value_for_type.js");
+  __zc_import("./execute/util/resolve_parent_ld_class_reference.js");
+  __zc_import("./execute/util/resolve_property_ld_class_reference.js");
+  __zc_import("./execute/util/unserialise_init_state_source.js");
+  __zc_import("./execute/util/update_dom.js");
 
-  let OOML_HIVE_PROPNAME_INTERNALHIVE = "__oomlHiveInternalHive";
-  let OOML_HIVE_PROPNAME_SUBSCRIPTIONS = "__oomlHiveSubscriptions";
-  let OOML_HIVE_PROPNAME_SUBSCRIBE = "__oomlHiveSubscribe";
-  let OOML_HIVE_PROPNAME_KEYPATH_PREFIX = "__oomlHiveKeypath";
-  let OOML_HIVE_PROPNAME_BINDINGS = "__oomlHiveBindings";
-  let OOML_HIVE_PROPNAME_BINDINGS_BY_KEYPATH = "__oomlHiveBindingsByKeypath";
+  __zc_import("./execute/exec_class.js");
+  __zc_import("./execute/exec_module.js");
+  __zc_import("./execute/exec_namespace.js");
+  __zc_import("./execute/exec_view_node.js");
 
-  let OOML_HIVESUBSCRIBER_PROPNAME_RECEIVE = "__oomlHiveSubscriberReceive";
-  let OOML_HIVESUBSCRIBER_PROPNAME_HANDLERS = "__oomlHiveSubscriberHandlers";
+  __zc_import("./ooml/__main__.js");
 
-  let OOML_DOM_PROPNAME_ISNAMESPACE = "__oomlIsNamespace";
-  let OOML_DOM_PROPNAME_ISCUSTOMHTML = "__oomlIsCustomHtml";
+  __zc_import("./ooml/EventSource/__main__.js");
+  __zc_import("./ooml/EventSource/_ATTACH.js");
+  __zc_import("./ooml/EventSource/_ERASE_ATTACHMENT_CONFIG.js");
+  __zc_import("./ooml/EventSource/_FORWARD_CHANGE.js");
+  __zc_import("./ooml/EventSource/_FORWARD_DISPATCH.js");
+  __zc_import("./ooml/EventSource/addChangeListener.js");
+  __zc_import("./ooml/EventSource/addDispatchHandler.js");
+  __zc_import("./ooml/EventSource/dispatch.js");
 
-  let OOML_INSTANCE_PROPNAME_DOMELEM = "__oomlDomElem";
-  let OOML_INSTANCE_PROPNAME_CURRENT_ATTACHMENT = "__oomlCurrentAttachment";
-  let OOML_INSTANCE_PROPNAME_ATTACH = "__oomlAttach";
-  let OOML_INSTANCE_PROPNAME_DETACH = "__oomlDetach";
-  let OOML_INSTANCE_PROPNAME_HANDLE_DISPATCH = "__oomlDispatch";
-  let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_DISPATCH = "__oomlEventHandlersDispatch";
-  let OOML_INSTANCE_PROPNAME_EVENT_HANDLERS_MUTATION = "__oomlEventHandlersMutation";
-  let OOML_INSTANCE_PROPNAME_PROPERTIES_INTERNAL_OBJECT = "__oomlPropertiesInternalObject";
-  let OOML_INSTANCE_PROPNAME_GET_EXPOSED_DOM_ELEM = "__oomlGetExposedDomElem";
-  let OOML_INSTANCE_PROPNAME_EXPOSED_DOM_ELEMS = "__oomlExposedDomElems";
-  let OOML_INSTANCE_PROPNAME_GET_PROPERTY = "__oomlGetProperty";
-  let OOML_INSTANCE_PROPNAME_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY = "__oomlSetPrimitiveProperty";
-  let OOML_INSTANCE_PROPNAME_SET_ARRAY_PROPERTY = "__oomlSetArrayProperty";
-  let OOML_INSTANCE_PROPNAME_SET_OBJECT_PROPERTY = "__oomlSetObjectProperty";
-  let OOML_INSTANCE_PROPNAME_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE = "__oomlHandleBindingChangeEventFromStore";
-  let OOML_INSTANCE_PROPNAME_REBIND_BINDING = "__oomlRebindDynamicBinding";
-  let OOML_INSTANCE_PROPNAME_PROPERTY_REBIND_SET_TIMEOUTS = "__oomlPropertyRebindSetTimeouts";
+  __zc_import("./ooml/Instance/__main__.js");
+  __zc_import("./ooml/Instance/_GET_PROPERTY.js");
+  __zc_import("./ooml/Instance/_RECEIVE_CHANGE.js");
+  __zc_import("./ooml/Instance/_RECEIVE_DISPATCH.js");
+  __zc_import("./ooml/Instance/_SERIALISE.js");
+  __zc_import("./ooml/Instance/_SET_ARRAY_PROPERTY.js");
+  __zc_import("./ooml/Instance/_SET_INSTANCE_PROPERTY.js");
+  __zc_import("./ooml/Instance/_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY.js");
+  __zc_import("./ooml/Instance/Symbol.iterator.js");
+  __zc_import("./ooml/Instance/toJSON.js");
+  __zc_import("./ooml/Instance/toObject.js");
 
-  let OOML_CLASS_PROPNAME_PROPNAMES = "__oomlProperties";
-  let OOML_CLASS_PROPNAME_PROPERTIES = "__oomlPredefinedProperties";
-  let OOML_CLASS_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS = "__oomlPropertiesToDependentBindings";
-  let OOML_CLASS_PROPNAME_PREDEFINEDCONSTRUCTOR = "__oomlPredefinedConstructor";
-  let OOML_CLASS_PROPNAME_VIEW_SHAPE = "__oomlExtensionPoint";
-  let OOML_CLASS_PROPNAME_EXTENSIONPOINT_PATH = "__oomlExtensionPointPath";
-  let OOML_CLASS_PROPNAME_ROOTELEMTAGNAME = "__oomlRootElemTagName";
-  let OOML_CLASS_PROPNAME_SELF_AND_ANCESTOR_CONSTRUCTORS = "__oomlAncestorClasses";
+  __zc_import("./ooml/Array/__main__.js");
+  __zc_import("./ooml/Array/_NORMALISE_INDEX.js");
+  __zc_import("./ooml/Array/_RECEIVE_CHANGE.js");
+  __zc_import("./ooml/Array/_RECEIVE_DISPATCH.js");
+  __zc_import("./ooml/Array/detach.js");
+  __zc_import("./ooml/Array/get.js");
+  __zc_import("./ooml/Array/includes, indexOf, lastIndexOf.js");
+  __zc_import("./ooml/Array/iteration.js");
+  __zc_import("./ooml/Array/length, first, and last.js");
+  __zc_import("./ooml/Array/pop and shift.js");
+  __zc_import("./ooml/Array/push and unshift.js");
+  __zc_import("./ooml/Array/reverse.js");
+  __zc_import("./ooml/Array/slice.js");
+  __zc_import("./ooml/Array/sort and sortBy.js");
+  __zc_import("./ooml/Array/splice.js");
+  __zc_import("./ooml/Array/toArray.js");
+  __zc_import("./ooml/Array/toJSON.js");
+  __zc_import("./ooml/Array/toString and toLocaleString.js");
+  __zc_import("./ooml/Array/__after__.js");
 
-  let OOML = {};
+  __zc_import("./ooml/execute/__main__.js");
+  __zc_import("./ooml/execute/anonymousNamespace.js");
+  __zc_import("./ooml/execute/anonymousClass.js");
+  __zc_import("./ooml/execute/module.js");
 
-  let OOMLGlobalImports = Utils_createCleanObject();
-  OOML.import = () => {
-    if (arguments.length == 2) {
-      let importName = arguments[0];
-      let importClass = arguments[1];
-      if (!Utils_typeOf(importName, TYPEOF_STRING)) {
-        throw TypeError(`Invalid import name`);
-      }
-      if (!Utils_isOOMLClass(importClass)) {
-        throw TypeError(`Invalid import class`);
-      }
-      if (OOMLGlobalImports[importName]) {
-        throw ReferenceError(`The class "${ importName }" has already been imported`);
-      }
-      OOMLGlobalImports[importName] = importClass;
-    } else {
-      for (let i = 0; i < arguments.length; i++) {
-        let argobj = arguments[i];
-        if (!Utils_isObjectLiteral(argobj)) {
-          throw TypeError(`Invalid import definition`);
-        }
-        Object.keys(argobj)
-          .forEach(importName => {
-            let importClass = argobj[importName];
-            OOML.import(importName, importClass);
-          });
-      }
-    }
-  };
+  __zc_import("./boot/main.js");
 
-  __zc_import("OOML.Hive/__main__.js");
-
-  __zc_import("OOML.Array/__main__.js");
-  __zc_import("OOML.Array/addDispatchHandler.js");
-  __zc_import("OOML.Array/addMutationObserver.js");
-  __zc_import("OOML.Array/detach.js");
-  __zc_import("OOML.Array/get.js");
-  __zc_import("OOML.Array/includes.js");
-  __zc_import("OOML.Array/indexOf and lastIndexOf.js");
-  __zc_import("OOML.Array/iteration.js");
-  __zc_import("OOML.Array/length.js");
-  __zc_import("OOML.Array/pop.js");
-  __zc_import("OOML.Array/push.js");
-  __zc_import("OOML.Array/reverse.js");
-  __zc_import("OOML.Array/shift.js");
-  __zc_import("OOML.Array/slice.js");
-  __zc_import("OOML.Array/sort.js");
-  __zc_import("OOML.Array/splice.js");
-  __zc_import("OOML.Array/toArray.js");
-  __zc_import("OOML.Array/toJSON.js");
-  __zc_import("OOML.Array/toString.js");
-  __zc_import("OOML.Array/unshift.js");
-  __zc_import("OOML.Array/_ATTACH.js");
-  __zc_import("OOML.Array/_HANDLE_DISPATCH.js");
-  __zc_import("OOML.Array/_REMOVE_ATTACHMENT_CONFIG.js");
-  __zc_import("OOML.Array/__after__.js");
-
-  __zc_import("OOML.Instance/__main__.js");
-  __zc_import("OOML.Instance/addDispatchHandler.js");
-  __zc_import("OOML.Instance/addMutationObserver.js");
-  __zc_import("OOML.Instance/assign.js");
-  __zc_import("OOML.Instance/detach.js");
-  __zc_import("OOML.Instance/dispatch.js");
-  __zc_import("OOML.Instance/keys.js");
-  __zc_import("OOML.Instance/Symbol.iterator.js");
-  __zc_import("OOML.Instance/toJSON.js");
-  __zc_import("OOML.Instance/toObject.js");
-  __zc_import("OOML.Instance/_ATTACH.js");
-  __zc_import("OOML.Instance/_GET_EXPOSED_DOM_ELEM.js");
-  __zc_import("OOML.Instance/_GET_PROPERTY.js");
-  __zc_import("OOML.Instance/_HANDLE_BINDING_CHANGE_EVENT_FROM_STORE.js");
-  __zc_import("OOML.Instance/_HANDLE_DISPATCH.js");
-  __zc_import("OOML.Instance/_REBIND_BINDING.js");
-  __zc_import("OOML.Instance/_REMOVE_ATTACHMENT_CONFIG.js");
-  __zc_import("OOML.Instance/_SET_ARRAY_PROPERTY.js");
-  __zc_import("OOML.Instance/_SET_ELEMENT_PROPERTY.js");
-  __zc_import("OOML.Instance/_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY.js");
-
-  __zc_import("OOML.Namespace/__main__.js");
-
-  // Should be fine to use array, as there aren't that many (also order is required)
-  // TODO
-  let namespaces = [];
-
+  // noinspection JSUnresolvedVariable
   if (typeof exports == TYPEOF_OBJECT) {
-    module.exports = OOML;
+    // noinspection JSUnresolvedVariable
+    module.exports = ooml;
   } else {
-    window.OOML = OOML;
+    window.ooml = ooml;
   }
 })(Object, TypeError, SyntaxError, ReferenceError, RangeError, Error);

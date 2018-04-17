@@ -1,0 +1,2 @@
+let __IP_OOML_CLASS_OWN_COLLAPSED_PROPERTIES = "__oomlClassCollapsedPropertiesConfig";
+let __IP_OOML_CLASS_OWN_COLLAPSED_PROPERTY_NAMES = "__oomlClassCollapsedPropertyNames";

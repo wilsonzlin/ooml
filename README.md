@@ -21,7 +21,7 @@ An object orientated web UI framework. Fast, easy to use, advanced, lightweight,
 - Integrated with a global store, message broker, and event system.
 - Collect and traverse history without immutable structures.
 - Abstract classes, type hinting, mutation observers, automatic serialisers&mdash;all are available, and more.
-- HTML in JS, JS in HTML, or both? ooml says: yes.
+- HTML in JS, JS in HTML, or both? Declarative and imperiative options available.
 
 ### Ready for packages
 - Due to its design, almost every existing JS library out there is already usable.
@@ -42,54 +42,52 @@ Here's a simple to-do list app ([view it live in your browser](https://wilsonl.i
 ```html
 <script src="https://wilsonl.in/ooml.js"></script>
 
-<div ooml="namespace">
+<!-- Use <template> to declare classes -->
+<template ooml="class" name="Item">
+  <!-- A class property can be declared like so: -->
+  <p name="label"></p>
 
-  <!-- Use <template> to declare classes -->
-  <template ooml="class" name="Item">
-    <!-- A class property can be declared like so: -->
-    <p name="label">""</p>
+  <!-- Declare the view of the class at the end -->
+  <li>{{ this.label }}</li>
+</template>
 
-    <!-- Declare the view of the class at the end -->
-    <li>{{ this.label }}</li>
-  </template>
+<template ooml="class" name="List">
+  <!-- The value inside the p (short for property) tag is its default value -->
+  <p name="name" type="string">""</p>
+  <p name="items" type="Item" array>[]</p>
 
-  <template ooml="class" name="List">
-    <!-- The value inside the p (short for property) tag is its default value -->
-    <p name="name" type="string">""</p>
-    <p name="items" type="Item" array>[]</p>
+  <div>
+    <!-- Use braces to substitute property values into the view -->
+    <!-- If the value is updated, so will this part of the view -->
+    <h2>{{ this.name }}</h2>
+    <ul>
+      <!-- You can even substitute other instances or arrays of them -->
+      {{ this.items }}
+    </ul>
+  </div>
+</template>
 
-    <div>
-      <!-- Use braces to substitute property values into the view -->
-      <!-- If the value is updated, so will this part of the view -->
-      <h2>{{ this.name }}</h2>
-      <ul>
-        <!-- You can even substitute other instances or arrays of them -->
-        {{ this.items }}
-      </ul>
-    </div>
-  </template>
+<template ooml="class" name="App">
+  <p name="list" type="List">{}</p>
 
-  <template ooml="class" name="App">
-    <p name="list" type="List">{}</p>
+  <!-- Methods are declared with m tags -->
+  <!-- This is a special method called the constructor -->
+  <m name="constructor">
+    function() {
+      // Just so we can tinker around with this demo in the console
+      window.app = this;
+    }
+  </i>
 
-    <div id="app">
-      <h1>Open your console and try adding items to this list</h1>
-      {{ this.list }}
-    </div>
-  </template>
-
-</div>
+  <div id="app">
+    <h1>Open your console and try adding items to this list</h1>
+    {{ this.list }}
+  </div>
+</template>
 
 <!-- Quickly bootstrap by declaring an initial instantiation -->
-<!-- ooml will create an App instance called `app` and put it here -->
-<div ooml="instantiate" type="App" name="app"></div>
-
-<script>
-  // Start your engines!
-  var namespace = new OOML.Namespace();
-  // Here's our initial instance called `app`
-  var app = namespace.objects.app;
-</script>
+<!-- ooml will create an App instance and put it here -->
+<div ooml="instantiate" type="App"></div>
 ```
 
 Running the above HTML page in your browser, try these in your browser's console
@@ -104,16 +102,16 @@ app.list.items.push({ label: "First item" });
 
 // You can also use declared ooml classes like regular JS classes
 var Item = namespace.classes.Item;
-var item = new Item({ label: "Second item" });
+var item = new Item({ label: "2nd item" });
 app.list.items.push(item);
 
-// Another example of the very vanilla-like syntax
-app.list.items.sort("label");
-
-// Every object and array is fully encapsulated, as you'd expect
+// Every object and array is fully encapsulated
 var firstItem = app.list.items.shift();
 firstItem.label = "No. 1";
 app.list.items.unshift(firstItem);
+
+// There are also some helper methods
+app.list.items.sortBy("label");
 
 // Most of your code will look like vanilla JS
 // This gives you more flexibility, very readable code, and nearly no learning curve
@@ -123,7 +121,7 @@ app.list.items.get(0).label = "1st item";
 var json = app.toJSON();
 app.list = null; // To test out the next part, delete something
 // ...and with two methods, restore your entire app from JSON
-app.assign( JSON.parse(json) ); // or Object.assign( app, JSON.parse(json) )
+Object.assign(app, JSON.parse(json))
 ```
 
 Open up the console, tinker with the `app` variable, and see how easy it is to utilise the DOM abstraction. Every constructed object is just composed of primitive values, arrays, and more objects, which makes it extremely easy to traverse, manipulate, and serialise at any level.

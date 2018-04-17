@@ -1,0 +1,2 @@
+let __BC_CLASSFIELD_NAME = 'n';
+let __BC_CLASSFIELD_DEFAULTVALUE = 'v';

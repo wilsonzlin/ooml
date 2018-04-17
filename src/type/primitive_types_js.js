@@ -1,0 +1,1 @@
+let __primitive_types_js = [TYPEOF_OOML_NULL, TYPEOF_NUMBER, TYPEOF_BOOLEAN, TYPEOF_STRING];
