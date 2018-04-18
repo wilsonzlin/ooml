@@ -80,10 +80,6 @@ let Utils_constructInstanceDomFromShape = config => {
     }
 
     break;
-
-  default:
-    // Defensive coding
-    throw Error(`Invalid class view shape type to process`);
   }
 
   return cloned;

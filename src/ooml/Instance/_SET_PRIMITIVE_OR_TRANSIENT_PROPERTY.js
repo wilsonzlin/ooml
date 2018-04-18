@@ -34,12 +34,12 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
 
   if (!config[__BC_CLASSPROP_TYPE]) {
     // $new_value is guaranteed not to be undefined
-    if (!config[__BC_CLASSPROP_TRANSIENT] && !u_is_a_type(__primitive_types_ooml, new_value)) {
+    if (!config[__BC_CLASSPROP_TRANSIENT] && !u_is_a_type(new_value, __primitive_types_ooml)) {
       throw TypeError(`Unrecognised type`);
     }
 
   } else {
-    if (!u_is_a_type(config[__BC_CLASSPROP_TYPE], new_value)) {
+    if (!u_is_a_type(new_value, config[__BC_CLASSPROP_TYPE])) {
       throw TypeError(`Value must be one of: ${ config[__BC_CLASSPROP_TYPE].join(", ") }`);
     }
   }

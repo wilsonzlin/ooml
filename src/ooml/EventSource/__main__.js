@@ -4,7 +4,7 @@ ooml.EventSource = function () {
   // Constructor may only be called from descendant classes
   if (!(_this instanceof ooml.EventSource) ||
       Object.getPrototypeOf(_this) == ooml.EventSource.prototype) {
-    throw Error(`Illegal constructor invocation`);
+    throw TypeError(`Illegal constructor invocation`);
   }
 
   let _this_properties_config = u_new_clean_object();

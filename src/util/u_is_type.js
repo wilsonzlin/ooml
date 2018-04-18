@@ -1,4 +1,4 @@
-let u_is_type = (type, val) => {
+let u_is_type = (val, type) => {
   switch (type) {
   case TYPEOF_OOML_NULL:
     return val === null;
@@ -19,8 +19,5 @@ let u_is_type = (type, val) => {
   case TYPEOF_OOML_DECIMAL:
     return u_typeof(val, TYPEOF_NUMBER) &&
            isFinite(val); // Returns false on NaN and +/-Infinity
-
-  default:
-    throw Error(`Unrecognised type for checking against`);
   }
 };

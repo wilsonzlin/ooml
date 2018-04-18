@@ -4,7 +4,7 @@ oomlArrayMutationPrototype.splice = function (start, delete_count) {
   let _this = this;
 
   // This differs from normal function, which allows $start to go out of bounds
-  let actual_start = _this[__IP_OOML_ARRAY_PROTO_NORMALISE_INDEX]("start", start);
+  let actual_start = _this[__IP_OOML_ARRAY_PROTO_NORMALISE_INDEX]("start", start, true);
 
   let arr = _this[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY];
   let element_type = _this[__IP_OOML_ARRAY_OWN_ELEMENT_TYPE];
@@ -36,8 +36,8 @@ oomlArrayMutationPrototype.splice = function (start, delete_count) {
     arr[actual_start - 1][__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT] :
     array_dom_element;
 
-  to_append.reduce((previousElem, elem) => {
-    elem[__IP_OOML_EVENTSOURCE_PROTO_ATTACH](_this, undefined, previousElem);
+  to_append.reduce((prev_elem, elem) => {
+    elem[__IP_OOML_EVENTSOURCE_PROTO_ATTACH](_this, undefined, prev_elem);
     return elem[__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT];
   }, append_from);
 

@@ -4,17 +4,18 @@ An object orientated web UI framework. Fast, easy to use, advanced, lightweight,
 ## Features
 
 ### Easy setup
-- Single, drop-in 30 KB [ooml.js](https://wilsonl.in/ooml.js) file.
+- Single, drop-in 12 KB gzipped [ooml.js](https://wilsonl.in/ooml.js) file.
 - No dependencies or toolchain/environment requirements.
 
 ### Incredibly simple
 - Only need to understand JSON and basic object orientation.
 - API is designed to be identical to vanilla JavaScript.
+- Straightforward stack traces with no framework noise.
 - Gradual learning curve&mdash;create large, scalable apps with only a few concepts.
 
 ### Very fast
 - No virtual DOM.
-- Up to [6x faster](https://wilsonl.in/ooml/comparisons/react/) than React.
+- [Faster than the most popular frameworks](https://wilsonl.in/ooml/performance/comparisons/) while using less memory.
 - Optionally precompile to bytecode, and get bonus static checks and optimisations.
 
 ### Have it your way
@@ -25,13 +26,13 @@ An object orientated web UI framework. Fast, easy to use, advanced, lightweight,
 
 ### Ready for packages
 - Due to its design, almost every existing JS library out there is already usable.
-- Publish modules to [ooml.store](https://ooml.store) with strictly-enforced [semver](#https://semver.org).
+- Publish modules to [ooml.store](https://ooml.store) with strictly-enforced [semver](https://semver.org).
 - Import [ooml.store](https://ooml.store) modules with a `<script>` to get them optimised, CDN delivered, and highly cacheable.
 
 ### High safety
 - Type hinting and strict syntax helps reduce and prevent bugs.
 - Large amounts of code dedicated to checking and validating.
-- [ooml-nano](https://wilsonl.in/ooml-nano/), the version without checks, is 40% smaller and 20% faster.
+- [ooml-nano](https://wilsonl.in/ooml/nano/), the version without checks, is 40% smaller and 20% faster.
 
 There's so much more&mdash;check out the [documentation](https://wilsonl.in/docs/ooml/), or read the [quick start](https://wilsonl.in/ooml/quick-start/).
 
@@ -71,8 +72,8 @@ Here's a simple to-do list app ([view it live in your browser](https://wilsonl.i
   <p name="list" type="List">{}</p>
 
   <!-- Methods are declared with m tags -->
-  <!-- This is a special method called the constructor -->
-  <m name="constructor">
+  <!-- This is a special method called the postConstructor -->
+  <m name="postConstructor">
     function() {
       // Just so we can tinker around with this demo in the console
       window.app = this;

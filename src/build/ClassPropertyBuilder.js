@@ -277,7 +277,7 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
       // Transient or primitive property
       if (actual_type) {
         // Property has type declaration
-        if (!u_is_a_type(actual_type, own_default_value)) {
+        if (!u_is_a_type(own_default_value, actual_type)) {
           throw TypeError(`Primitive property doesn't match declared type`);
         }
 
@@ -285,7 +285,7 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
         // Property has no type declaration, so check default value
         // against default type if not transient
         if (!transient &&
-            !u_is_a_type(__primitive_types_ooml, own_default_value)) {
+            !u_is_a_type(own_default_value, __primitive_types_ooml)) {
           throw TypeError(`Primitive property doesn't match declared type`);
         }
       }
