@@ -1,1 +1,1 @@
-let __BC_CLASSVIEW_ROOT = 'r';
+let __BC_CLASSVIEW_ROOT = "r";

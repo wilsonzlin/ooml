@@ -1,30 +1,18 @@
 let parse_dom_namespace = ($namespace, anonymous) => {
-  let config = validate_dom_attrs($namespace, {
+  let config = collect_dom_attrs($namespace, {
     ooml: {
       skip: true,
     },
-    name: anonymous ? undefined : {
-      validator: valid_namespace_name,
-    },
+    name: anonymous ? undefined : {},
   });
-  config.classes = {};
+  config.classes = [];
   config.instantiations = [];
 
-  u_iterate($namespace.children, $child => {
+  u_iterate(get_dom_child_elements($namespace), $child => {
     let type = $child.getAttribute("ooml");
 
     if (type == "inst") {
-      if (!anonymous) {
-        throw SyntaxError(`Instantiation in anonymous namespace`);
-      }
-
-      try {
-        config.instantiations.push(parse_dom_inst($child));
-      } catch (e) {
-        e.message += `\n    in namespace "${config.name}"`;
-        throw e;
-      }
-
+      config.instantiations.push(parse_dom_instantiation($child));
       return;
     }
 
@@ -32,18 +20,9 @@ let parse_dom_namespace = ($namespace, anonymous) => {
       throw SyntaxError(`Invalid ooml tag type "${type}"`);
     }
 
-    let klass;
-    try {
-      klass = parse_dom_class($child, false);
-    } catch (e) {
-      e.message += `\n    in namespace "${config.name}"`;
-      throw e;
-    }
+    let klass = parse_dom_class($child);
 
-    if (config.classes[klass.name]) {
-      throw ReferenceError(`Duplicate class "${klass.name}"`);
-    }
-    config.classes[klass.name] = klass;
+    config.classes.push(klass);
   });
 
   return config;

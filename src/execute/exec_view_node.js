@@ -20,7 +20,7 @@ let exec_view_node = (bc_view_node, _this, properties_state) => {
 
       if (bc_current[__BC_CLASSVIEW_NODE_EXPOSEKEY]) {
         // Expose DOM element
-        Object.defineProperty(_this, '$' + bc_current[__BC_CLASSVIEW_NODE_EXPOSEKEY], {value: node});
+        Object.defineProperty(_this, "$" + bc_current[__BC_CLASSVIEW_NODE_EXPOSEKEY], {value: node});
       }
 
       if (bc_current[__BC_CLASSVIEW_NODE_DOMEVENTHANDLERS]) {
@@ -71,6 +71,7 @@ let exec_view_node = (bc_view_node, _this, properties_state) => {
     } else if (bc_current[__BC_CLASSVIEW_NODE_ISTEXT]) {
       // Create text
       node = document.createTextNode(bc_current[__BC_CLASSVIEW_NODE_VALUE] || "");
+      parent.appendChild(node);
 
     } else { // Can only be bc_current[__BC_CLASSVIEW_NODE_ISSUB]
       // Create substitution placeholder/anchor
@@ -78,6 +79,7 @@ let exec_view_node = (bc_view_node, _this, properties_state) => {
       // (otherwise DOM will be littered with blank comments)
       node = document.createTextNode("");
       properties_state[bc_current[__BC_CLASSVIEW_NODE_SUBPROP]][__IP_OOML_PROPERTIES_STATE_NODES].push(node);
+      parent.appendChild(node);
     }
   }
 

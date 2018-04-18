@@ -18,4 +18,7 @@ oomlEventSourcePrototype[__IP_OOML_EVENTSOURCE_PROTO_ATTACH] = function (parent,
   if (anchor) {
     anchor.parentNode.insertBefore(dom_element, anchor.nextSibling);
   }
+  if (_this instanceof ooml.Array) {
+    _this[__IP_OOML_ARRAY_PROTO_REINSERT_DOM_ELEMENTS]();
+  }
 };

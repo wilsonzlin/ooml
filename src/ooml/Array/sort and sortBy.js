@@ -1,17 +1,14 @@
-OOMLArrayProtoMutation.sort = function (sorter) {
-  let intarray = this[OOML_ARRAY_PROPNAME_INTERNAL_ARRAY].sort(sorter);
+oomlArrayMutationPrototype.sort = function (sorter) {
+  this[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY].sort(sorter);
 
-  let insertAfter = this[OOML_ARRAY_PROPNAME_DOM_ANCHOR];
-
-  intarray.reduce((previousElem, elem) => {
-    previousElem.parentNode.insertBefore(elem[OOML_INSTANCE_PROPNAME_DOMELEM], previousElem.nextSibling);
-    return elem[OOML_INSTANCE_PROPNAME_DOMELEM];
-  }, insertAfter);
+  this[__IP_OOML_ARRAY_PROTO_REINSERT_DOM_ELEMENTS]();
 
   return this;
 };
 
-OOMLArrayProtoMutation.sortBy = function (propName, descending) {
+// Don't assign sortBy to mutation prototype
+// as it should trigger "sort" event, not "sort" and "sortBy"
+oomlArrayPrototype.sortBy = function (propName, descending) {
   let ascendingMultiplier = descending ?
     -1 :
     1;
@@ -22,7 +19,7 @@ OOMLArrayProtoMutation.sortBy = function (propName, descending) {
     } else if (a[propName] === b[propName]) {
       return 0;
     } else {
-      return 1 * ascendingMultiplier;
+      return ascendingMultiplier;
     }
   });
 };

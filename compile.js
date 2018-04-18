@@ -4,7 +4,7 @@ const babel = require("babel-core");
 
 const args = process.argv.slice(2);
 const DST_ARG = args.find(arg => /^-o=.+$/.test(arg));
-const HARMONY_ARG = args.includes("es6");
+const HARMONY_ARG = args.includes("harmony");
 const DEBUG_ARG = args.includes("debug");
 
 // Don't put backlash or quotes as then otherwise they need to be specially handled
@@ -81,11 +81,11 @@ zc({
 
       code = code
         .replace(/(['"])__Builder([a-zA-Z]+)\1/g, () =>
-          `"__${ it.next(IP_MIN_CHARSET_BUILDER) }";`);
+          `"__${ it.next(IP_MIN_CHARSET_BUILDER) }"`);
 
       code = code
         .replace(/(['"])__Ooml([a-zA-Z]+)\1/g, () =>
-          `"__${ it.next(IP_MIN_CHARSET_OOML) }";`);
+          `"__${ it.next(IP_MIN_CHARSET_OOML) }"`);
 
       it.reset();
       code = code

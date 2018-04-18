@@ -4,5 +4,5 @@ ooml.execute.anonymousClass = klass => {
   }
   // exec_group will check that no other anonymous class
   // already exists with the same name
-  exec_class(klass, true);
+  exec_class(klass);
 };

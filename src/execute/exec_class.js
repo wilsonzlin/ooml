@@ -88,7 +88,7 @@ let exec_class = (bc_class, module, namespace) => {
       let default_value = bc_prop[__BC_CLASSPROP_DEFAULTVALUE];
 
       if (init_state_source && u_has_own_property(init_state_source, prop_name)) {
-        let passthrough_property = bc_prop[prop_name][__BC_CLASSPROP_PASSTHROUGH];
+        let passthrough_property = bc_prop[__BC_CLASSPROP_PASSTHROUGH];
 
         if (passthrough_property) {
           // If passthrough, initialise instance with initial state built-in
@@ -116,8 +116,10 @@ let exec_class = (bc_class, module, namespace) => {
     });
 
     // Call post-constructor
-    // noinspection JSUnresolvedFunction
-    _this.postConstructor();
+    // noinspection JSUnresolvedVariable
+    if (_this.postConstructor) {
+      _this.postConstructor();
+    }
 
     // TODO
   };
@@ -156,6 +158,7 @@ let exec_class = (bc_class, module, namespace) => {
           module,
           namespace,
           ooml_class);
+
       } else {
         prop[__BC_CLASSPROP_TYPE] = bc_prop[__BC_CLASSPROP_TYPE];
       }
@@ -192,7 +195,6 @@ let exec_class = (bc_class, module, namespace) => {
         }
         prop[__BC_CLASSPROP_DISPATCHHANDLERS][dispatch_event].push(method_name);
       });
-      prop[__BC_CLASSPROP_BINDINGMISSING].push(bc_prop[__BC_CLASSPROP_BINDINGMISSING]);
     }
   });
 
@@ -216,7 +218,7 @@ let exec_class = (bc_class, module, namespace) => {
   u_enumerate(bc_class_fields, (bc_field, field_name) => {
     // Don't need to bind `this` to field if function, as JS does automatically
     Object.defineProperty(ooml_class, field_name, {
-      value: bc_field[__BC_CLASSFIELD_DEFAULTVALUE], // Don't need to clone, as there is only one use
+      value: bc_field[__BC_CLASSFIELD_VALUE], // Don't need to clone, as there is only one use
       writable: true,
       enumerable: true,
     });
@@ -229,15 +231,15 @@ let exec_class = (bc_class, module, namespace) => {
   ooml_class_prototype_properties_config.namespace = {value: namespace};
   ooml_class_prototype_properties_config.module = {value: module};
 
-  u_enumerate(collapsed_properties, (bc_prop, prop_name) => {
+  u_enumerate(collapsed_properties, (prop, prop_name) => {
     if (ooml_class.prototype[prop_name]) {
       // This property is overriding
       return;
     }
 
-    let internal_setter_property = bc_prop[__BC_CLASSPROP_ARRAY] ?
+    let internal_setter_property = prop[__BC_CLASSPROP_ARRAY] ?
       __IP_OOML_INST_PROTO_SET_ARRAY_PROPERTY : // Array property
-      valid_ooml_class(bc_prop[__BC_CLASSPROP_TYPE]) ?
+      u_typeof(prop[__BC_CLASSPROP_TYPE], TYPEOF_FUNCTION) ?
         __IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY : // Instance property
         __IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY; // Primitive or transient property
 

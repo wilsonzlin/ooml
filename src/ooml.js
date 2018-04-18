@@ -1,27 +1,46 @@
 (function (Object, TypeError, SyntaxError, ReferenceError, RangeError, Error, undefined) {
   "use strict";
 
-  __zc_import("./const/IP_OOML_INST_PROTO.js");
-  __zc_import("./const/BC_CLASSVIEW.js");
-  __zc_import("./const/TYPEOF.js");
-  __zc_import("./const/BC_CLASSPROP.js");
-  __zc_import("./const/IP_OOML_PROPERTIES_STATE.js");
-  __zc_import("./const/IP_OOML_INST_OWN.js");
-  __zc_import("./const/BC_CLASSVIEW_NODE.js");
-  __zc_import("./const/IP_OOML_EVENTSOURCE_OWN.js");
-  __zc_import("./const/IP_BUILDER.js");
-  __zc_import("./const/BC_CLASSMETHOD.js");
-  __zc_import("./const/IP_OOML_ARRAY_OWN.js");
-  __zc_import("./const/BC_NS.js");
-  __zc_import("./const/IP_OOML_EVENTSOURCE_PROTO.js");
-  __zc_import("./const/BC_CLASSFIELD.js");
-  __zc_import("./const/BC_MOD.js");
+  // Load util/* before const/*, as some const/* depend on util/*
+  __zc_import("./util/u_assign.js");
+  __zc_import("./util/u_collect_iterator_values.js");
+  __zc_import("./util/u_deep_clone.js");
+  __zc_import("./util/u_enumerate.js");
+  __zc_import("./util/u_eval_js.js");
+  __zc_import("./util/u_has_own_property.js");
+  __zc_import("./util/u_is_a_type.js");
+  __zc_import("./util/u_is_type.js");
+  __zc_import("./util/u_iterate.js");
+  __zc_import("./util/u_keys.js");
+  __zc_import("./util/u_map.js");
+  __zc_import("./util/u_new_clean_object.js");
+  __zc_import("./util/u_typeof.js");
+
   __zc_import("./const/BC_CLASS.js");
-  __zc_import("./const/IP_OOML_CLASS_OWN.js");
-  __zc_import("./const/IP_OOML_EMUL_ATTR.js");
+  __zc_import("./const/BC_CLASSFIELD.js");
+  __zc_import("./const/BC_CLASSMETHOD.js");
+  __zc_import("./const/BC_CLASSPROP.js");
+  __zc_import("./const/BC_CLASSVIEW.js");
   __zc_import("./const/BC_CLASSVIEW_ATTR.js");
-  __zc_import("./const/IP_OOML_CUSTOM_HTML.js");
+  __zc_import("./const/BC_CLASSVIEW_NODE.js");
+  __zc_import("./const/BC_INSTANTIATION.js");
+  __zc_import("./const/BC_MOD.js");
+  __zc_import("./const/BC_NS.js");
+  __zc_import("./const/IP_BUILDER.js");
+  __zc_import("./const/IP_OOML_ARRAY_OWN.js");
   __zc_import("./const/IP_OOML_ARRAY_PROTO.js");
+  __zc_import("./const/IP_OOML_CLASS_OWN.js");
+  __zc_import("./const/IP_OOML_CUSTOM_HTML.js");
+  __zc_import("./const/IP_OOML_EMUL_ATTR.js");
+  __zc_import("./const/IP_OOML_EVENTSOURCE_OWN.js");
+  __zc_import("./const/IP_OOML_EVENTSOURCE_PROTO.js");
+  __zc_import("./const/IP_OOML_INST_OWN.js");
+  __zc_import("./const/IP_OOML_INST_PROTO.js");
+  __zc_import("./const/IP_OOML_PROPERTIES_STATE.js");
+  __zc_import("./const/IP_NODESET.js");
+  __zc_import("./const/IP_NODESET_ELEMENT.js");
+  __zc_import("./const/IP_STRINGSET.js");
+  __zc_import("./const/TYPEOF.js");
 
   __zc_import("./compat/Set.js");
   __zc_import("./compat/HTMLTemplateElement.js");
@@ -37,19 +56,7 @@
   __zc_import("./rule/reserved_prop_method_names_s.js");
   __zc_import("./rule/reserved_field_names_s.js");
   __zc_import("./rule/reserved_class_names_s.js");
-
-  __zc_import("./util/u_validate_object.js");
-  __zc_import("./util/u_has_own_property.js");
-  __zc_import("./util/u_enumerate.js");
-  __zc_import("./util/u_new_clean_object.js");
-  __zc_import("./util/u_map.js");
-  __zc_import("./util/u_typeof.js");
-  __zc_import("./util/u_is_type.js");
-  __zc_import("./util/u_is_a_type.js");
-  __zc_import("./util/u_deep_clone.js");
-  __zc_import("./util/u_iterate.js");
-  __zc_import("./util/u_keys.js");
-  __zc_import("./util/u_assign.js");
+  __zc_import("./rule/restricted_view_tags_s.js");
 
   __zc_import("./validator/identifier/valid_class_name.js");
   __zc_import("./validator/identifier/valid_namespace_name.js");
@@ -64,7 +71,6 @@
   __zc_import("./validator/data/valid_ooml_type.js");
   __zc_import("./validator/data/valid_covariant_ooml_subtype.js");
   __zc_import("./validator/data/valid_class_of_base.js");
-  __zc_import("./validator/data/valid_non_empty_string.js");
   __zc_import("./validator/data/valid_empty_object.js");
   __zc_import("./validator/data/valid_object_literal.js");
   __zc_import("./validator/data/valid_ooml_class.js");
@@ -75,7 +81,6 @@
 
   __zc_import("./assert/assert_typeof_r.js");
   __zc_import("./assert/assert_set.js");
-  __zc_import("./assert/assert_unique_in_array_of_objs.js");
   __zc_import("./assert/assert_instanceof_r.js");
   __zc_import("./assert/assert_is_type_r.js");
   __zc_import("./assert/assert_valid_r.js");
@@ -85,18 +90,26 @@
   __zc_import("./assert/assert_undefined_obj_prop.js");
 
   __zc_import("./parse/DOM/collect_dom_attrs.js");
-  __zc_import("./parse/DOM/eval_dom_js.js");
+  __zc_import("./parse/DOM/get_dom_child_elements.js");
 
-  __zc_import("./parse/DOM/parse_dom.js");
-  __zc_import("./parse/DOM/parse_dom_class.js");
-  __zc_import("./parse/DOM/parse_dom_class_property.js");
-  __zc_import("./parse/DOM/parse_dom_group.js");
-  __zc_import("./parse/DOM/parse_dom_inst.js");
   __zc_import("./parse/DOM/parse_dom_module.js");
   __zc_import("./parse/DOM/parse_dom_namespace.js");
+  __zc_import("./parse/DOM/parse_dom_class_property.js");
+  __zc_import("./parse/DOM/parse_dom_class_method.js");
+  __zc_import("./parse/DOM/parse_dom_class_field.js");
+  __zc_import("./parse/DOM/parse_dom_class_initialiser.js");
+  __zc_import("./parse/DOM/parse_dom_class.js");
+  __zc_import("./parse/DOM/parse_dom_instantiation.js");
+  __zc_import("./parse/DOM/parse_dom.js");
 
+  __zc_import("./create/create_module.js");
+  __zc_import("./create/create_namespace.js");
   __zc_import("./create/create_class.js");
   __zc_import("./create/create_class_property.js");
+  __zc_import("./create/create_class_method.js");
+  __zc_import("./create/create_class_field.js");
+  __zc_import("./create/create_class_view.js");
+  __zc_import("./create/create_instantiation.js");
 
   __zc_import("./build/util/generate_bc_from_builder.js");
   __zc_import("./build/util/stream_substitution_parts.js");
@@ -109,13 +122,14 @@
   __zc_import("./build/resolve/resolve_bc_class_reference.js");
   __zc_import("./build/resolve/resolve_prop_type_bc_class_reference.js");
 
+  __zc_import("./build/ModuleBuilder.js");
+  __zc_import("./build/NamespaceBuilder.js");
   __zc_import("./build/ClassBuilder.js");
   __zc_import("./build/ClassFieldBuilder.js");
   __zc_import("./build/ClassMethodBuilder.js");
   __zc_import("./build/ClassPropertyBuilder.js");
   __zc_import("./build/ClassViewBuilder.js");
-  __zc_import("./build/ModuleBuilder.js");
-  __zc_import("./build/NamespaceBuilder.js");
+  __zc_import("./build/InstantiationBuilder.js");
 
   __zc_import("./execute/runtime.js");
 
@@ -130,6 +144,7 @@
   __zc_import("./execute/exec_module.js");
   __zc_import("./execute/exec_namespace.js");
   __zc_import("./execute/exec_view_node.js");
+  __zc_import("./execute/exec_instantiation.js");
 
   __zc_import("./ooml/__main__.js");
 
@@ -158,7 +173,7 @@
   __zc_import("./ooml/Array/_NORMALISE_INDEX.js");
   __zc_import("./ooml/Array/_RECEIVE_CHANGE.js");
   __zc_import("./ooml/Array/_RECEIVE_DISPATCH.js");
-  __zc_import("./ooml/Array/detach.js");
+  __zc_import("./ooml/Array/_REINSERT_DOM_ELEMENTS.js");
   __zc_import("./ooml/Array/get.js");
   __zc_import("./ooml/Array/includes, indexOf, lastIndexOf.js");
   __zc_import("./ooml/Array/iteration.js");
@@ -174,10 +189,15 @@
   __zc_import("./ooml/Array/toString and toLocaleString.js");
   __zc_import("./ooml/Array/__after__.js");
 
+  __zc_import("./ooml/Builder/__main__.js");
+
+  __zc_import("./ooml/create/__main__.js");
+
   __zc_import("./ooml/execute/__main__.js");
+  __zc_import("./ooml/execute/module.js");
   __zc_import("./ooml/execute/anonymousNamespace.js");
   __zc_import("./ooml/execute/anonymousClass.js");
-  __zc_import("./ooml/execute/module.js");
+  __zc_import("./ooml/execute/topLevelInstantiation.js");
 
   __zc_import("./boot/main.js");
 

@@ -14,7 +14,7 @@ let valid_ooml_type = t => {
       // There can only be one number type
       if (__primitive_number_types_ooml_s.has(type)) {
         if (has_number_type) {
-          return false
+          return false;
         }
         has_number_type = true;
       }

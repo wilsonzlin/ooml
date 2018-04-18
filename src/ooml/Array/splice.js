@@ -8,7 +8,7 @@ oomlArrayMutationPrototype.splice = function (start, delete_count) {
 
   let arr = _this[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY];
   let element_type = _this[__IP_OOML_ARRAY_OWN_ELEMENT_TYPE];
-  let parking_anchor = _this[__IP_OOML_ARRAY_OWN_PARKING_ANCHOR];
+  let array_dom_element = _this[__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT];
 
   let to_append = [];
   let args_to_apply = [actual_start, delete_count];
@@ -28,17 +28,17 @@ oomlArrayMutationPrototype.splice = function (start, delete_count) {
   let spliced = Array.prototype.splice.apply(arr, args_to_apply);
   spliced.forEach(elem => {
     if (elem) {
-      elem[__IP_OOML_INST_PROTO_ERASE_ATTACHMENT_CONFIG]();
+      elem[__IP_OOML_EVENTSOURCE_PROTO_ERASE_ATTACHMENT_CONFIG]();
     }
   });
 
   let append_from = actual_start ?
-    arr[actual_start - 1][__IP_OOML_INST_OWN_DOM_ELEM] :
-    parking_anchor;
+    arr[actual_start - 1][__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT] :
+    array_dom_element;
 
   to_append.reduce((previousElem, elem) => {
-    elem[__IP_OOML_INST_PROTO_ATTACH](_this, undefined, previousElem);
-    return elem[__IP_OOML_INST_OWN_DOM_ELEM];
+    elem[__IP_OOML_EVENTSOURCE_PROTO_ATTACH](_this, undefined, previousElem);
+    return elem[__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT];
   }, append_from);
 
   return spliced;

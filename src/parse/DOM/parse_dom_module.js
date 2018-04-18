@@ -1,33 +1,23 @@
 let parse_dom_module = $module => {
-  let config = validate_dom_attrs($module, {
+  let config = collect_dom_attrs($module, {
     ooml: {
       skip: true,
     },
-    name: {
-      validator: valid_module_name,
-    },
+    name: {},
+    group: {},
   });
-  config.namespaces = {};
+  config.namespaces = [];
 
-  u_iterate($module.children, $child => {
+  u_iterate(get_dom_child_elements($module), $child => {
     let type = $child.getAttribute("ooml");
 
     if (type != "namespace") {
       throw SyntaxError(`Invalid ooml tag type "${type}"`);
     }
 
-    let namespace;
-    try {
-      namespace = parse_dom_namespace($child, false);
-    } catch (e) {
-      e.message += `\n    in module "${config.name}"`;
-      throw e;
-    }
+    let namespace = parse_dom_namespace($child, false);
 
-    if (config.namespaces[namespace.name]) {
-      throw ReferenceError(`Duplicate namespace "${namespace.name}"`);
-    }
-    config.namespaces[namespace.name] = namespace;
+    config.namespaces.push(namespace);
   });
 
   return config;

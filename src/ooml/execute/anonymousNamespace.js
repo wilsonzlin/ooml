@@ -5,5 +5,5 @@ ooml.execute.anonymousNamespace = ns => {
     }
     ns = ns[__IP_BUILDER_PROTO_COMPILE]();
   }
-  exec_namespace(ns, true);
+  exec_namespace(ns);
 };

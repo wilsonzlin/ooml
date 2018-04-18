@@ -52,10 +52,10 @@ ClassBuilderPrototype.addInitialiser = function (fn) {
   this[__BC_CLASS_INITIALISERS].push(assert_typeof_r("initialiser", fn, TYPEOF_FUNCTION));
 };
 
-ClassBuilderPrototype.setView = function (built_view) {
-  assert_instanceof_r("field", built_view, ClassViewBuilder);
+ClassBuilderPrototype.setView = function (view) {
+  assert_instanceof_r("field", view, ClassViewBuilder);
 
-  this[__BC_CLASS_VIEW] = built_view;
+  this[__IP_BUILDER_UNCHECKED_VIEW] = view;
 };
 
 ClassBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc_ns) {
@@ -66,14 +66,13 @@ ClassBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc_ns) {
   //       and not cached/collapsed because they are context dependent
   //       and builders need to be independent and reusable
 
-  let ancestor_contexts;
+  let ancestor_contexts = [];
   if (this[__BC_CLASS_PARENT]) {
     // Cyclic inheritance not possible, except if parent == "this"
     if (this[__BC_CLASS_PARENT] == "this") {
       throw ReferenceError(`Parent is itself`);
     }
     let bc_class = this;
-    ancestor_contexts = []; // $this is not an ancestor
     while (bc_class[__BC_CLASS_PARENT]) {
       let context = resolve_bc_class_reference(bc_class[__BC_CLASS_PARENT], bc_mod, bc_ns, bc_class);
       bc_mod = context[0];

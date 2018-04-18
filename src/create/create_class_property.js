@@ -1,62 +1,58 @@
 let create_class_property = config => {
-  config = u_validate_object(config, {
-    name: {
-      validator: valid_property_or_method_name,
-    },
-    type: {
-      optional: true,
-      validator: valid_ooml_type,
-      // Don't set default value:
-      //   - Save bytecode space
-      //   - Transient properties can't have types
-    },
-    array: {
-      optional: true,
-      type: TYPEOF_BOOLEAN,
-    },
-    defaultValue: {
-      optional: true,
-      validator: valid_non_undefined_value,
-    },
-    transient: {
-      optional: true,
-      type: TYPEOF_BOOLEAN,
-    },
-    // Keep order of properties as they are checked in order after
-    passthrough: {
-      optional: true,
-      validator: valid_property_or_method_name,
-    },
-    get: {
-      optional: true,
-      validator: valid_property_or_method_reference,
-    },
-    set: {
-      optional: true,
-      validator: valid_property_or_method_reference,
-    },
-    change: {
-      optional: true,
-      validator: valid_property_or_method_reference,
-    },
-    binding: {
-      optional: true,
-      // TODO
-    },
-    bindingExist: {
-      optional: true,
-      validator: valid_property_or_method_reference,
-    },
-    bindingMissing: {
-      optional: true,
-      validator: valid_property_or_method_reference,
-    },
-    handlers: {
-      optional: true,
-      glob: __regex_handle_attr_name_glob,
-      validator: valid_property_or_method_reference,
-    },
-  });
+  let builder = new ClassPropertyBuilder();
 
+  builder.setName(config.name);
 
+  if (u_has_own_property(config, "type")) {
+    builder.setType(config.type);
+  }
+
+  if (u_has_own_property(config, "array")) {
+    builder.isArray(config.array);
+  }
+
+  if (u_has_own_property(config, "defaultValue")) {
+    builder.setDefaultValue(config.defaultValue);
+  }
+
+  if (u_has_own_property(config, "transient")) {
+    builder.isTransient(config.transient);
+  }
+
+  if (u_has_own_property(config, "passthrough")) {
+    builder.setPassthrough(config.passthrough);
+  }
+
+  if (u_has_own_property(config, "get")) {
+    builder.setGet(config.get);
+  }
+
+  if (u_has_own_property(config, "set")) {
+    builder.setSet(config.set);
+  }
+
+  if (u_has_own_property(config, "change")) {
+    builder.setChange(config.change);
+  }
+
+  if (u_has_own_property(config, "binding")) {
+    builder.setBinding(config.binding);
+  }
+
+  if (u_has_own_property(config, "bindingExist")) {
+    builder.setBindingExist(config.bindingExist);
+  }
+
+  if (u_has_own_property(config, "bindingMissing")) {
+    builder.setBindingMissing(config.bindingMissing);
+  }
+
+  if (u_has_own_property(config, "dispatchHandlers")) {
+    assert_valid_r("dispatchHandlers", config.dispatchHandlers, valid_object_literal);
+    u_enumerate(config.dispatchHandlers, (method_name, event_name) => {
+      builder.addDispatchHandler(event_name, method_name);
+    });
+  }
+
+  return builder;
 };

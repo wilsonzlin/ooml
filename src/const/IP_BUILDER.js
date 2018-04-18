@@ -16,6 +16,7 @@ let __IP_BUILDER_UNCHECKED_VIEW = "__BuilderUncheckedView";
 // NamespaceBuilder
 let __IP_BUILDER_CLASS_NAMES = "__BuilderClassNames";
 let __IP_BUILDER_UNCHECKED_CLASSES = "__BuilderUncheckedClasses";
+let __IP_BUILDER_UNCHECKED_INSTANTIATIONS = "__BuilderUncheckedInstantiations";
 
 // ModuleBuilder
 let __IP_BUILDER_NAMESPACE_NAMES = "__BuilderNamespaceNames";

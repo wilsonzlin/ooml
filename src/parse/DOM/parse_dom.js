@@ -1,15 +1,17 @@
 let SV_PARSE_DOM_PARSERS = {
-  group: parse_dom_group,
   module: parse_dom_module,
   namespace: parse_dom_namespace,
   class: parse_dom_class,
-  inst: parse_dom_inst,
+  inst: parse_dom_instantiation,
 };
 
 let parse_dom = $top => {
   let modules = [];
+  let anonymous_namespaces = [];
+  let anonymous_classes = [];
+  let top_level_instantiations = [];
 
-  u_iterate($top.children, $child => {
+  u_iterate(get_dom_child_elements($top), $child => {
     let type = $child.getAttribute("ooml");
     if (!type) {
       return;
@@ -21,35 +23,31 @@ let parse_dom = $top => {
     }
 
     let parsed;
-    try {
-      parsed = parser($child);
-    } catch (e) {
-      e.message += `\n    in top level`;
-      throw e;
-    }
 
     switch (type) {
-    case "group":
-      // TODO
-      break;
-
     case "module":
-      // TODO
+      parsed = parser($child);
+      modules.push(parsed);
       break;
 
     case "namespace":
-      // TODO
+      parsed = parser($child, true);
+      anonymous_namespaces.push(parsed);
       break;
 
     case "class":
-      // TODO
+      parsed = parser($child);
+      anonymous_classes.push(parsed);
       break;
 
     case "inst":
-      // TODO
+      parsed = parser($child);
+      top_level_instantiations.push(parsed);
       break;
     }
+
+    $top.removeChild($child);
   });
 
-  return modules;
+  return [modules, anonymous_namespaces, anonymous_classes, top_level_instantiations];
 };

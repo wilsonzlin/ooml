@@ -5,7 +5,7 @@ let SV_PARSE_DOM_CLASS_CONTENT_PARSERS = {
   I: parse_dom_class_initialiser,
 };
 
-let parse_dom_class = ($class, anonymous) => {
+let parse_dom_class = $class => {
   let config = collect_dom_attrs($class, {
     ooml: {
       skip: true,
@@ -16,14 +16,13 @@ let parse_dom_class = ($class, anonymous) => {
       boolean: true,
     },
   });
-  config.anonymous = anonymous;
   config.properties = {};
   config.methods = {};
   config.fields = {};
   config.initialisers = [];
-  config.view = undefined;
+  // View will only be set if provided
 
-  u_iterate($class.children, $child => {
+  u_iterate(get_dom_child_elements($class), $child => {
     if (config.view) {
       throw SyntaxError(`Nothing can come after a view declaration`);
     }
@@ -32,31 +31,31 @@ let parse_dom_class = ($class, anonymous) => {
 
     let parser = SV_PARSE_DOM_CLASS_CONTENT_PARSERS[type];
     if (!parser) {
-      if (!config.view) {
+      if (config.view) {
         throw SyntaxError(`Invalid ooml tag type "${type}"`);
       }
       config.view = $child;
       return;
     }
 
-    let parsed;
-    try {
-      parsed = parser($child);
-    } catch (e) {
-      e.message += `\n    in class "${config.name}"`;
-      throw e;
-    }
+    let parsed = parser($child);
 
     switch (type) {
     case "P":
-      // TODO
-      // TODO Check binding references and property name is unique member name
-      if (own_member_names.has(parsed.name)) {
-        throw ReferenceError(`Duplicate member "${parsed.name}"`);
-      }
+      config.properties[parsed.name] = parsed;
       break;
 
-      // TODO
+    case "M":
+      config.methods[parsed.name] = parsed;
+      break;
+
+    case "F":
+      config.fields[parsed.name] = parsed;
+      break;
+
+    case "I":
+      config.initialisers.push(parsed);
+      break;
     }
   });
 

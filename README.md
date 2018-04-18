@@ -4,7 +4,7 @@ An object orientated web UI framework. Fast, easy to use, advanced, lightweight,
 ## Features
 
 ### Easy setup
-- Single, drop-in 12 KB [ooml.js](https://wilsonl.in/ooml.js) file.
+- Single, drop-in 30 KB [ooml.js](https://wilsonl.in/ooml.js) file.
 - No dependencies or toolchain/environment requirements.
 
 ### Incredibly simple

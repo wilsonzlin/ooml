@@ -1,61 +1,47 @@
 let create_class = config => {
-  config = u_validate_object(config, {
-    name: {
-      validator: valid_class_name,
-    },
-    parent: {
-      validator: valid_class_reference,
-    },
-    abstract: {
-      type: TYPEOF_BOOLEAN,
-    },
-    anonymous: {
-      type: TYPEOF_BOOLEAN,
-    },
-    properties: {}
-    // TODO Nested array and object properties
-  });
-  config.properties = {};
-  config.methods = {};
-  config.fields = {};
-  config.initialisers = [];
+  let builder = new ClassBuilder();
 
-  let own_member_names = new StringSet();
-  let view;
+  builder.setName(config.name);
 
-  u_iterate($class.children, $child => {
-    if (view) {
-      throw SyntaxError(`Nothing can come after a view declaration`);
-    }
+  if (u_has_own_property(config, "parent")) {
+    builder.setParent(config.parent);
+  }
 
-    let type = $child.tagName;
+  if (u_has_own_property(config, "abstract")) {
+    builder.isAbstract(config.abstract);
+  }
 
-    let parser = SV_PARSE_DOM_CLASS_CONTENT_PARSERS[type];
-    if (!parser) {
-      if (!view) {
-        throw SyntaxError(`Invalid ooml tag type "${type}"`);
-      }
-      // TODO
-    }
+  if (u_has_own_property(config, "properties")) {
+    assert_valid_r("properties", config.properties, valid_object_literal);
+    u_enumerate(config.properties, prop => {
+      builder.addProperty(create_class_property(prop));
+    });
+  }
 
-    let parsed;
-    try {
-      parsed = parser($child);
-    } catch (e) {
-      e.message += `\n    in class "${config.name}"`;
-      throw e;
-    }
+  if (u_has_own_property(config, "methods")) {
+    assert_valid_r("methods", config.methods, valid_object_literal);
+    u_enumerate(config.methods, method => {
+      builder.addMethod(create_class_method(method));
+    });
+  }
 
-    switch (type) {
-    case "P":
-      // TODO
-      // TODO Check binding references and property name is unique member name
-      if (own_member_names.has(parsed.name)) {
-        throw ReferenceError(`Duplicate member "${parsed.name}"`);
-      }
-      break;
+  if (u_has_own_property(config, "fields")) {
+    assert_valid_r("fields", config.fields, valid_object_literal);
+    u_enumerate(config.fields, field => {
+      builder.addField(create_class_field(field));
+    });
+  }
 
-      // TODO
-    }
-  });
+  if (u_has_own_property(config, "initialisers")) {
+    assert_valid_r("initialisers", config.initialisers, valid_array);
+    u_enumerate(config.initialisers, init => {
+      builder.addInitialiser(init);
+    });
+  }
+
+  if (u_has_own_property(config, "view")) {
+    builder.setView(create_class_view(config.view));
+  }
+
+  return builder;
 };

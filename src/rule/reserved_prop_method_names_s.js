@@ -8,8 +8,6 @@ let __reserved_prop_method_names_s = new StringSet([
   "toString",
   "valueOf",
 
-  "this",
-
   // Mirror with ooml class prototype properties
   "module",
   "namespace",

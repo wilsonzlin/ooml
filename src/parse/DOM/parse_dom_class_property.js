@@ -1,8 +1,5 @@
 let parse_dom_class_property = $prop => {
   let config = collect_dom_attrs($prop, {
-    ooml: {
-      skip: true,
-    },
     name: {},
     type: {},
     array: {
@@ -18,13 +15,15 @@ let parse_dom_class_property = $prop => {
     binding: {},
     bindingExist: {},
     bindingMissing: {},
-    handlers: {
-      glob: /^handle-(.+)$/,
+    dispatchHandlers: {
+      glob: /^handle(.+)$/,
     },
   });
-  let default_value = eval_dom_js($prop);
-  if (default_value !== undefined) {
-    config.default_value = default_value;
+
+  let default_value_js = $prop.textContent.trim();
+
+  if (default_value_js) {
+    config.defaultValue = u_eval_js(default_value_js);
   }
 
   return config;

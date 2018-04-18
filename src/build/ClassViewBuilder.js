@@ -30,15 +30,18 @@ ClassViewBuilderPrototype.setRoot = function ($root) {
       if (/^ooml-(?:table|thead|tbody|tfoot|tr|th|td|caption|col|colgroup)$/.test(tag_name)) {
         tag_name = tag_name.slice(5);
       }
+      if (__reserved_view_tags_s.has(tag_name)) {
+        throw SyntaxError(`Illegal tag "${tag_name}" in view`);
+      }
       bc[__BC_CLASSVIEW_NODE_TAGNAME] = tag_name;
 
       u_iterate($current.attributes, $attr => {
         let attr_name = $attr.name.toLocaleLowerCase();
         let attr_value = $attr.value;
 
-        if (/^handle-/.test(attr_name)) {
-          let handler_method = assert_valid_prop_or_method_reference_p_r(attr_value);
-          bc[__BC_CLASSVIEW_NODE_DOMEVENTHANDLERS][attr_name.slice(5)] = handler_method;
+        if (/^handle/.test(attr_name)) {
+          let handler_method = assert_valid_prop_or_method_reference_p_r("DOM event handler method", attr_value);
+          bc[__BC_CLASSVIEW_NODE_DOMEVENTHANDLERS][attr_name.slice(6)] = handler_method;
           this[__IP_BUILDER_DOM_EVENT_HANDLER_METHODS].add(handler_method);
 
         } else if (/^on/.test(attr_name)) {
@@ -57,8 +60,8 @@ ClassViewBuilderPrototype.setRoot = function ($root) {
             attr_name = "style";
           }
 
-          let bc = u_new_clean_object();
-          bc[__BC_CLASSVIEW_ATTR_NAME] = attr_name;
+          let attr_bc = u_new_clean_object();
+          attr_bc[__BC_CLASSVIEW_ATTR_NAME] = attr_name;
 
           let parts = [];
           let map = u_new_clean_object();
@@ -82,13 +85,13 @@ ClassViewBuilderPrototype.setRoot = function ($root) {
 
           if (valid_empty_object(map)) {
             // OK if parts[0] is undefined
-            bc[__BC_CLASSVIEW_ATTR_PLAINVALUE] = parts[0];
+            attr_bc[__BC_CLASSVIEW_ATTR_PLAINVALUE] = parts[0];
           } else {
-            bc[__BC_CLASSVIEW_ATTR_VALUEPARTS] = parts;
-            bc[__BC_CLASSVIEW_ATTR_VALUESUBMAP] = map;
+            attr_bc[__BC_CLASSVIEW_ATTR_VALUEPARTS] = parts;
+            attr_bc[__BC_CLASSVIEW_ATTR_VALUESUBMAP] = map;
           }
 
-          bc[__BC_CLASSVIEW_NODE_ATTRS].push(bc);
+          bc[__BC_CLASSVIEW_NODE_ATTRS][attr_name] = attr_bc;
         }
       });
 
@@ -129,6 +132,9 @@ ClassViewBuilderPrototype.setRoot = function ($root) {
 };
 
 ClassViewBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function () {
+  // Check required values have been provided
+  assert_set("root", __BC_CLASSVIEW_ROOT, this);
+
   // Need to compile to make a copy, even with identical data
   return generate_bc_from_builder(this);
 };

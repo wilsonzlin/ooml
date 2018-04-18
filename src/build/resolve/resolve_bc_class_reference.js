@@ -2,12 +2,17 @@ let resolve_bc_class_reference = (ref, from_module, from_namespace, from_class) 
   // $ref is assumed to be a valid class reference string
   if (ref == "this") {
     // Self class reference
+    if (!from_class) {
+      throw ReferenceError(`Reference to "this" from non-class context`);
+    }
     return from_class;
   }
 
   // All $from_* args should be bytecode
   // $from_namespace and $from_module can be null
+  // $from_class can be null if instantiation
   // Names for $from_* bytecode should be already set, as well as group for $from_module
+  let from_instantiation = !from_class;
   let from_anon_class = !from_namespace;
   let from_anon_class_or_ns = !from_module;
   let from_group_name = !from_anon_class_or_ns && from_module[__BC_MOD_GROUP];
@@ -21,7 +26,7 @@ let resolve_bc_class_reference = (ref, from_module, from_namespace, from_class) 
 
   switch (parts.length) {
   case 1:
-    if (parts[0] == from_class[__BC_CLASS_NAME]) {
+    if (!from_instantiation && parts[0] == from_class[__BC_CLASS_NAME]) {
       // Can't refer to own class name using 1-part reference,
       // even if a class exists with the same name
       // (use `this` instead)
@@ -29,7 +34,7 @@ let resolve_bc_class_reference = (ref, from_module, from_namespace, from_class) 
     }
 
     if (from_anon_class) {
-      // From anonymous class
+      // From anonymous class or top-level instantiation
       deref = __rt_bc_anon_classes[parts[0]];
 
     } else {
