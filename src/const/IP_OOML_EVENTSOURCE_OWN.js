@@ -2,7 +2,5 @@ let __IP_OOML_EVENTSOURCE_OWN_DISPATCH_HANDLERS = "__OomlEventSourceOwnDispatchH
 
 let __IP_OOML_EVENTSOURCE_OWN_CHANGE_LISTENERS = "__OomlEventSourceOwnChangeListeners";
 
-let __IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT = "__OomlEventSourceOwnDOMElement";
-
 let __IP_OOML_EVENTSOURCE_OWN_PARENT_INSTANCE = "__OomlEventSourceOwnParentInstance";
 let __IP_OOML_EVENTSOURCE_OWN_PARENT_PROPERTY = "__OomlEventSourceOwnParentProperty";

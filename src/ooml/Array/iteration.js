@@ -16,17 +16,6 @@ oomlArrayPrototype.forEachRight = function (callback, this_arg) {
 
 if (__compat_Symbol) {
   oomlArrayPrototype[Symbol.iterator] = function () {
-    let i = -1;
-    let arr = this[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY];
-
-    return {
-      next: () => {
-        if (++i == arr.length) {
-          return {done: true};
-        }
-
-        return {value: arr[i], done: false};
-      }
-    };
+    return this[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY][Symbol.iterator]();
   };
 }

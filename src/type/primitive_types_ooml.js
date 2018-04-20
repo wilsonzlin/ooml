@@ -1,3 +1,2 @@
-// Duplicate entry TYPEOF_NUMBER will be removed automatically
-let __primitive_types_ooml_s = new StringSet(u_assign(__primitive_number_types_ooml_s.values(), __primitive_types_js));
-let __primitive_types_ooml = u_collect_iterator_values(__primitive_types_ooml_s.values());
+let __primitive_types_ooml = [TYPEOF_OOML_NULL, TYPEOF_BOOLEAN, TYPEOF_STRING, TYPEOF_OOML_NATURAL, TYPEOF_OOML_INTEGER, TYPEOF_OOML_DECIMAL, TYPEOF_NUMBER];
+let __primitive_types_ooml_s = new StringSet(__primitive_types_ooml);

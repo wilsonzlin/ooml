@@ -56,8 +56,32 @@ zc({
         passes: 3,
       },
       onload: code => {
+        if (!DEBUG_ARG) {
+          let it = new Iterator();
+
+          // OPTIMISATION: Make internal property names shorter
+
+          code = code
+            .replace(/(['"])__Builder([a-zA-Z]+)\1/g, () =>
+              `"__${ it.next(IP_MIN_CHARSET_BUILDER) }"`);
+
+          code = code
+            .replace(/(['"])__Ooml([a-zA-Z]+)\1/g, () =>
+              `"__${ it.next(IP_MIN_CHARSET_OOML) }"`);
+
+          it.reset();
+          code = code
+            .replace(/(['"])__NodeSet([a-zA-Z]+)\1/g, () =>
+              `"__${ it.next(IP_MIN_CHARSET_NODESET) }"`);
+
+          it.reset();
+          code = code
+            .replace(/(['"])__StringSet([a-zA-Z]+)\1/g, () =>
+              `"__${ it.next(IP_MIN_CHARSET_STRINGSET) }"`);
+        }
+
         if (!HARMONY_ARG) {
-          return babel.transform(code, {
+          code = babel.transform(code, {
             plugins: [
               "transform-es2015-arrow-functions",
               "transform-es2015-block-scoping",
@@ -65,41 +89,14 @@ zc({
             ]
           }).code.replace(/void 0/g, "undefined");
         }
+
+        return code;
       },
     },
   },
 
   files: ["ooml.js"],
 })
-  .then(() => {
-    let code = fs.readFileSync(dest + "/ooml.js", "utf8");
-
-    if (!DEBUG_ARG) {
-      let it = new Iterator();
-
-      // OPTIMISATION: Make internal property names shorter
-
-      code = code
-        .replace(/(['"])__Builder([a-zA-Z]+)\1/g, () =>
-          `"__${ it.next(IP_MIN_CHARSET_BUILDER) }"`);
-
-      code = code
-        .replace(/(['"])__Ooml([a-zA-Z]+)\1/g, () =>
-          `"__${ it.next(IP_MIN_CHARSET_OOML) }"`);
-
-      it.reset();
-      code = code
-        .replace(/(['"])__NodeSet([a-zA-Z]+)\1/g, () =>
-          `"__${ it.next(IP_MIN_CHARSET_NODESET) }"`);
-
-      it.reset();
-      code = code
-        .replace(/(['"])__StringSet([a-zA-Z]+)\1/g, () =>
-          `"__${ it.next(IP_MIN_CHARSET_STRINGSET) }"`);
-
-      fs.writeFileSync(dest + "/ooml.js", code);
-    }
-  })
   .catch(err => {
     console.error(err);
   });

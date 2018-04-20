@@ -1,10 +1,11 @@
-(function (Object, TypeError, SyntaxError, ReferenceError, RangeError, Error, undefined) {
+((Object, TypeError, SyntaxError, ReferenceError, RangeError, Error, undefined) => {
   "use strict";
 
   // Load util/* before const/*, as some const/* depend on util/*
   __zc_import("./util/u_assign.js");
-  __zc_import("./util/u_collect_iterator_values.js");
   __zc_import("./util/u_deep_clone.js");
+  __zc_import("./util/u_define_property.js");
+  __zc_import("./util/u_define_data_property.js");
   __zc_import("./util/u_enumerate.js");
   __zc_import("./util/u_eval_js.js");
   __zc_import("./util/u_has_own_property.js");
@@ -30,13 +31,13 @@
   __zc_import("./const/IP_OOML_ARRAY_OWN.js");
   __zc_import("./const/IP_OOML_ARRAY_PROTO.js");
   __zc_import("./const/IP_OOML_CLASS_OWN.js");
-  __zc_import("./const/IP_OOML_CUSTOM_HTML.js");
   __zc_import("./const/IP_OOML_EMUL_ATTR.js");
   __zc_import("./const/IP_OOML_EVENTSOURCE_OWN.js");
   __zc_import("./const/IP_OOML_EVENTSOURCE_PROTO.js");
   __zc_import("./const/IP_OOML_INST_OWN.js");
   __zc_import("./const/IP_OOML_INST_PROTO.js");
   __zc_import("./const/IP_OOML_PROPERTIES_STATE.js");
+  __zc_import("./const/IP_OOML_RUNTIME_DOM_UPDATE.js");
   __zc_import("./const/IP_NODESET.js");
   __zc_import("./const/IP_NODESET_ELEMENT.js");
   __zc_import("./const/IP_STRINGSET.js");
@@ -46,7 +47,6 @@
   __zc_import("./compat/HTMLTemplateElement.js");
   __zc_import("./compat/Symbol.js");
 
-  __zc_import("./polyfill/NodeSet.js");
   __zc_import("./polyfill/StringSet.js");
 
   __zc_import("./type/primitive_types_js.js");
@@ -131,14 +131,14 @@
   __zc_import("./build/ClassViewBuilder.js");
   __zc_import("./build/InstantiationBuilder.js");
 
-  __zc_import("./execute/runtime.js");
+  __zc_import("./runtime/runtime.js");
+  __zc_import("./runtime/dom/update_queue.js");
 
   __zc_import("./execute/util/construct_ooml_instance.js");
   __zc_import("./execute/util/get_default_value_for_type.js");
   __zc_import("./execute/util/resolve_parent_ld_class_reference.js");
   __zc_import("./execute/util/resolve_property_ld_class_reference.js");
   __zc_import("./execute/util/unserialise_init_state_source.js");
-  __zc_import("./execute/util/update_dom.js");
 
   __zc_import("./execute/exec_class.js");
   __zc_import("./execute/exec_module.js");
@@ -173,7 +173,6 @@
   __zc_import("./ooml/Array/_NORMALISE_INDEX.js");
   __zc_import("./ooml/Array/_RECEIVE_CHANGE.js");
   __zc_import("./ooml/Array/_RECEIVE_DISPATCH.js");
-  __zc_import("./ooml/Array/_REINSERT_DOM_ELEMENTS.js");
   __zc_import("./ooml/Array/get.js");
   __zc_import("./ooml/Array/includes, indexOf, lastIndexOf.js");
   __zc_import("./ooml/Array/iteration.js");
@@ -201,9 +200,7 @@
 
   __zc_import("./boot/main.js");
 
-  // noinspection JSUnresolvedVariable
   if (typeof exports == TYPEOF_OBJECT) {
-    // noinspection JSUnresolvedVariable
     module.exports = ooml;
   } else {
     window.ooml = ooml;

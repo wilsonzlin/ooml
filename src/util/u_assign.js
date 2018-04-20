@@ -1,9 +1,6 @@
 // Do not use arrow function, as it requires `arguments`
 let u_assign = function () {
   let ret = arguments[0];
-  if (u_typeof(ret.next, TYPEOF_FUNCTION)) {
-    ret = u_collect_iterator_values(ret);
-  }
 
   // Don't use validator/* as not loaded yet
   if (u_typeof(ret.length, TYPEOF_NUMBER)) {
@@ -16,9 +13,6 @@ let u_assign = function () {
       if (seq) {
         if (u_typeof(seq.length, TYPEOF_NUMBER)) {
           Array.prototype.push.apply(ret, seq);
-
-        } else if (u_typeof(seq.next, TYPEOF_FUNCTION)) {
-          Array.prototype.push.apply(ret, u_collect_iterator_values(seq));
         }
       }
     }

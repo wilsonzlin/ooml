@@ -11,7 +11,7 @@ if (__compat_Set) {
     _this[__IP_STRINGSET_INTERNALOBJECT] = u_new_clean_object();
 
     if (initialValues) {
-      initialValues.forEach(v => _this.add(v));
+      u_iterate(initialValues, v => _this.add(v));
     }
   };
 
@@ -49,10 +49,6 @@ if (__compat_Set) {
   StringSetPrototype.has = function (str) {
     return u_typeof(str, TYPEOF_STRING) &&
            this[__IP_STRINGSET_INTERNALOBJECT][str] != undefined;
-  };
-
-  StringSetPrototype.values = function () {
-    return this[__IP_STRINGSET_INTERNALARRAY].slice();
   };
 
   Object.defineProperty(StringSetPrototype, "size", {

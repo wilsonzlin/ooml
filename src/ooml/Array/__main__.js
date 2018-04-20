@@ -8,49 +8,28 @@ ooml.Array = function (element_type, initial_elems) {
 
   ooml.EventSource.call(_this);
 
-  // Use Text instead of Comment to prevent
-  // empty comments from littering the DOM
-  let dom_element = document.createTextNode("");
-
-  // When this array is detached, the DOM elements of instances in this array
-  // need to be parked somewhere with a parent
-  // (most removal methods require a parent)
-  let parking_parent = document.createElement("div");
-  parking_parent.appendChild(dom_element);
-
   let internal_arr;
 
   if (initial_elems) {
-    internal_arr = initial_elems.map(elem => construct_ooml_instance(element_type, elem));
-    internal_arr.reduce((prev_elem_dom, elem_to_attach) => {
-      elem_to_attach[__IP_OOML_EVENTSOURCE_PROTO_ATTACH](_this, undefined, prev_elem_dom);
-      return elem_to_attach[__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT];
-    }, dom_element);
+    internal_arr = initial_elems.map(elem => {
+      let inst = construct_ooml_instance(element_type, elem);
+      // Optimisation: Don't attach to array's DOM until array itself is attached
+      inst[__IP_OOML_EVENTSOURCE_PROTO_ATTACH](_this);
+      return inst;
+    });
 
   } else {
     internal_arr = [];
   }
 
   // Use defineProperty for properties to prevent enumeration
-  let _this_properties_config = u_new_clean_object();
-  _this_properties_config[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY] = {
-    value: internal_arr,
-  };
-  _this_properties_config[__IP_OOML_ARRAY_OWN_ELEMENT_TYPE] = {
-    value: element_type,
-  };
+  u_define_data_property(_this, __IP_OOML_ARRAY_OWN_INTERNAL_ARRAY, internal_arr);
+  u_define_data_property(_this, __IP_OOML_ARRAY_OWN_ELEMENT_TYPE, element_type);
+  u_define_data_property(_this, __IP_OOML_ARRAY_OWN_PARENT_ANCHOR, undefined, true);
+  u_define_data_property(_this, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION, undefined, true);
+  u_define_data_property(_this, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ARGUMENT, undefined, true);
 
-  _this_properties_config[__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT] = {
-    value: dom_element,
-  };
-  _this_properties_config[__IP_OOML_ARRAY_OWN_PARKING_PARENT] = {
-    value: parking_parent,
-  };
-
-  u_enumerate(_this_properties_config, (config, prop_name) => {
-    Object.defineProperty(_this, prop_name, config);
-  });
-
+  // Prevent arr[0] = "some_value" from working
   Object.preventExtensions(_this);
 };
 

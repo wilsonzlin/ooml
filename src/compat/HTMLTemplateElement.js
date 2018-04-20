@@ -1,1 +1,1 @@
-let __compat_Set = !!window.Set;
+let __compat_HTMLTemplateElement = !!window.HTMLTemplateElement;

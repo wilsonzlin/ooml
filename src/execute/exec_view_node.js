@@ -1,6 +1,7 @@
-let exec_view_node = (bc_view_node, _this, properties_state) => {
+let exec_view_node = (bc_view_node, _this, collapsed_properties, properties_state) => {
   // Exposed DOM elements will be set on $_this
   // DOM event handlers will call methods on $_this
+  // Substitutions will be checked if they are instance or array properties using $collapsed_properties
   // Substitution node placeholders/anchors will be added to $properties_state
 
   let queue = [[bc_view_node]];
@@ -63,7 +64,7 @@ let exec_view_node = (bc_view_node, _this, properties_state) => {
       }
 
       if (parent) {
-        parent.appendChild(node);
+        __rt_dom_update_add_to_queue(node, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_APPENDTO, parent);
       } else {
         cloned = node;
       }
@@ -71,15 +72,20 @@ let exec_view_node = (bc_view_node, _this, properties_state) => {
     } else if (bc_current[__BC_CLASSVIEW_NODE_ISTEXT]) {
       // Create text
       node = document.createTextNode(bc_current[__BC_CLASSVIEW_NODE_VALUE] || "");
-      parent.appendChild(node);
+      __rt_dom_update_add_to_queue(node, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_APPENDTO, parent);
 
-    } else { // Can only be bc_current[__BC_CLASSVIEW_NODE_ISSUB]
+    } else {
+      // Can only be bc_current[__BC_CLASSVIEW_NODE_ISSUB]
+
       // Create substitution placeholder/anchor
-      // Use Text node even if instance/array substitution
-      // (otherwise DOM will be littered with blank comments)
-      node = document.createTextNode("");
-      properties_state[bc_current[__BC_CLASSVIEW_NODE_SUBPROP]][__IP_OOML_PROPERTIES_STATE_NODES].push(node);
-      parent.appendChild(node);
+      let prop_name = bc_current[__BC_CLASSVIEW_NODE_SUBPROP];
+      node = u_typeof(collapsed_properties[prop_name][__BC_CLASSPROP_TYPE], TYPEOF_FUNCTION) ?
+        document.createComment("") :
+        document.createTextNode("");
+
+      properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(node);
+
+      __rt_dom_update_add_to_queue(node, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_APPENDTO, parent);
     }
   }
 

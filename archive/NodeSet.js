@@ -57,12 +57,6 @@ if (__compat_Set) {
     return !!node[ip_node_id];
   };
 
-  NodeSetPrototype.values = function () {
-    // .filter callback is never called on deleted/non-set indexes
-    // and is probably faster than .map
-    return this[__IP_NODESET_INTERNALARRAY].filter(() => true);
-  };
-
   Object.defineProperty(NodeSetPrototype, "size", {
     get: function () {
       return this[__IP_NODESET_INTERNALARRAY].length;

@@ -46,7 +46,7 @@ let parse_dom = $top => {
       break;
     }
 
-    $top.removeChild($child);
+    __rt_dom_update_add_to_queue($child, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_POTENTIALLYREMOVE);
   });
 
   return [modules, anonymous_namespaces, anonymous_classes, top_level_instantiations];

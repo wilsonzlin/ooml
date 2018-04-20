@@ -59,6 +59,9 @@ let exec_class = (bc_class, module, namespace) => {
       // If a property is not substituted (inc. array/inst props), this will be empty
       prop_state[__IP_OOML_PROPERTIES_STATE_NODES] = [];
 
+      // Also can have __IP_OOML_PROPERTIES_STATE_CUSTOM_HTML_ROOT_DOM_ELEMENTS with array
+      // but don't initialise until first use to save memory
+
       // TODO
 
       properties_state[prop_name] = prop_state;
@@ -68,10 +71,11 @@ let exec_class = (bc_class, module, namespace) => {
     // This will define exposed DOM element properties on $_this
     let dom_elem = exec_view_node(bc_class_view[__BC_CLASSVIEW_ROOT],
       _this,
+      collapsed_properties,
       properties_state);
 
     let _this_properties_values = u_new_clean_object();
-    _this_properties_values[__IP_OOML_EVENTSOURCE_OWN_DOM_ELEMENT] = dom_elem;
+    _this_properties_values[__IP_OOML_INST_OWN_DOM_ELEMENT] = dom_elem;
     _this_properties_values[__IP_OOML_INST_OWN_PROPERTIES_STATE] = properties_state;
 
     // Apply own internal properties
@@ -200,11 +204,15 @@ let exec_class = (bc_class, module, namespace) => {
 
   let ooml_class_prototype = Object.create(class_parent.prototype);
 
+  let namespace_property = namespace || __rt_ld_anon_classes;
+
   // Static properties for internal use
   let ooml_class_properties_values = u_new_clean_object();
   ooml_class_properties_values.name = class_name;
-  ooml_class_properties_values.namespace = namespace;
-  ooml_class_properties_values.module = module;
+  ooml_class_properties_values.namespace = namespace_property;
+  if (module) {
+    ooml_class_properties_values.module = module;
+  }
   ooml_class_properties_values.prototype = ooml_class_prototype;
   ooml_class_properties_values[__IP_OOML_CLASS_OWN_COLLAPSED_PROPERTY_NAMES] = collapsed_property_names;
   ooml_class_properties_values[__IP_OOML_CLASS_OWN_COLLAPSED_PROPERTIES] = collapsed_properties;
@@ -228,8 +236,10 @@ let exec_class = (bc_class, module, namespace) => {
 
   ooml_class_prototype_properties_config.constructor = {value: ooml_class};
   // WARNING: $namespace and $module not frozen
-  ooml_class_prototype_properties_config.namespace = {value: namespace};
-  ooml_class_prototype_properties_config.module = {value: module};
+  ooml_class_prototype_properties_config.namespace = {value: namespace_property};
+  if (module) {
+    ooml_class_prototype_properties_config.module = {value: module};
+  }
 
   u_enumerate(collapsed_properties, (prop, prop_name) => {
     if (ooml_class.prototype[prop_name]) {

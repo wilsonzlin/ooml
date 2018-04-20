@@ -7,7 +7,8 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
 
   let current_value = state[__IP_OOML_PROPERTIES_STATE_CURRENTVALUE];
 
-  let custom_html;
+  let custom_dom;
+  let remove_custom_dom;
   let is_initial = current_value === undefined;
 
   if (config[__BC_CLASSPROP_SET]) {
@@ -27,7 +28,20 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
 
       if (u_has_own_property(setter_rv, "HTML")) {
         // noinspection JSUnresolvedVariable
-        custom_html = setter_rv.HTML;
+        assert_typeof_r("custom HTML", setter_rv.HTML, TYPEOF_STRING);
+        // TODO Allow false, HTMLElement
+        // noinspection JSUnresolvedVariable
+        let custom_html = setter_rv.HTML.trim();
+        if (!custom_html) {
+          remove_custom_dom = true;
+        } else {
+          let dom = document.createElement("div");
+          dom.innerHTML = custom_html;
+          if (dom.children.length != 1) {
+            throw SyntaxError(`Custom HTML has no or multiple root elements`);
+          }
+          custom_dom = dom.children[0];
+        }
       }
     }
   }
@@ -47,8 +61,51 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
   // Because initially $current_value is undefined and $new_value cannot be undefined,
   // this runs initially as well
   if (current_value !== new_value) {
+    if (remove_custom_dom || custom_dom) {
+      // Remove any old custom HTML if blank or new custom HTML provided
+      if (state[__IP_OOML_PROPERTIES_STATE_CUSTOM_HTML_ROOT_DOM_ELEMENTS]) {
+        u_iterate(state[__IP_OOML_PROPERTIES_STATE_CUSTOM_HTML_ROOT_DOM_ELEMENTS], $custom_dom_elem => {
+          if ($custom_dom_elem[__IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION]) {
+            // Old custom HTML still in queue
+            delete $custom_dom_elem[__IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION];
+          } else {
+            // Old custom HTML needs to be removed from DOM
+            __rt_dom_update_add_to_queue($custom_dom_elem, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_POTENTIALLYREMOVE);
+          }
+        });
+      }
+      // Reset custom HTML DOM elements array
+      state[__IP_OOML_PROPERTIES_STATE_CUSTOM_HTML_ROOT_DOM_ELEMENTS] = [];
+    }
+
     // Write changes only if value changed
-    update_dom(prop_name, state[__IP_OOML_PROPERTIES_STATE_NODES], new_value, custom_html);
+    u_iterate(state[__IP_OOML_PROPERTIES_STATE_NODES], node => {
+      if (node instanceof Text) {
+        let new_text;
+
+        if (custom_dom) {
+          let cloned = custom_dom.cloneNode(true);
+          state[__IP_OOML_PROPERTIES_STATE_CUSTOM_HTML_ROOT_DOM_ELEMENTS].push(cloned);
+
+          __rt_dom_update_add_to_queue(cloned, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_INSERTAFTER, node);
+
+          new_text = "";
+
+        } else {
+          new_text = new_value;
+        }
+
+        __rt_dom_update_add_to_queue(node, __IP_OOML_RUNTIME_DOM_UPDATE_CDATA_ACTION_ENUMVAL_UPDATETEXT, new_text);
+
+      } else {
+        // Must be attribute
+        u_iterate(node[__IP_OOML_EMUL_ATTR_VALUESUBMAP][prop_name], index => {
+          node[__IP_OOML_EMUL_ATTR_VALUEPARTS][index] = new_value;
+        });
+
+        __rt_dom_update_add_to_queue(node, __IP_OOML_RUNTIME_DOM_UPDATE_CDATA_ACTION_ENUMVAL_APPLYATTR);
+      }
+    });
 
     state[__IP_OOML_PROPERTIES_STATE_CURRENTVALUE] = new_value;
 

@@ -1,7 +1,11 @@
 oomlArrayMutationPrototype.sort = function (sorter) {
-  this[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY].sort(sorter);
+  let _this = this;
 
-  this[__IP_OOML_ARRAY_PROTO_REINSERT_DOM_ELEMENTS]();
+  _this[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY].sort(sorter);
+
+  if (_this[__IP_OOML_ARRAY_OWN_PARENT_ANCHOR]) {
+    __rt_dom_update_add_to_queue(_this, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_ARRREINSERT);
+  }
 
   return this;
 };
