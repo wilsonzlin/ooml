@@ -5,14 +5,14 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
   let state = _this[__IP_OOML_INST_OWN_PROPERTIES_STATE][prop_name];
   let config = _this.constructor[__IP_OOML_CLASS_OWN_COLLAPSED_PROPERTIES][prop_name];
 
-  let current_value = state[__IP_OOML_PROPERTIES_STATE_CURRENTVALUE];
+  let old_value = state[__IP_OOML_PROPERTIES_STATE_CURRENTVALUE];
 
   let custom_dom;
   let remove_custom_dom;
-  let is_initial = current_value === undefined;
+  let is_initial = old_value === undefined;
 
   if (config[__BC_CLASSPROP_SET]) {
-    let setter_rv = _this[config[__BC_CLASSPROP_SET]](new_value, current_value, is_initial, prop_name);
+    let setter_rv = _this[config[__BC_CLASSPROP_SET]](new_value, old_value, is_initial, prop_name);
     if (setter_rv === false) {
       return;
     }
@@ -52,16 +52,16 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
     }
   }
 
-  // Because initially $current_value is undefined and $new_value cannot be undefined,
+  // Because initially $old_value is undefined and $new_value cannot be undefined,
   // this runs initially as well
-  if (current_value !== new_value) {
+  if (old_value !== new_value) {
     if (remove_custom_dom || custom_dom) {
       // Remove any old custom HTML if blank or new custom HTML provided
       if (state[__IP_OOML_PROPERTIES_STATE_CUSTOM_HTML_ROOT_DOM_ELEMENTS]) {
         u_iterate(state[__IP_OOML_PROPERTIES_STATE_CUSTOM_HTML_ROOT_DOM_ELEMENTS], $custom_dom_elem => {
           if ($custom_dom_elem[__IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION]) {
             // Old custom HTML still in queue
-            delete $custom_dom_elem[__IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION];
+            $custom_dom_elem[__IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION] = undefined;
           } else {
             // Old custom HTML needs to be removed from DOM
             __rt_dom_update_add_to_queue($custom_dom_elem, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ENUMVAL_POTENTIALLYREMOVE);
@@ -117,12 +117,12 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
     */
 
     u_iterate(config[__BC_CLASSPROP_CHANGE], method_name => {
-      _this[method_name](current_value, is_initial);
+      _this[method_name](new_value, is_initial);
     });
 
     _this[__IP_OOML_EVENTSOURCE_PROTO_FORWARD_CHANGE]("update", {
       property: prop_name,
-      oldValue: current_value,
+      oldValue: old_value,
       newValue: new_value,
       initial: is_initial,
     });

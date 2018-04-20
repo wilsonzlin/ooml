@@ -80,10 +80,11 @@ let exec_view_node = (bc_view_node, collapsed_properties) => {
       // Can only be bc_current[__BC_CLASSVIEW_NODE_ISSUB]
 
       // Create substitution placeholder/anchor
+      // IE9 removes empty text nodes when cloning, so put blank space
       let prop_name = bc_current[__BC_CLASSVIEW_NODE_SUBPROP];
       node = u_typeof(collapsed_properties[prop_name][__BC_CLASSPROP_TYPE], TYPEOF_FUNCTION) ?
         document.createComment("") :
-        document.createTextNode("");
+        document.createTextNode(" ");
 
       substitutions.push([prop_name, path_from_root]);
     }
@@ -92,7 +93,9 @@ let exec_view_node = (bc_view_node, collapsed_properties) => {
   }
 
   let rv = u_new_clean_object();
-  rv[__IP_OOML_VIEW_TEMPLATE_ROOT] = root.children[0];
+  // For some reason IE9 doesn't implement .children/.firstElementChild on HTMLDocumentFragment.prototype,
+  // but this should work as root is guaranteed to be an element
+  rv[__IP_OOML_VIEW_TEMPLATE_ROOT] = root.firstChild;
   rv[__IP_OOML_VIEW_EXPOSED_ELEMS] = exposed_elems;
   rv[__IP_OOML_VIEW_ELEMS_WITH_EVENT_HANDLERS] = elems_with_event_handlers;
   rv[__IP_OOML_VIEW_SUBSTITUTIONS] = substitutions;

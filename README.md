@@ -9,36 +9,39 @@ An object orientated web UI framework. Fast, easy to use, advanced, lightweight,
 
 ### Incredibly simple
 - Only need to understand JSON and basic object orientation.
-- API is designed to be identical to vanilla JavaScript.
-- Straightforward stack traces with no framework noise.
+- No special language, and usage is designed to be identical to vanilla JavaScript.
+- Clean stack traces with near zero framework noise.
 - Gradual learning curve&mdash;create large, scalable apps with only a few concepts.
 
 ### Very fast
 - No virtual DOM.
 - [Faster than the most popular frameworks](https://wilsonl.in/ooml/performance/comparisons/) while using less memory.
-- Optionally precompile to bytecode, and get bonus static checks and optimisations.
+- Asynchronously load ooml.js compressed, CDN delivered, and highly cacheable.
+- Optionally precompile to bytecode:
+  - Get bonus static checks and optimisations.
+  - Load a 5KB VM-only ooml.js and tiny, compressed bytecode.
+  - Remove runtime parsing, type checking, and assertions to boost performance and reduce bloat.
 
 ### Have it your way
 - Integrated with a global store, message broker, and event system.
-- Collect and traverse history without immutable structures.
-- Abstract classes, type hinting, mutation observers, automatic serialisers&mdash;all are available, and more.
+- Abstract classes, type hinting, change listeners&mdash;all are available, and more.
+- Everything's JSON, so model your app like your data and get single-line serialisation and deserialisation.
 - HTML in JS, JS in HTML, or both? Declarative and imperiative options available.
 
-### Ready for packages
-- Due to its design, almost every existing JS library out there is already usable.
-- Publish modules to [ooml.store](https://ooml.store) with strictly-enforced [semver](https://semver.org).
-- Import [ooml.store](https://ooml.store) modules with a `<script>` to get them optimised, CDN delivered, and highly cacheable.
+### Ready for reuse
+- Almost every existing JS library out there is already compatible.
+- Easily share modules by precompiling them and hosting the single bytecode file anywhere.
+- Import ooml modules asynchronously using regular `<script>`, and potentially get them compressed, CDN delivered, and highly cacheable.
 
 ### High safety
 - Type hinting and strict syntax helps reduce and prevent bugs.
 - Large amounts of code dedicated to checking and validating.
-- [ooml-nano](https://wilsonl.in/ooml/nano/), the version without checks, is 40% smaller and 20% faster.
 
 There's so much more&mdash;check out the [documentation](https://wilsonl.in/docs/ooml/), or read the [quick start](https://wilsonl.in/ooml/quick-start/).
 
 ## Quick example
 
-Here's a simple to-do list app ([view it live in your browser](https://wilsonl.in/ooml/examples/to-do-list-1/code.html)):
+Here's a simple to-do list app declared using HTML form ([view it live in your browser](https://wilsonl.in/ooml/examples/to-do-list-1/code.html)):
 
 ```html
 <script src="https://wilsonl.in/ooml.js"></script>
@@ -77,8 +80,9 @@ Here's a simple to-do list app ([view it live in your browser](https://wilsonl.i
     function() {
       // Just so we can tinker around with this demo in the console
       window.app = this;
+      window.namespace = this.namespace;
     }
-  </i>
+  </m>
 
   <div id="app">
     <h1>Open your console and try adding items to this list</h1>
@@ -102,7 +106,7 @@ app.list = { name: "My to-do list" };
 app.list.items.push({ label: "First item" });
 
 // You can also use declared ooml classes like regular JS classes
-var Item = namespace.classes.Item;
+var Item = namespace.Item;
 var item = new Item({ label: "2nd item" });
 app.list.items.push(item);
 
@@ -118,10 +122,10 @@ app.list.items.sortBy("label");
 // This gives you more flexibility, very readable code, and nearly no learning curve
 app.list.items.get(0).label = "1st item";
 
-// With one method, get your entire app in JSON...
-var json = app.toJSON();
-app.list = null; // To test out the next part, delete something
-// ...and with two methods, restore your entire app from JSON
+// With one line, get your entire app in JSON...
+var json = JSON.stringify( app.toJSON() );
+app.list = null; // Pretend we're starting again
+// ...and with one line, restore your entire app from JSON
 Object.assign(app, JSON.parse(json))
 ```
 

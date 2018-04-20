@@ -166,7 +166,6 @@
   __zc_import("./ooml/Instance/_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY.js");
   __zc_import("./ooml/Instance/Symbol.iterator.js");
   __zc_import("./ooml/Instance/toJSON.js");
-  __zc_import("./ooml/Instance/toObject.js");
 
   __zc_import("./ooml/Array/__main__.js");
   __zc_import("./ooml/Array/_NORMALISE_INDEX.js");
@@ -182,7 +181,6 @@
   __zc_import("./ooml/Array/slice.js");
   __zc_import("./ooml/Array/sort and sortBy.js");
   __zc_import("./ooml/Array/splice.js");
-  __zc_import("./ooml/Array/toArray.js");
   __zc_import("./ooml/Array/toJSON.js");
   __zc_import("./ooml/Array/toString and toLocaleString.js");
   __zc_import("./ooml/Array/__after__.js");

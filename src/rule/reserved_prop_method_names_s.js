@@ -12,10 +12,9 @@ let __reserved_prop_method_names_s = new StringSet([
   "module",
   "namespace",
 
-  // Mirror with ooml.EventSource and ooml.Instance prototype
+  // Mirror with ooml.EventSource and ooml.Instance prototypes
   "addDispatchHandler",
   "addChangeListener",
   "dispatch",
   "toJSON",
-  "toObject",
 ]);

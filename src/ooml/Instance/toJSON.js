@@ -1,7 +1,27 @@
-oomlInstancePrototype.toJSON = function (indentation) {
-  if (!u_is_type(indentation, TYPEOF_OOML_NATURAL) || indentation < 0 || indentation > 10) {
-    throw RangeError(`Invalid indentation value`);
-  }
+oomlInstancePrototype.toObject = function () {
+  let _this = this;
+  let obj = u_new_clean_object();
 
-  return JSON.stringify(this.toObject(), undefined, indentation);
+  let props = _this.constructor[__IP_OOML_CLASS_OWN_COLLAPSED_PROPERTIES];
+
+  u_enumerate(props, (prop, prop_name) => {
+    if (prop[__BC_CLASSPROP_TRANSIENT]) {
+      return;
+    }
+
+    let value = _this[prop_name];
+
+    // Use instanceof; don't read from properties configuration or whatever
+    if (value instanceof ooml.Array) {
+      obj[prop_name] = value.toArray();
+
+    } else if (value instanceof ooml.Instance) {
+      obj[prop_name] = value[__IP_OOML_INST_PROTO_SERIALISE]();
+
+    } else {
+      obj[prop_name] = value;
+    }
+  });
+
+  return obj;
 };
