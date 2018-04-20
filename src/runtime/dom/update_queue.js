@@ -78,12 +78,12 @@ let __rt_dom_update_process_queue = () => {
   u_iterate(arrays_to_unload, current => {
     let arr = current[__IP_OOML_ARRAY_OWN_INTERNAL_ARRAY];
 
-    let array_dom_element = current[__IP_OOML_ARRAY_OWN_PARENT_ANCHOR];
+    let last_elem_dom = current[__IP_OOML_ARRAY_OWN_PARENT_ANCHOR];
 
-    arr.reduce((prev_elem, elem) => {
-      prev_elem.parentNode.insertBefore(elem[__IP_OOML_INST_OWN_DOM_ELEMENT], prev_elem.nextSibling);
-      return elem[__IP_OOML_INST_OWN_DOM_ELEMENT];
-    }, array_dom_element);
+    u_iterate(arr, elem => {
+      last_elem_dom.parentNode.insertBefore(elem[__IP_OOML_INST_OWN_DOM_ELEMENT], last_elem_dom.nextSibling);
+      last_elem_dom = elem[__IP_OOML_INST_OWN_DOM_ELEMENT];
+    });
   });
 
   __rt_dom_update_queue = [];

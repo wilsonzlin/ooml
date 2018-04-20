@@ -3,5 +3,5 @@ let valid_class_name = name => {
          /^[a-zA-Z][a-zA-Z0-9]*$/.test(name) &&
          !__reserved_prop_method_names_s.has(name) &&
          !__reserved_class_names_s.has(name) &&
-         !__primitive_types_ooml_s.has(name);
+         !__primitive_types_s.has(name);
 };

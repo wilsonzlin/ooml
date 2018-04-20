@@ -38,6 +38,7 @@
   __zc_import("./const/IP_OOML_INST_PROTO.js");
   __zc_import("./const/IP_OOML_PROPERTIES_STATE.js");
   __zc_import("./const/IP_OOML_RUNTIME_DOM_UPDATE.js");
+  __zc_import("./const/IP_OOML_VIEW_TEMPLATE.js");
   __zc_import("./const/IP_NODESET.js");
   __zc_import("./const/IP_NODESET_ELEMENT.js");
   __zc_import("./const/IP_STRINGSET.js");
@@ -49,9 +50,7 @@
 
   __zc_import("./polyfill/StringSet.js");
 
-  __zc_import("./type/primitive_types_js.js");
-  __zc_import("./type/primitive_number_types_ooml.js");
-  __zc_import("./type/primitive_types_ooml.js");
+  __zc_import("./type/primitive_types.js");
 
   __zc_import("./rule/reserved_prop_method_names_s.js");
   __zc_import("./rule/reserved_field_names_s.js");
@@ -69,7 +68,6 @@
   __zc_import("./validator/reference/valid_class_reference.js");
   __zc_import("./validator/data/valid_covariant_ooml_type.js");
   __zc_import("./validator/data/valid_ooml_type.js");
-  __zc_import("./validator/data/valid_covariant_ooml_subtype.js");
   __zc_import("./validator/data/valid_class_of_base.js");
   __zc_import("./validator/data/valid_empty_object.js");
   __zc_import("./validator/data/valid_object_literal.js");
@@ -138,6 +136,7 @@
   __zc_import("./execute/util/get_default_value_for_type.js");
   __zc_import("./execute/util/resolve_parent_ld_class_reference.js");
   __zc_import("./execute/util/resolve_property_ld_class_reference.js");
+  __zc_import("./execute/util/traverse_dom_path.js");
   __zc_import("./execute/util/unserialise_init_state_source.js");
 
   __zc_import("./execute/exec_class.js");

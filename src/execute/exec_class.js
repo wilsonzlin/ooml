@@ -67,32 +67,70 @@ let exec_class = (bc_class, module, namespace) => {
       properties_state[prop_name] = prop_state;
     });
 
-    // Set up $properties_state before calling this
-    // This will define exposed DOM element properties on $_this
-    let dom_elem = exec_view_node(bc_class_view[__BC_CLASSVIEW_ROOT],
-      _this,
-      collapsed_properties,
-      properties_state);
+    let dom_elem = class_view[__IP_OOML_VIEW_TEMPLATE_ROOT].cloneNode(true);
 
-    let _this_properties_values = u_new_clean_object();
-    _this_properties_values[__IP_OOML_INST_OWN_DOM_ELEMENT] = dom_elem;
-    _this_properties_values[__IP_OOML_INST_OWN_PROPERTIES_STATE] = properties_state;
+    // Set up exposed DOM elements
+    u_iterate(class_view[__IP_OOML_VIEW_EXPOSED_ELEMS], expose => {
+      let key = expose[0];
+      let path = expose[1];
 
-    // Apply own internal properties
-    u_enumerate(_this_properties_values, (val, p) => {
-      Object.defineProperty(_this, p, {value: val});
+      u_define_data_property(_this, key, traverse_dom_path(dom_elem, path));
     });
+
+    // Set up DOM event handlers
+    u_iterate(class_view[__IP_OOML_VIEW_ELEMS_WITH_EVENT_HANDLERS], elem_with_handler => {
+      let event_name = elem_with_handler[0];
+      let method_name = elem_with_handler[1];
+      let path = elem_with_handler[2];
+
+      traverse_dom_path(dom_elem, path).addEventListener(event_name, event => {
+        _this[method_name](event);
+      });
+    });
+
+    // Set up substitutions
+    u_iterate(class_view[__IP_OOML_VIEW_SUBSTITUTIONS], sub => {
+      let prop_name = sub[0];
+      let path = sub[1];
+
+      properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(traverse_dom_path(dom_elem, path));
+    });
+
+    // Set up attributes with substitutions
+    u_iterate(class_view[__IP_OOML_VIEW_ATTRS_WITH_SUBSTITUTIONS], attr_config => {
+      let attr_name = attr_config[0];
+      let value_parts = attr_config[1];
+      let value_sub_map = attr_config[2];
+      let mapped_to_props = attr_config[3];
+      let path = attr_config[4];
+
+      // COMPATIBILITY - IE: Don't use .(get|set)Attribute(Node)? -- buggy behaviour in IE
+      // This is an emulated Node instance
+      let attr = u_new_clean_object();
+      attr[__IP_OOML_EMUL_ATTR_NAME] = attr_name;
+      attr[__IP_OOML_EMUL_ATTR_VALUEPARTS] = value_parts.slice();
+      attr[__IP_OOML_EMUL_ATTR_VALUESUBMAP] = value_sub_map;
+      attr[__IP_OOML_EMUL_ATTR_OWNER] = traverse_dom_path(dom_elem, path);
+
+      u_iterate(mapped_to_props, prop_name => {
+        properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(attr);
+      });
+    });
+
+    u_define_data_property(_this, __IP_OOML_INST_OWN_DOM_ELEMENT, dom_elem);
+    u_define_data_property(_this, __IP_OOML_INST_OWN_PROPERTIES_STATE, properties_state);
 
     // Prevent assigning to non-existent properties
     Object.preventExtensions(_this);
 
     // Assign values from initial state or default values
-    u_enumerate(collapsed_properties, (bc_prop, prop_name) => {
-      let has_default_value = u_has_own_property(bc_prop, __BC_CLASSPROP_DEFAULTVALUE);
-      let default_value = bc_prop[__BC_CLASSPROP_DEFAULTVALUE];
+    u_iterate(collapsed_property_names, prop_name => {
+      let prop_config = collapsed_properties[prop_name];
+      let has_default_value = u_has_own_property(prop_config, __BC_CLASSPROP_DEFAULTVALUE);
+      let default_value = prop_config[__BC_CLASSPROP_DEFAULTVALUE];
 
       if (init_state_source && u_has_own_property(init_state_source, prop_name)) {
-        let passthrough_property = bc_prop[__BC_CLASSPROP_PASSTHROUGH];
+        let passthrough_property = prop_config[__BC_CLASSPROP_PASSTHROUGH];
 
         if (passthrough_property) {
           // If passthrough, initialise instance with initial state built-in
@@ -114,7 +152,7 @@ let exec_class = (bc_class, module, namespace) => {
         } else {
           // Neither this property nor any ancestor has a default value,
           // and no value is provided by $init_state_source
-          _this[prop_name] = get_default_value_for_type(bc_prop[__BC_CLASSPROP_TYPE]);
+          _this[prop_name] = get_default_value_for_type(prop_config[__BC_CLASSPROP_TYPE]);
         }
       }
     });
@@ -128,6 +166,7 @@ let exec_class = (bc_class, module, namespace) => {
     // TODO
   };
 
+  // Set up collapsed properties config and names
   u_enumerate(bc_class_properties, (bc_prop, prop_name) => {
     let root = !collapsed_properties[prop_name];
 
@@ -156,15 +195,16 @@ let exec_class = (bc_class, module, namespace) => {
     }
 
     if (bc_prop[__BC_CLASSPROP_TYPE]) {
-      if (u_typeof(bc_prop[__BC_CLASSPROP_TYPE], TYPEOF_STRING)) {
+      if (__primitive_types_s.has(bc_prop[__BC_CLASSPROP_TYPE])) {
+        prop[__BC_CLASSPROP_TYPE] = bc_prop[__BC_CLASSPROP_TYPE];
+
+      } else {
         prop[__BC_CLASSPROP_TYPE] = resolve_property_ld_class_reference(
           bc_prop[__BC_CLASSPROP_TYPE],
           module,
           namespace,
           ooml_class);
 
-      } else {
-        prop[__BC_CLASSPROP_TYPE] = bc_prop[__BC_CLASSPROP_TYPE];
       }
     }
 
@@ -201,6 +241,8 @@ let exec_class = (bc_class, module, namespace) => {
       });
     }
   });
+
+  let class_view = exec_view_node(bc_class_view[__BC_CLASSVIEW_ROOT], collapsed_properties);
 
   let ooml_class_prototype = Object.create(class_parent.prototype);
 

@@ -9,7 +9,7 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY] = function (pr
   // it can only be undefined during class instantiation
   let current_value = state[__IP_OOML_PROPERTIES_STATE_CURRENTVALUE];
   let is_initial = current_value === undefined;
-  let current_value_is_instance = current_value != undefined;
+  let current_value_is_not_null = current_value != null;
 
   if (config[__BC_CLASSPROP_SET]) {
     let setter_rv = _this[config[__BC_CLASSPROP_SET]](new_value, current_value, prop_name);
@@ -31,9 +31,9 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY] = function (pr
   }
 
   if (config[__BC_CLASSPROP_PASSTHROUGH] &&
-      new_value != null &&
-      u_typeof(new_value, __primitive_types_ooml) &&
-      current_value_is_instance) {
+      // This also covers null
+      !u_typeof(new_value, TYPEOF_OBJECT) &&
+      current_value_is_not_null) {
     current_value[config[__BC_CLASSPROP_PASSTHROUGH]] = new_value;
     return;
   }
@@ -46,7 +46,7 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY] = function (pr
   }
 
   // Current element may be null and therefore does not need detaching
-  if (current_value_is_instance) {
+  if (current_value_is_not_null) {
     current_value[__IP_OOML_EVENTSOURCE_PROTO_ERASE_ATTACHMENT_CONFIG]();
   }
 

@@ -84,12 +84,12 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
   assert_set("name", __BC_CLASSPROP_NAME, this);
 
   let name = this[__BC_CLASSPROP_NAME];
-  // [TYPEOF_STRING, TYPEOF_OOML_NATURAL, TYPEOF_OOML_NULL] || "group.mod.ns.c" || undefined
+  // TYPEOF_STRING || "group.mod.ns.c" || undefined
   let declared_type_raw = this[__BC_CLASSPROP_TYPE];
 
   // These variables will be updated with inherited value if this property overrides
-  let actual_type_is_class = u_typeof(declared_type_raw, TYPEOF_STRING);
-  let actual_type = declared_type_raw; // [TYPEOF_STRING] || class SomeClass {} || undefined
+  let actual_type_is_class = declared_type_raw && !__primitive_types_s.has(declared_type_raw);
+  let actual_type = declared_type_raw; // TYPEOF_STRING || class SomeClass {} || undefined
   if (actual_type_is_class) {
     // This property has a class type
     actual_type = resolve_prop_type_bc_class_reference(declared_type_raw, bc_mod, bc_ns, this);
@@ -278,14 +278,6 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
       if (actual_type) {
         // Property has type declaration
         if (!u_is_a_type(own_default_value, actual_type)) {
-          throw TypeError(`Primitive property doesn't match declared type`);
-        }
-
-      } else {
-        // Property has no type declaration, so check default value
-        // against default type if not transient
-        if (!transient &&
-            !u_is_a_type(own_default_value, __primitive_types_ooml)) {
           throw TypeError(`Primitive property doesn't match declared type`);
         }
       }

@@ -26,6 +26,7 @@ ooml.Array = function (element_type, initial_elems) {
   u_define_data_property(_this, __IP_OOML_ARRAY_OWN_INTERNAL_ARRAY, internal_arr);
   u_define_data_property(_this, __IP_OOML_ARRAY_OWN_ELEMENT_TYPE, element_type);
   u_define_data_property(_this, __IP_OOML_ARRAY_OWN_PARENT_ANCHOR, undefined, true);
+
   u_define_data_property(_this, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION, undefined, true);
   u_define_data_property(_this, __IP_OOML_RUNTIME_DOM_UPDATE_TREE_ACTION_ARGUMENT, undefined, true);
 
