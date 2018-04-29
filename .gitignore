@@ -1,9 +1,0 @@
-/dist/
-
-.idea/
-*.iml
-.vscode/
-
-node_modules/
-package-lock*
-npm-debug.log
