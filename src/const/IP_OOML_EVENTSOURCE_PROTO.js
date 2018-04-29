@@ -1,0 +1,8 @@
+let __IP_OOML_EVENTSOURCE_PROTO_RECEIVE_DISPATCH = "__OomlEventSourceProtoReceiveDispatch";
+let __IP_OOML_EVENTSOURCE_PROTO_FORWARD_DISPATCH = "__OomlEventSourceProtoForwardDispatch";
+
+let __IP_OOML_EVENTSOURCE_PROTO_RECEIVE_CHANGE = "__OomlEventSourceProtoReceiveChange";
+let __IP_OOML_EVENTSOURCE_PROTO_FORWARD_CHANGE = "__OomlEventSourceProtoForwardChange";
+
+let __IP_OOML_EVENTSOURCE_PROTO_ATTACH = "__OomlEventSourceProtoAttach";
+let __IP_OOML_EVENTSOURCE_PROTO_ERASE_ATTACHMENT_CONFIG = "__OomlEventSourceProtoEraseAttachmentConfig";
