@@ -1,0 +1,3 @@
+[submodule "submodules/libooml"]
+	path = submodules/libooml
+	url = https://github.com/ooml/libooml
