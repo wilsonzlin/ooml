@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "babel-core": "6.x",
+    "babel-plugin-transform-es2015-arrow-functions": "6.x",
+    "babel-plugin-transform-es2015-block-scoping": "6.x",
+    "babel-plugin-transform-es2015-template-literals": "6.x",
+    "zcompile": "4.x"
+  },
+  "dependencies": {}
+}
