@@ -98,7 +98,10 @@ zc({
     },
   },
 
-  files: [OUTPUT_NAME_ARG],
+  files: [{
+    source: "wrapper.js",
+    destination: OUTPUT_NAME_ARG,
+  }],
 })
   .catch(err => {
     console.error(err);
