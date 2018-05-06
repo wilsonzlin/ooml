@@ -9,6 +9,7 @@ const babelPluginTransformES2015TemplateLiterals = require(
 
 const args = process.argv.slice(2);
 const HARMONY_ARG = args.includes("harmony");
+const EXPANDED_ARG = args.includes("expanded");
 const DEBUG_ARG = args.includes("debug");
 const OUTPUT_NAME_ARG = args[0];
 
@@ -59,7 +60,7 @@ zc({
         passes: 3,
       },
       onload: code => {
-        if (!DEBUG_ARG) {
+        if (!DEBUG_ARG && !EXPANDED_ARG) {
           let it = new Iterator();
 
           // OPTIMISATION: Make internal property names shorter
