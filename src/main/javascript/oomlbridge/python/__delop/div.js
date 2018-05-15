@@ -1,8 +1,8 @@
-__delop.divide = (a, b) => {
+__delop.div = (a, b) => {
   return py_bin_op([
     {
       both: [is_number_or_boolean],
-      result: (a, b) => num.__divide(a, b),
+      result: (a, b) => py_num_div(a, b),
     },
 
     // Reflective operator on RHS takes precedence

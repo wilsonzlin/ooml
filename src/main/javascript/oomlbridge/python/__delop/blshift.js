@@ -2,7 +2,7 @@ __delop.blshift = (a, b) => {
   return py_bin_op([
     {
       both: [is_integer_or_boolean],
-      result: (a, b) => a << b,
+      result: (a, b) => assert(b >= 0, ValueError, "Negative shift count") && a << b,
     },
 
     // Reflective operator on RHS takes precedence

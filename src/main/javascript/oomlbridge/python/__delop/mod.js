@@ -2,7 +2,7 @@ __delop.mod = (a, b) => {
   return py_bin_op([
     {
       both: [is_number_or_boolean],
-      result: (a, b) => num.__modulo(a, b),
+      result: (a, b) => py_num_mod(a, b),
     },
 
     // Reflective operator on RHS takes precedence

@@ -71,8 +71,11 @@ try {
   if (!failed) {
     if (else_thrown) {
       throw else_err;
+    } else if (else_rv !== undefined) {
+      // Since `undefined` can't be used in Python,
+      // and plain `return` returns `null`, this should work
+      return else_rv;
     }
-    return else_rv;
   }
 }
 ```

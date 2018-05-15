@@ -74,6 +74,9 @@ def isinstance(object, classinfo):
 
 
 def issubclass(klass, classinfo):
+    """
+    NOTE: Also returns True if same class.
+    """
     ...
 
 
@@ -127,6 +130,9 @@ def reversed(seq):
 
 
 def round(number, ndigits=None):
+    """
+    Rounds to even.
+    """
     ...
 
 

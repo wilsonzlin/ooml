@@ -3,7 +3,7 @@ class range {
     if (step == undefined) {
       step = 1;
     } else if (step === 0) {
-      throw ValueError(`range() arg 3 must not be zero`);
+      throw ValueError(`Step must not be zero`);
     }
 
     if (stop == undefined) {

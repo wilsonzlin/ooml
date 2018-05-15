@@ -77,8 +77,9 @@
 |`__setitem__`|`set`|
 |`__delitem__`|`delete`|
 |`__iter__`|`iterator`|
+|`__next__`|`next`|
 |`__reversed__`|`toReverse`|
-|`__contains__`|Not supported|
+|`__contains__`|`has`|
 |`__missing__`|Not supported|
 |`__instancecheck__`|Not supported|
 |`__subclasscheck__`|Not supported|

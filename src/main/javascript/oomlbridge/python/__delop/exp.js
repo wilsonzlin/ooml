@@ -2,7 +2,7 @@ __delop.exp = (a, b) => {
   return py_bin_op([
     {
       both: [is_number_or_boolean],
-      result: (a, b) => a ** b,
+      result: (a, b) => Math.pow(a, b),
     },
 
     // Reflective operator on RHS takes precedence

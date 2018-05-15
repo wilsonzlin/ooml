@@ -36,13 +36,52 @@ Given this, keyword arguments should be supported if the function signature is c
 
 ### Declaration
 
+#### Consider
+
+- Positional vs. keyword
+- Single vs. variable
+- Default vs. non-default
+
+#### Rules
+
 - Positional first, keywords last.
 - No positional parameters after variable-length parameter.
 - Keyword-only parameters are the non-variable-size parameters after variable-length parameter.
 - Keyword parameters must follow variable-length parameter.
 - An unnamed variable-length parameter is a delimiter, and does not accept any positional parameters.
+  - A variable-size parameter cannot come immediately after an unnamed variable-length parameter (but can come after a named one).
+- Variable-size parameter must be very last parameter.
+- Default positional parameters must follow non-default ones.
+  - Non-default keyword keyword parameters can follow default ones, and vice versa. 
 
 ### Matching
 
-- Positional arguments can be fulfilled by keyword arguments if they were not already fulfilled by a positional one. 
-- Keyword arguments must match a position, keyword, or variable-size argument.
+- Positional parameters can be fulfilled by keyword arguments if they were not already fulfilled by a positional one.
+- Unpacking a sequence argument fulfills all remaining positional parameters, not just a variable-length one. 
+- Unpacking a dictionary argument fulfills all parameters with the same names as its keys, both positional and keyword, single or variable.
+  - If a parameter has already been fulfilled, a TypeError is raised. 
+- Keyword arguments must match a position, keyword, or variable-size parameter.
+- All matching is done at runtime.
+
+#### Compile-time matching
+
+Requirements at the declaration site:
+
+- Signature is known.
+
+Requirements at the use site:
+
+- Unpacking sequence arguments to fulfill non-variable-length positional parameters can be done with a wrapper function that checks length and calls `.apply` in JS.
+- Unpacking dictionary arguments to fulfill parameters won't work if not all parameters have been guaranteed fulfilled at compile-time unless all parameter names are known at runtime.
+
+### Interop
+
+- Variable-size parameters and dictionary unpacking to fulfill any parameter in:
+  - Java
+  - JavaScript
+- Variable-length parameters and sequence unpacking to fulfill remaining positional parameters in:
+  - Java
+  - JavaScript
+- Adding to a variable-size parameter with a specific keyword argument in:
+  - Java
+  - JavaScript

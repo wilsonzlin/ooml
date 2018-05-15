@@ -75,3 +75,7 @@ Variable-length collecting is possible:
 ```python
 a, b, *c = [1, 2, 3]  # a == 1, b == 2, c == [3]
 ```
+
+### `for`
+
+All of the above rules also apply to `for` loops and comprehensions.

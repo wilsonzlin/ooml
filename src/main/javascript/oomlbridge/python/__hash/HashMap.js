@@ -12,7 +12,7 @@ let HashMapPrototypeGetHashEntriesIndex = function (_this, k) {
   let index = -1;
 
   if (entries) {
-    index = entries.findIndex(e => is_equal(k, e[0]));
+    index = entries.findIndex(e => py_is_eq(e[0], k));
   }
 
   return [hash, entries, index];
@@ -95,16 +95,15 @@ HashMapPrototype.entries = function () {
 };
 
 HashMapPrototype.forEach = function (callback, this_arg) {
-  for (let entry of this.entries()) {
+  consume_iterator(this[Symbol.iterator](), entry => {
     callback.call(this_arg, entry[1], entry[0], this);
-  }
+  });
 };
 
-if (__compat_Symbol) {
-  HashMapPrototype[Symbol.iterator] = function () {
-    return this.entries();
-  };
-}
+// Don't need to check compatibility; see __compat/Symbol.js
+HashMapPrototype[Symbol.iterator] = function () {
+  return this.entries();
+};
 
 HashMapPrototype.delete = function (k) {
   let [, entries, index] = HashMapPrototypeGetHashEntriesIndex(this, k);

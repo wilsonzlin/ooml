@@ -1,4 +1,4 @@
-num.__modulo = (a, b) => {
+let py_num_mod = (a, b) => {
   // $a or $b could be boolean
   if (b == 0) {
     // TODO

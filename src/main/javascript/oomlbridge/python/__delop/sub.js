@@ -7,7 +7,7 @@ __delop.sub = (a, b) => {
 
     {
       both: [is_set],
-      result: set.__subtract,
+      result: set.difference,
     },
 
     // Reflective operator on RHS takes precedence

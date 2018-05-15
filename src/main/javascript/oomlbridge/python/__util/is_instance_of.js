@@ -1,4 +1,4 @@
-let is_instance_of = (a, type) => {
+let is_instance = (type, a) => {
   return is_object(a) &&
          is_function(type) &&
          a instanceof type;

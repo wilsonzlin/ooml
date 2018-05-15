@@ -38,7 +38,7 @@ let py_un_op = (configs, a) => {
   });
 
   if (!handled) {
-    throw TypeError(`bad operand type for unary`);
+    throw TypeError(`Bad operand type for unary`);
   }
 
   return rv;
@@ -78,7 +78,7 @@ let py_bin_op = (configs, a, b) => {
   });
 
   if (!handled) {
-    throw TypeError(`unsupported operand type(s)`);
+    throw TypeError(`Unsupported operand type(s)`);
   }
 
   return rv;

@@ -1,7 +1,7 @@
-set.__subtract = (a, b) => {
+set.union = (a, b) => {
   let tmp = new Set(a);
   b.forEach(v => {
-    tmp.delete(v);
+    tmp.add(v);
   });
   return tmp;
 };
