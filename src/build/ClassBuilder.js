@@ -14,8 +14,7 @@ ClassBuilderPrototype.setName = function (name) {
 };
 
 ClassBuilderPrototype.setParent = function (class_reference) {
-  // Cyclic inheritance is impossible, because only
-  // loaded classes can be used as parents
+  // Cyclic inheritance is impossible, because only loaded classes can be used as parents
   this[__BC_CLASS_PARENT] = assert_valid_r("parent", class_reference, valid_class_reference);
 };
 
@@ -102,6 +101,15 @@ ClassBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc_ns) {
     // Make sure property is valid first before validing relation to class
     // Don't put into $bc until validated
     let bc_prop = prop[__IP_BUILDER_PROTO_COMPILE](bc_mod, bc_ns, this, ancestor_contexts);
+
+    // Check linked properties from property
+    // __IP_BUILDER_LINKED_PROPERTIES is a Set so don't use u_iterate
+    prop[__IP_BUILDER_LINKED_PROPERTIES].forEach(prop_name => {
+      if (!ancestor_contexts.some(ac => find_bc_prop_from_class(ac[2], prop_name)) &&
+          !bc[__BC_CLASS_PROPERTIES][prop_name]) {
+        throw ReferenceError(`Non-existent property reference "this.${prop_name}"`);
+      }
+    });
 
     // Check linked methods from property
     // __IP_BUILDER_LINKED_METHODS is a Set so don't use u_iterate

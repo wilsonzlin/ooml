@@ -1,4 +1,5 @@
 let ClassPropertyBuilder = function () {
+  this[__IP_BUILDER_LINKED_PROPERTIES] = new StringSet();
   this[__IP_BUILDER_LINKED_METHODS] = new StringSet();
 
   this[__BC_CLASSPROP_DISPATCHHANDLERS] = u_new_clean_object();
@@ -49,8 +50,38 @@ ClassPropertyBuilderPrototype.setChange = function (change) {
 };
 
 ClassPropertyBuilderPrototype.setBinding = function (binding) {
-  // TODO
-  this[__BC_CLASSPROP_BINDING] = binding;
+  binding = binding.trim();
+
+  if (!binding) {
+    throw SyntaxError(`Empty binding`);
+  }
+
+  let parts = [];
+  let map = u_new_clean_object();
+
+  let is_dynamic = false;
+
+  stream_substitution_parts(binding, lit => {
+    parts.push(lit);
+
+  }, sub_prop => {
+    this[__IP_BUILDER_LINKED_PROPERTIES].add(
+      sub_prop = assert_valid_prop_or_method_reference_p_r("binding dynamic part", sub_prop)
+    );
+
+    let part_id = parts.push(undefined) - 1;
+    if (!map[sub_prop]) {
+      map[sub_prop] = [];
+    }
+    map[sub_prop].push(part_id);
+
+    is_dynamic = true;
+  });
+
+  this[__BC_CLASSPROP_BINDING] = parts;
+  if (is_dynamic) {
+    this[__BC_CLASSPROP_BINDINGSUBMAP] = map;
+  }
 };
 
 ClassPropertyBuilderPrototype.setBindingExist = function (binding_exist) {
@@ -126,13 +157,13 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
       if (actual_type != ooml.Instance) {
         if (actual_type == bc_class && own_passthrough == name) {
           // Can't passthrough to own class and property
-          throw ReferenceError(`Cyclic passthrough`);
+          throw ReferenceError(`Passthrough to own class and property`);
         }
 
-        if (!find_bc_prop_from_class(actual_type, name)) {
-          // TODO Check inherited properties as well
-          throw ReferenceError(`Non-existent passthrough property`);
-        }
+        // Don't check if references actual value:
+        // - Could still be cyclic (e.g. A.b -> B.c -> A.b)
+        // - Target property may not accept same values
+        // - Target property may be inherited (so all ancestors need to be checked)
       }
     }
 
