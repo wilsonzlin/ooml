@@ -23,7 +23,6 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
       }
 
       if (u_typeof(setter_rv.HTML, TYPEOF_STRING)) {
-        // TODO Allow false, HTMLElement
         // noinspection JSUnresolvedVariable
         let custom_html = setter_rv.HTML.trim();
         if (!custom_html) {
@@ -98,23 +97,22 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
     state[__IP_OOML_PROPERTIES_STATE_CURRENTVALUE] = new_value;
 
     // This should run initially as well (rebinding is really just binding)
-    /* TODO
-    let dependentBindings = instance.constructor[OOML_CLASS_PROPNAME_PROPERTIES_TO_DEPENDENT_BINDINGS][prop_name];
-    if (dependentBindings) {
-      dependentBindings.forEach(dependentProperty => {
-        classProperties[dependentProperty].bindingPropertyToPartMap[prop_name].forEach(idx => {
-          instanceProperties[dependentProperty].bindingParts[idx] = new_value;
+    let dependent_bindings = config[__IP_OOML_PROPERTIES_CONFIG_DEPENDENT_BINDINGS] &&
+                             config[__IP_OOML_PROPERTIES_CONFIG_DEPENDENT_BINDINGS][prop_name];
+    if (dependent_bindings) {
+      u_iterate(dependent_bindings, dependent => {
+        config[dependent][__BC_CLASSPROP_BINDINGSUBMAP][prop_name].forEach(idx => {
+          state[dependent][__IP_OOML_PROPERTIES_STATE_BINDINGPARTS][idx] = new_value;
         });
-        instance[OOML_INSTANCE_PROPNAME_REBIND_BINDING](dependentProperty);
+        _this[__IP_OOML_INST_PROTO_REBIND_BINDING](dependent);
       });
     }
-    */
 
     u_iterate(config[__BC_CLASSPROP_CHANGE], method_name => {
       _this[method_name](new_value, is_initial);
     });
 
-    _this[__IP_OOML_EVENTSOURCE_PROTO_FORWARD_CHANGE]("u  pdate", {
+    _this[__IP_OOML_EVENTSOURCE_PROTO_FORWARD_CHANGE]("update", {
       property: prop_name,
       oldValue: old_value,
       newValue: new_value,

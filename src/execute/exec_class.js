@@ -1,7 +1,7 @@
 let exec_class = (bc_class, module, namespace) => {
   let class_name = bc_class[__BC_CLASS_NAME];
   let class_parent_ref = bc_class[__BC_CLASS_PARENT];
-  let class_abstract = bc_class[__BC_CLASS_ABSTRACT]; // TODO
+  let class_abstract = bc_class[__BC_CLASS_ABSTRACT];
   let class_initialisers = bc_class[__BC_CLASS_INITIALISERS];
 
   let bc_class_properties = bc_class[__BC_CLASS_PROPERTIES];
@@ -32,10 +32,7 @@ let exec_class = (bc_class, module, namespace) => {
     u_deep_clone(class_parent[__IP_OOML_CLASS_OWN_COLLAPSED_PROPERTY_NAMES]).slice() :
     [];
 
-  // $collapsed_properties and $collapsed_property_names will be updated after $ooml_class,
-  // as $collapsed_properties needs to refer to $ooml_class
-
-  let ooml_class = function (init_state_source) {
+  let common_constructor = function (init_state_source) {
     let _this = this;
 
     if (Object.getPrototypeOf(_this) != ooml_class.prototype) {
@@ -47,124 +44,164 @@ let exec_class = (bc_class, module, namespace) => {
     // Unserialise (if necessary) initial state
     init_state_source = unserialise_init_state_source(ooml_class, init_state_source);
 
-    // Set up internal properties
-    let properties_state = u_new_clean_object();
-
-    u_iterate(collapsed_property_names, prop_name => {
-      let prop_state = u_new_clean_object();
-
-      // Don't need to use set as even attributes with multiple substitutions to the same property
-      // are only added once as their map's keys are used
-      // Instance/array substitutions will have their only node at index 0
-      // If a property is not substituted (inc. array/inst props), this will be empty
-      prop_state[__IP_OOML_PROPERTIES_STATE_NODES] = [];
-
-      // Also can have __IP_OOML_PROPERTIES_STATE_CUSTOMHTMLDOMELEMS with array
-      // but don't initialise until first use to save memory
-
-      // TODO
-
-      properties_state[prop_name] = prop_state;
-    });
-
-    let dom_elem = class_view[__IP_OOML_VIEW_TEMPLATE_ROOT].cloneNode(true);
-
-    // Set up exposed DOM elements
-    u_iterate(class_view[__IP_OOML_VIEW_EXPOSED_ELEMS], expose => {
-      let key = expose[0];
-      let path = expose[1];
-
-      u_define_data_property(_this, key, traverse_dom_path(dom_elem, path));
-    });
-
-    // Set up DOM event handlers
-    u_iterate(class_view[__IP_OOML_VIEW_ELEMS_WITH_EVENT_HANDLERS], elem_with_handler => {
-      let event_name = elem_with_handler[0];
-      let method_name = elem_with_handler[1];
-      let path = elem_with_handler[2];
-
-      traverse_dom_path(dom_elem, path).addEventListener(event_name, event => {
-        _this[method_name](event);
-      });
-    });
-
-    // Set up substitutions
-    u_iterate(class_view[__IP_OOML_VIEW_SUBSTITUTIONS], sub => {
-      let prop_name = sub[0];
-      let path = sub[1];
-
-      properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(traverse_dom_path(dom_elem, path));
-    });
-
-    // Set up attributes with substitutions
-    u_iterate(class_view[__IP_OOML_VIEW_ATTRS_WITH_SUBSTITUTIONS], attr_config => {
-      let attr_name = attr_config[0];
-      let value_parts = attr_config[1];
-      let value_sub_map = attr_config[2];
-      let mapped_to_props = attr_config[3];
-      let path = attr_config[4];
-
-      // COMPATIBILITY - IE: Don't use .(get|set)Attribute(Node)? -- buggy behaviour in IE
-      // This is an emulated Node instance
-      let attr = u_new_clean_object();
-      attr[__IP_OOML_EMUL_ATTR_NAME] = attr_name;
-      attr[__IP_OOML_EMUL_ATTR_VALUEPARTS] = value_parts.slice();
-      attr[__IP_OOML_EMUL_ATTR_VALUESUBMAP] = value_sub_map;
-      attr[__IP_OOML_EMUL_ATTR_OWNER] = traverse_dom_path(dom_elem, path);
-
-      u_iterate(mapped_to_props, prop_name => {
-        properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(attr);
-      });
-    });
-
-    u_define_data_property(_this, __IP_OOML_INST_OWN_DOM_ELEMENT, dom_elem);
-    u_define_data_property(_this, __IP_OOML_INST_OWN_PROPERTIES_STATE, properties_state);
-
-    // Prevent assigning to non-existent properties
-    Object.preventExtensions(_this);
-
-    // Assign values from initial state or default values
-    u_iterate(collapsed_property_names, prop_name => {
-      let prop_config = collapsed_properties[prop_name];
-      let has_default_value = u_has_own_property(prop_config, __BC_CLASSPROP_DEFAULTVALUE);
-      let default_value = prop_config[__BC_CLASSPROP_DEFAULTVALUE];
-
-      if (init_state_source && u_has_own_property(init_state_source, prop_name)) {
-        let passthrough_property = prop_config[__BC_CLASSPROP_PASSTHROUGH];
-
-        if (passthrough_property) {
-          // If passthrough, initialise instance with initial state built-in
-          // (to prevent it counting as a change, and to increase efficiency)
-          let expanded = u_assign({}, default_value);
-          expanded[passthrough_property] = init_state_source[prop_name];
-          // Default value could be null or undefined
-          _this[prop_name] = expanded;
-
-        } else {
-          // Otherwise, just use provided value
-          _this[prop_name] = init_state_source[prop_name];
-        }
-
-      } else {
-        if (has_default_value) {
-          // Don't need to clone, as it won't be modified
-          _this[prop_name] = default_value;
-        } else {
-          // Neither this property nor any ancestor has a default value,
-          // and no value is provided by $init_state_source
-          _this[prop_name] = get_default_value_for_type(prop_config[__BC_CLASSPROP_TYPE]);
-        }
-      }
-    });
-
-    // Call post-constructor
-    // noinspection JSUnresolvedVariable
-    if (_this.postConstructor) {
-      _this.postConstructor();
-    }
-
-    // TODO
+    return init_state_source;
   };
+
+  // $collapsed_properties and $collapsed_property_names will be updated after $ooml_class,
+  // as $collapsed_properties needs to refer to $ooml_class
+
+  let ooml_class;
+  if (class_abstract) {
+    ooml_class = function (init_state_source) {
+      if (!u_typeof(ooml_class.factory, TYPEOF_FUNCTION)) {
+        throw TypeError(`Abstract classes can't be instantiated`);
+      }
+
+      init_state_source = common_constructor.apply(this, arguments);
+
+      let ret = ooml_class.factory(init_state_source);
+      if (!(ret instanceof ooml.Instance)) {
+        throw TypeError(`Abstract factory did not return ooml instance`);
+      }
+
+      return ret;
+    };
+
+  } else {
+    ooml_class = function (init_state_source) {
+      let _this = this;
+
+      init_state_source = common_constructor.apply(_this, arguments);
+
+      // Set up internal properties
+      let properties_state = u_new_clean_object();
+
+      u_iterate(collapsed_property_names, prop_name => {
+        let prop_state = u_new_clean_object();
+
+        // Don't need to use set as even attributes with multiple substitutions to the same property
+        // are only added once as their maps' keys are used
+        // Instance/array substitutions will have their only node at index 0
+        // If a property is not substituted (inc. array/inst props), this will be empty
+        prop_state[__IP_OOML_PROPERTIES_STATE_NODES] = [];
+
+        // Also can have __IP_OOML_PROPERTIES_STATE_CUSTOMHTMLDOMELEMS with array
+        // but don't initialise until first use to save memory
+
+        if (collapsed_properties[prop_name][__BC_CLASSPROP_BINDING]) {
+          prop_state[__IP_OOML_PROPERTIES_STATE_BINDINGPARTS] = collapsed_properties[prop_name][__BC_CLASSPROP_BINDING].slice();
+          prop_state[__IP_OOML_PROPERTIES_STATE_BINDINGSTATE] = __IP_OOML_PROPERTIES_STATE_BINDINGSTATE_ENUMVAL_INIT;
+          // This is safe here, as it's async
+          // Any dependency parts will have been filled when setting their initial values below
+          _this[__IP_OOML_INST_PROTO_REBIND_BINDING](prop_name);
+        }
+
+        properties_state[prop_name] = prop_state;
+      });
+
+      let dom_elem = class_view[__IP_OOML_VIEW_TEMPLATE_ROOT].cloneNode(true);
+
+      // Set up exposed DOM elements
+      u_iterate(class_view[__IP_OOML_VIEW_EXPOSED_ELEMS], expose => {
+        let key = expose[0];
+        let path = expose[1];
+
+        u_define_data_property(_this, key, traverse_dom_path(dom_elem, path));
+      });
+
+      // Set up DOM event handlers
+      u_iterate(class_view[__IP_OOML_VIEW_ELEMS_WITH_EVENT_HANDLERS], elem_with_handler => {
+        let event_name = elem_with_handler[0];
+        let method_name = elem_with_handler[1];
+        let path = elem_with_handler[2];
+
+        traverse_dom_path(dom_elem, path).addEventListener(event_name, event => {
+          _this[method_name](event);
+        });
+      });
+
+      // Set up substitutions
+      u_iterate(class_view[__IP_OOML_VIEW_SUBSTITUTIONS], sub => {
+        let prop_name = sub[0];
+        let path = sub[1];
+
+        properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(traverse_dom_path(dom_elem, path));
+      });
+
+      // Set up attributes with substitutions
+      u_iterate(class_view[__IP_OOML_VIEW_ATTRS_WITH_SUBSTITUTIONS], attr_config => {
+        let attr_name = attr_config[0];
+        let value_parts = attr_config[1];
+        let value_sub_map = attr_config[2];
+        let mapped_to_props = attr_config[3];
+        let path = attr_config[4];
+
+        // COMPATIBILITY - IE: Don't use .(get|set)Attribute(Node)? -- buggy behaviour in IE
+        // This is an emulated Node instance
+        let attr = u_new_clean_object();
+        attr[__IP_OOML_EMUL_ATTR_NAME] = attr_name;
+        attr[__IP_OOML_EMUL_ATTR_VALUEPARTS] = value_parts.slice();
+        attr[__IP_OOML_EMUL_ATTR_VALUESUBMAP] = value_sub_map;
+        attr[__IP_OOML_EMUL_ATTR_OWNER] = traverse_dom_path(dom_elem, path);
+
+        u_iterate(mapped_to_props, prop_name => {
+          properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(attr);
+        });
+      });
+
+      u_define_data_property(_this, __IP_OOML_INST_OWN_DOM_ELEMENT, dom_elem);
+      u_define_data_property(_this, __IP_OOML_INST_OWN_PROPERTIES_STATE, properties_state);
+      u_define_data_property(_this, __IP_OOML_INST_OWN_BINDINGS, u_new_clean_object());
+      u_define_data_property(_this, __IP_OOML_INST_OWN_REBINDING_SET_TIMEOUTS, u_new_clean_object());
+
+      // Prevent assigning to non-existent properties
+      Object.preventExtensions(_this);
+
+      // Assign values from initial state or default values
+      u_iterate(collapsed_property_names, prop_name => {
+        let prop_config = collapsed_properties[prop_name];
+        let has_default_value = u_has_own_property(prop_config, __BC_CLASSPROP_DEFAULTVALUE);
+        let default_value = prop_config[__BC_CLASSPROP_DEFAULTVALUE];
+
+        // Initial (re)bindings are done when setting up internal properties state above
+
+        if (init_state_source && u_has_own_property(init_state_source, prop_name)) {
+          let passthrough_property = prop_config[__BC_CLASSPROP_PASSTHROUGH];
+
+          if (passthrough_property) {
+            // If passthrough, initialise instance with initial state built-in
+            // (to prevent it counting as a change, and to increase efficiency)
+            let expanded = u_assign({}, default_value);
+            expanded[passthrough_property] = init_state_source[prop_name];
+            // Default value could be null or undefined
+            _this[prop_name] = expanded;
+
+          } else {
+            // Otherwise, just use provided value
+            _this[prop_name] = init_state_source[prop_name];
+          }
+
+        } else {
+          if (has_default_value) {
+            // Don't need to clone, as it won't be modified
+            _this[prop_name] = default_value;
+          } else {
+            // Neither this property nor any ancestor has a default value,
+            // and no value is provided by $init_state_source
+            _this[prop_name] = get_default_value_for_type(prop_config[__BC_CLASSPROP_TYPE]);
+          }
+        }
+      });
+
+      // Call post-constructor
+      // noinspection JSUnresolvedVariable
+      if (_this.postConstructor) {
+        _this.postConstructor();
+      }
+    };
+  }
+
+  let properties_to_dependent_bindings = u_new_clean_object(); // { "id": "name" } i.e. <p name="name" binding="{{ this.id }}"></p>
 
   // Set up collapsed properties config and names
   u_enumerate(bc_class_properties, (bc_prop, prop_name) => {
@@ -192,6 +229,17 @@ let exec_class = (bc_class, module, namespace) => {
       prop[__BC_CLASSPROP_ARRAY] = bc_prop[__BC_CLASSPROP_ARRAY];
       prop[__BC_CLASSPROP_TRANSIENT] = bc_prop[__BC_CLASSPROP_TRANSIENT];
       prop[__BC_CLASSPROP_PASSTHROUGH] = bc_prop[__BC_CLASSPROP_PASSTHROUGH];
+      prop[__BC_CLASSPROP_BINDING] = bc_prop[__BC_CLASSPROP_BINDING];
+      if (bc_prop[__BC_CLASSPROP_BINDINGSUBMAP]) {
+        prop[__BC_CLASSPROP_BINDINGSUBMAP] = bc_prop[__BC_CLASSPROP_BINDINGSUBMAP];
+        // Don't add to dependency[__IP_OOML_PROPERTIES_CONFIG_DEPENDENT_BINDINGS] because it might not exist yet
+        u_enumerate(bc_prop[__BC_CLASSPROP_BINDINGSUBMAP], (_, dependency) => {
+          if (!properties_to_dependent_bindings[dependency]) {
+            properties_to_dependent_bindings[dependency] = [];
+          }
+          properties_to_dependent_bindings[dependency].push(prop_name);
+        });
+      }
     }
 
     if (bc_prop[__BC_CLASSPROP_TYPE]) {
@@ -204,7 +252,6 @@ let exec_class = (bc_class, module, namespace) => {
           module,
           namespace,
           ooml_class);
-
       }
     }
 
@@ -242,6 +289,10 @@ let exec_class = (bc_class, module, namespace) => {
     }
   });
 
+  u_enumerate(properties_to_dependent_bindings, (dependents, dependency) => {
+    collapsed_properties[dependency][__IP_OOML_PROPERTIES_CONFIG_DEPENDENT_BINDINGS] = dependents;
+  });
+
   let class_view = exec_view_node(bc_class_view[__BC_CLASSVIEW_ROOT], collapsed_properties);
 
   let ooml_class_prototype = Object.create(class_parent.prototype);
@@ -249,38 +300,30 @@ let exec_class = (bc_class, module, namespace) => {
   let namespace_property = namespace || __rt_ld_anon_classes;
 
   // Static properties for internal use
-  let ooml_class_properties_values = u_new_clean_object();
-  ooml_class_properties_values.name = class_name;
-  ooml_class_properties_values.namespace = namespace_property;
+  u_define_data_property(ooml_class, "name ", class_name);
+  u_define_data_property(ooml_class, "namespace ", namespace_property);
   if (module) {
-    ooml_class_properties_values.module = module;
+    u_define_data_property(ooml_class, "module ", module);
   }
-  ooml_class_properties_values.prototype = ooml_class_prototype;
-  ooml_class_properties_values[__IP_OOML_CLASS_OWN_COLLAPSED_PROPERTY_NAMES] = collapsed_property_names;
-  ooml_class_properties_values[__IP_OOML_CLASS_OWN_COLLAPSED_PROPERTIES] = collapsed_properties;
-
-  // Apply class internal static properties
-  u_enumerate(ooml_class_properties_values, (val, p) => {
-    Object.defineProperty(ooml_class, p, {value: val});
-  });
+  u_define_data_property(ooml_class, "prototype ", ooml_class_prototype);
+  u_define_data_property(ooml_class, __IP_OOML_CLASS_OWN_COLLAPSED_PROPERTY_NAMES, collapsed_property_names);
+  u_define_data_property(ooml_class, __IP_OOML_CLASS_OWN_COLLAPSED_PROPERTIES, collapsed_properties);
 
   // Apply class fields
   u_enumerate(bc_class_fields, (bc_field, field_name) => {
     // Don't need to bind `this` to field if function, as JS does automatically
-    Object.defineProperty(ooml_class, field_name, {
+    u_define_property(ooml_class, field_name, {
       value: bc_field[__BC_CLASSFIELD_VALUE], // Don't need to clone, as there is only one use
       writable: true,
       enumerable: true,
     });
   });
 
-  let ooml_class_prototype_properties_config = u_new_clean_object();
-
-  ooml_class_prototype_properties_config.constructor = {value: ooml_class};
+  u_define_data_property(ooml_class_prototype, "constructor", ooml_class);
   // WARNING: $namespace and $module not frozen
-  ooml_class_prototype_properties_config.namespace = {value: namespace_property};
+  u_define_data_property(ooml_class_prototype, "namespace", namespace_property);
   if (module) {
-    ooml_class_prototype_properties_config.module = {value: module};
+    u_define_data_property(ooml_class_prototype, "module", module);
   }
 
   u_enumerate(collapsed_properties, (prop, prop_name) => {
@@ -295,7 +338,7 @@ let exec_class = (bc_class, module, namespace) => {
         __IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY : // Instance property
         __IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY; // Primitive or transient property
 
-    ooml_class_prototype_properties_config[prop_name] = {
+    u_define_property(ooml_class_prototype, prop_name, {
       get: function () {
         return this[__IP_OOML_INST_PROTO_GET_PROPERTY](prop_name);
       },
@@ -306,16 +349,13 @@ let exec_class = (bc_class, module, namespace) => {
         this[internal_setter_property](prop_name, value);
       },
       // Don't make enumerable, as this is on prototype, so not enumerable anyway
-    };
+    });
   });
 
   // Set defined methods on class prototype
   u_enumerate(bc_class_methods, (bc_method, method_name) => {
-    ooml_class_prototype_properties_config[method_name] = {value: bc_method[__BC_CLASSMETHOD_FUNCTION]};
+    u_define_property(ooml_class_prototype, method_name, bc_method[__BC_CLASSMETHOD_FUNCTION]);
   });
-
-  // Apply class prototype properties
-  Object.defineProperties(ooml_class_prototype, ooml_class_prototype_properties_config);
 
   // Call initialisers
   if (class_initialisers) {

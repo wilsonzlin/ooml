@@ -1,4 +1,4 @@
-# oomlvm
+# [oomlvm](https://ooml.org/oomlvm/)
 The JS runtime to execute [ooml](https://github.com/ooml/ooml) bytecode.
 
 ## Features
@@ -22,4 +22,4 @@ The JS runtime to execute [ooml](https://github.com/ooml/ooml) bytecode.
 See [ooml](https://github.com/ooml/ooml) for all features and more information.
 
 ## Compiling to ooml bytecode
-See [oomlc](https://github.com/ooml/oomlc).
+See [oomlc](https://github.com/ooml/oomlc-core).

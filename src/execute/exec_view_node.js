@@ -1,8 +1,5 @@
 let exec_view_node = (bc_view_node, collapsed_properties) => {
-  // Exposed DOM elements will be set on $_this
-  // DOM event handlers will call methods on $_this
   // Substitutions will be checked if they are instance or array properties using $collapsed_properties
-  // Substitution node placeholders/anchors will be added to $properties_state
 
   // Avoid objects whenever possible, as enumeration is slow
   // Only use for fast lookups and no enumeration
@@ -22,6 +19,8 @@ let exec_view_node = (bc_view_node, collapsed_properties) => {
     let path_from_root = current[2];
 
     let node;
+
+    // TODO Extension point
 
     if (bc_current[__BC_CLASSVIEW_NODE_ISTAG]) {
       // Create element
@@ -57,10 +56,6 @@ let exec_view_node = (bc_view_node, collapsed_properties) => {
             attr[4] = path_from_root;
 
             attrs_with_substitutions.push(attr);
-
-            // u_iterate(u_keys(bc_attr[__BC_CLASSVIEW_ATTR_VALUESUBMAP]), prop_name => {
-            //   properties_state[prop_name][__IP_OOML_PROPERTIES_STATE_NODES].push(attr);
-            // });
           }
         });
       }
