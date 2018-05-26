@@ -86,10 +86,10 @@ zc({
 
         if (!HARMONY_ARG) {
           code = babel.transform(code, {
-            plugins: [babelPluginTransformES2015ArrowFunctions,
+            plugins: [
+              babelPluginTransformES2015ArrowFunctions,
               babelPluginTransformES2015BlockScoping,
               babelPluginTransformES2015TemplateLiterals,
-
             ],
           }).code.replace(/void 0/g, "undefined");
         }
