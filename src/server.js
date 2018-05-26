@@ -33,11 +33,15 @@ function hydrateJSJSON (top) {
         let elem = cur[k];
 
         if (typeof elem == "string") {
-          if (/^__object/.test(elem)) {
-            cur[k] = objects.get(Number.parseInt(elem.slice(8), 10));
+          // TODO Use a better way, as this might collide with legit strings
+          // TODO Probably use objects with special oomlc-server-specific fields instead
+          if (/^__obj/.test(elem)) {
+            cur[k] = objects.get(Number.parseInt(elem.slice(5), 10));
           } else if (/^__js/.test(elem)) {
             cur[k] = Function(`"use strict"; return (${elem.slice(4)});`);
-          } // It's a string, don't need to add to queue
+          } else {
+            // It's a string, don't need to add to queue
+          }
 
         } else {
           queue.push(elem);
