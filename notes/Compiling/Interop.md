@@ -94,6 +94,22 @@ If the iterator was wrapped, the above code transpiled to JS would no longer wor
 
 ### Keyword parameters
 
+An idea:
+
+```python
+class A:
+  def a(self, b, c, *d, *, e, f, **g):
+    pass
+```
+
+```java
+class A{
+  Object a(Object e, Object f, Map<?> g, Object b, Object c, Object... d) {
+    return null;
+  }
+}
+```
+
 ### Overloading
 
 ### Default values
@@ -104,6 +120,10 @@ If the iterator was wrapped, the above code transpiled to JS would no longer wor
 
 ### Argument unpacking
 
+#### Keyword argument unpacking
+
+#### Dynamic argument unpacking
+
 ## Types
 
 ### Callables
@@ -112,12 +132,30 @@ If the iterator was wrapped, the above code transpiled to JS would no longer wor
 
 ### Generics
 
+#### Overloadable generic parameters
+
+```cs
+class A<T> {}
+class A<T, U> {}
+```
+
 ### Full type erasure
 
 ### Covariance and contravariance
 
 - Universal and existential types
 - Declaration-site and use-site
+- Wildcards (Java)
+
+### Anonymous fixed structures
+
+#### Tuples
+
+#### Object literals
+
+- Interaction with maps
+
+#### TypeScript interfaces
 
 ## Operators
 

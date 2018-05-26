@@ -24,6 +24,7 @@ ooml-sync-->oomlvm
 oomllib-env-->oomlc-$lang
 oomlc-$lang-->oomllib-$lang
 
+oomlbridge-common-->oomlbridge-$lang
 oomlc-$lang-->oomlbridge-$lang
 ```
 
@@ -34,7 +35,7 @@ Every language except for HTML, JS, and JS-related ones has their own `org.ooml.
 |Package|Description|Example|
 |---|---|---|
 |org.ooml.oomllib.$lang|Various ooml annotations and constants|Annotations for declaring transient properties and getters and setters.|
-|org.ooml.oomllib.$lang.interop|Functions and classes for helping interop|Common interfaces for protocols such as Containers and Iterators.|
+|org.ooml.oomllib.$lang.ail|Functions and classes for AIL|`EventSource`, `Array`, `Instance`|
 |org.ooml.oomllib.$lang.env|Browser API declarations|Declarations of Web API and ECMAScript classes, functions, and constants.|
 
 ### org.ooml.oomllib.$lang.env
@@ -87,8 +88,8 @@ Most languages have a package management system that allows automatic downloadin
 ### Developing with other ooml modules
 
 - Other modules should be in development bytecode form.
-- An `module.ooml.json` file should exist and specify URLs to dependencies.
-- oomlc-$lang reads `module.ooml.json`, downloads dependencies in bytecode form to `__ooml/modules/__bc`, and generates declarations in specific-language to `__ooml/modules/lang`.
+- An `ooml-module.json` file should exist and specify URLs to dependencies.
+- oomlc-$lang reads `ooml-module.json`, downloads dependencies in bytecode form to `__ooml/modules/__bc`, and generates declarations in specific-language to `__ooml/modules/lang`.
 - `__ooml/modules/lang` should be added to the search mechanism of the language's import loader to allow generated declaration modules to be referred to in development.
 
 ### Using non-ooml dependencies
@@ -98,7 +99,7 @@ Most languages have a package management system that allows automatic downloadin
   - The source code is written in a supported language (e.g. can't be a native module).
   - The source code is compatible with oomlc-$lang.
 
-### Using JavaScript libraries
+### Using JavaScript browser libraries
 
 - JS libraries don't have type declarations and may not be object-orientated, making it hard to use with ooml in other languages.
 - It's possible to just use `window.*` and suppress compiler warnings about invalid references.
@@ -106,6 +107,14 @@ Most languages have a package management system that allows automatic downloadin
   - Unfortunately, there's no automatic way for all cases.
 - Some libraries have bad behaviour, such as using or manipulating globals, that make it even harder to use.
 - ooml modules written in HTML can use implicit globals (e.g. `$`, `marked`) instead of `window.*`, because they don't have to be compiled and therefore skip static checks.
+
+#### TypeScript declarations for JS browser library
+
+- JS browser library makes global
+- But needs to be imported in other languages
+- So when transforming, rename references to `window.*` if imported (but don't allow direct/global access without importing)
+
+### Using JS Node.js libraries
 
 ## Bytecode formats
 
@@ -121,7 +130,7 @@ Same as development bytecode but without any source code for functions. Usually 
 
 Generally, all annotations and type declarations are erased for faster performance.
 
-## module.ooml.json
+## ooml-module.json
 
 ## Transpiled JavaScript
 
