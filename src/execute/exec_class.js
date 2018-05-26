@@ -194,7 +194,6 @@ let exec_class = (bc_class, module, namespace) => {
       });
 
       // Call post-constructor
-      // noinspection JSUnresolvedVariable
       if (_this.postConstructor) {
         _this.postConstructor();
       }
