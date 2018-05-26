@@ -4,6 +4,21 @@ from Compile.Expression.ExpressionCompiler import ExpressionCompiler
 from Error.UnsupportedSyntaxError import UnsupportedSyntaxError
 from Processing.Context import Context
 
+_BINARY_OPS = {
+    ast.Add: "add",
+    ast.Sub: "sub",
+    ast.Mult: "mul",
+    ast.Div: "div",
+    ast.FloorDiv: "floordiv",
+    ast.Mod: "mod",
+    ast.Pow: "exp",
+    ast.LShift: "blshift",
+    ast.RShift: "brshift",
+    ast.BitOr: "bor",
+    ast.BitXor: "bxor",
+    ast.BitAnd: "band",
+}
+
 
 class BinaryOperationCompiler:
     @staticmethod
@@ -11,41 +26,11 @@ class BinaryOperationCompiler:
         compiled_lhs = ExpressionCompiler.compile(ctx, expr.left)
         compiled_rhs = ExpressionCompiler.compile(ctx, expr.right)
 
-        if isinstance(expr.op, ast.Add):
-            return compiled_lhs + "+" + compiled_rhs
-
-        elif isinstance(expr.op, ast.Sub):
-            return compiled_lhs + "-" + compiled_rhs
-
-        elif isinstance(expr.op, ast.Mult):
-            return compiled_lhs + "*" + compiled_rhs
-
-        elif isinstance(expr.op, ast.Div):
-            return compiled_lhs + "/" + compiled_rhs
-
-        elif isinstance(expr.op, ast.FloorDiv):
-            return "window.Math.floor(" + compiled_lhs + "/" + compiled_rhs + ")"
-
-        elif isinstance(expr.op, ast.Mod):
-            return compiled_lhs + "%" + compiled_rhs
-
-        elif isinstance(expr.op, ast.Pow):
-            return compiled_lhs + "**" + compiled_rhs
-
-        elif isinstance(expr.op, ast.LShift):
-            return compiled_lhs + "<<" + compiled_rhs
-
-        elif isinstance(expr.op, ast.RShift):
-            return compiled_lhs + ">>" + compiled_rhs
-
-        elif isinstance(expr.op, ast.BitOr):
-            return compiled_lhs + "|" + compiled_rhs
-
-        elif isinstance(expr.op, ast.BitXor):
-            return compiled_lhs + "^" + compiled_rhs
-
-        elif isinstance(expr.op, ast.BitAnd):
-            return compiled_lhs + "&" + compiled_rhs
-
+        for node_type, op in _BINARY_OPS.items():
+            if isinstance(expr.op, node_type):
+                # $op is already set
+                break
         else:
             raise UnsupportedSyntaxError(expr)
+
+        return "window.oomlpy.__delop.{}({}, {})".format(op, compiled_lhs, compiled_rhs)

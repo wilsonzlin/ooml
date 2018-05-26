@@ -66,10 +66,6 @@ class ValueError(Exception):
     ...
 
 
-class StopAsyncIteration(Exception):
-    ...
-
-
 class StopIteration(Exception):
     ...
 

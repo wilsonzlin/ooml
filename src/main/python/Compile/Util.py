@@ -1,7 +1,6 @@
-import ast
+import sys
+from random import SystemRandom
 from typing import Union, Tuple, List
-
-from Error.InvalidSyntaxError import InvalidSyntaxError
 
 
 def indent(code: str, level: int = 1) -> str:
@@ -21,21 +20,16 @@ def flatten(seq: Union[Tuple, List]) -> List:
     return flat
 
 
-def get_base_names(targets: Union[ast.Name, ast.Tuple, ast.Subscript, ast.Attribute, Tuple, List]) -> List[str, ...]:
-    if isinstance(targets, ast.Name):
-        return [targets.id]
+def create_js_string_literal(value: str) -> str:
+    # TODO Probably needs to handle more edge cases and Unicode (e.g. Unicode line terminators)
+    return '"' + value \
+        .replace("\\", "\\\\") \
+        .replace("\r", "\\r") \
+        .replace("\n", "\\n") \
+        .replace("\"", "\\\"") + '"'
 
-    elif isinstance(targets, ast.Tuple):
-        return flatten([get_base_names(e) for e in targets.elts])
 
-    elif isinstance(targets, ast.Subscript):
-        return get_base_names(targets.value)
-
-    elif isinstance(targets, ast.Attribute):
-        return get_base_names(targets.value)
-
-    elif type(targets) == tuple or type(targets) == list:
-        return flatten([get_base_names(e) for e in targets])
-
-    else:
-        raise InvalidSyntaxError(targets, "Unknown targets")
+def generate_symbol(prefix: str = "") -> str:
+    cryptorand = SystemRandom()
+    rand_suffix = str(cryptorand.randrange(0, sys.maxsize))
+    return f"___tmp_{prefix}_{rand_suffix}"

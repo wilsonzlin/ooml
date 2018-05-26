@@ -32,11 +32,10 @@
   __zc_import("./__delop/uneg.js");
   __zc_import("./__delop/upos.js");
 
-  __zc_import("./__util/all_iterator.js");
   __zc_import("./__util/assert.js");
+  __zc_import("./__util/assert_args_len.js");
   __zc_import("./__util/assert_index.js");
   __zc_import("./__util/assert_param.js");
-  __zc_import("./__util/consume_iterator.js");
   __zc_import("./__util/create_clean_object.js");
   __zc_import("./__util/create_regex_from_charsets.js");
   __zc_import("./__util/get_constructor.js");
@@ -53,22 +52,28 @@
   __zc_import("./__util/is_number.js");
   __zc_import("./__util/is_number_or_boolean.js");
   __zc_import("./__util/is_object.js");
+  __zc_import("./__util/is_pojo.js");
   __zc_import("./__util/is_set.js");
   __zc_import("./__util/is_string.js");
   __zc_import("./__util/is_undefined.js");
-  __zc_import("./__util/iterate_iterable.js");
+  __zc_import("./__util/iter_collect.js");
+  __zc_import("./__util/iter_consume.js");
+  __zc_import("./__util/iter_map.js");
+  __zc_import("./__util/iter_pred_every.js");
+  __zc_import("./__util/iter_pred_some.js");
   __zc_import("./__util/nearest_index.js");
   __zc_import("./__util/nullable_is.js");
   __zc_import("./__util/push_all.js");
   __zc_import("./__util/py_cmp.js");
+  __zc_import("./__util/py_create_iterator.js");
   __zc_import("./__util/py_get_len.js");
+  __zc_import("./__util/py_handle_iter.js");
   __zc_import("./__util/py_is_eq.js");
   __zc_import("./__util/py_is_True.js");
   __zc_import("./__util/py_num_div.js");
   __zc_import("./__util/py_num_mod.js");
   __zc_import("./__util/py_op.js");
   __zc_import("./__util/raw_compare.js");
-  __zc_import("./__util/some_iterator.js");
 
   __zc_import("./__hash/__main__.js");
   __zc_import("./__hash/__get_hash.js");
@@ -108,6 +113,7 @@
 
   __zc_import("./__delstx/__main__.js");
   __zc_import("./__delstx/if.js");
+  __zc_import("./__delstx/for.js");
 
   __zc_import("./str/__main__.js");
   __zc_import("./str/capitalize.js");

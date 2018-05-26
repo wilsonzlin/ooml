@@ -13,7 +13,7 @@ class BuilderMirror:
         if json.error:
             raise BuildError(json.error.name, json.error.message)
 
-        return json
+        return json.result
 
     def __init__(self, builder_type: str):
         res = self._handle_response(requests.get(f"{_ORIGIN}/new/{builder_type}"))
@@ -21,7 +21,6 @@ class BuilderMirror:
 
     def __getattr__(self, item):
         def method(*args):
-            res = self._handle_response(requests.post(f"{_ORIGIN}/{self.id}/{item}", data=args))
-            return res.result
+            return self._handle_response(requests.post(f"{_ORIGIN}/{self.id}/{item}", data=args))
 
         return method

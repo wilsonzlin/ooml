@@ -1,32 +1,32 @@
 __hash.HashMap = function (iterable) {
-  Map.apply(this, iterable);
+  this.__map = new Map(iterable);
   this.size = 0;
 };
 
 let HashMapPrototype = __hash.HashMap.prototype = Object.create(Map.prototype);
 
-let HashMapPrototypeGetHashEntriesIndex = function (_this, k) {
+let HashMapPrototypeGetHashEntriesIndex = function (__map, k) {
   let hash = get_hash(k);
 
-  let entries = this.get(hash);
+  let bucket = __map.get(hash);
   let index = -1;
 
-  if (entries) {
-    index = entries.findIndex(e => py_is_eq(e[0], k));
+  if (bucket) {
+    index = bucket.findIndex(e => py_is_eq(e[0], k));
   }
 
-  return [hash, entries, index];
+  return [hash, bucket, index];
 };
 
-let HashMapPrototypeIterator = function (_this, value_transformer) {
-  let it = Map.prototype.keys.apply(_this);
-  let entries;
-  let next_entries_idx;
+let HashMapPrototypeIterator = function (__map, value_transformer) {
+  let it = __map.keys();
+  let bucket;
+  let next_bucket_idx;
 
   return {
     next: () => {
-      // Use while loop in case next hash has no entries
-      while (!entries || next_entries_idx >= entries.length) {
+      // Use while loop in case next bucket is empty
+      while (!bucket || next_bucket_idx >= bucket.length) {
         let next = it.next();
         if (next.done) {
           return {
@@ -34,17 +34,17 @@ let HashMapPrototypeIterator = function (_this, value_transformer) {
           };
 
         } else {
-          entries = next.value;
-          next_entries_idx = 0;
+          bucket = next.value;
+          next_bucket_idx = 0;
         }
       }
 
       let rv = {
         done: false,
-        value: value_transformer(entries[next_entries_idx]),
+        value: value_transformer(bucket[next_bucket_idx]),
       };
 
-      next_entries_idx++;
+      next_bucket_idx++;
 
       return rv;
     },
@@ -52,7 +52,7 @@ let HashMapPrototypeIterator = function (_this, value_transformer) {
 };
 
 HashMapPrototype.get = function (k) {
-  let [, entries, index] = HashMapPrototypeGetHashEntriesIndex(this, k);
+  let [, entries, index] = HashMapPrototypeGetHashEntriesIndex(this.__map, k);
 
   if (index > -1) {
     return entries[index][1];
@@ -60,7 +60,7 @@ HashMapPrototype.get = function (k) {
 };
 
 HashMapPrototype.set = function (k, v) {
-  let [hash, entries, index] = HashMapPrototypeGetHashEntriesIndex(this, k);
+  let [hash, entries, index] = HashMapPrototypeGetHashEntriesIndex(this.__map, k);
 
   if (!entries) {
     entries = [];
@@ -78,24 +78,24 @@ HashMapPrototype.set = function (k, v) {
 };
 
 HashMapPrototype.has = function (k) {
-  let [, , index] = HashMapPrototypeGetHashEntriesIndex(this, k);
+  let [, , index] = HashMapPrototypeGetHashEntriesIndex(this.__map, k);
   return index > -1;
 };
 
 HashMapPrototype.keys = function () {
-  return HashMapPrototypeIterator(this, entry => entry[0]);
+  return HashMapPrototypeIterator(this.__map, entry => entry[0]);
 };
 
 HashMapPrototype.values = function () {
-  return HashMapPrototypeIterator(this, entry => entry[1]);
+  return HashMapPrototypeIterator(this.__map, entry => entry[1]);
 };
 
 HashMapPrototype.entries = function () {
-  return HashMapPrototypeIterator(this, entry => entry);
+  return HashMapPrototypeIterator(this.__map, entry => entry);
 };
 
 HashMapPrototype.forEach = function (callback, this_arg) {
-  consume_iterator(this[Symbol.iterator](), entry => {
+  iter_consume(this[Symbol.iterator](), entry => {
     callback.call(this_arg, entry[1], entry[0], this);
   });
 };
@@ -106,7 +106,7 @@ HashMapPrototype[Symbol.iterator] = function () {
 };
 
 HashMapPrototype.delete = function (k) {
-  let [, entries, index] = HashMapPrototypeGetHashEntriesIndex(this, k);
+  let [, entries, index] = HashMapPrototypeGetHashEntriesIndex(this.__map, k);
 
   if (index > -1) {
     entries.splice(index, 1);

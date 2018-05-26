@@ -1,7 +1,3 @@
 str.join = (a, iter) => {
-  let parts = [];
-  py_iterate(iter, p => {
-    parts.push(p);
-  });
-  return parts.join(a);
+  return iter_collect(py_create_iterator(iter)).join(a);
 };

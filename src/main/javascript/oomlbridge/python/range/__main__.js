@@ -1,46 +1,46 @@
-class range {
-  constructor (start, stop, step) {
-    if (step == undefined) {
-      step = 1;
-    } else if (step === 0) {
-      throw ValueError(`Step must not be zero`);
-    }
-
-    if (stop == undefined) {
-      stop = start;
-      start = 0;
-    }
-
-    this.start = start;
-    this.stop = stop;
-    this.step = step;
+let Range = function (start, stop, step) {
+  if (step == undefined) {
+    step = 1;
+  } else if (step === 0) {
+    throw ValueError(`Step must not be zero`);
   }
 
-  [Symbol.iterator] () {
-    let start = this.start;
-    let stop = this.stop;
-    let step = this.step;
+  if (stop == undefined) {
+    stop = start;
+    start = 0;
+  }
 
-    let dir_neg = step < 0;
+  this.start = start;
+  this.stop = stop;
+  this.step = step;
+};
 
-    let current = start;
+let RangePrototype = Range.prototype;
 
-    return {
-      next: function () {
-        if (dir_neg ? current > stop : current < stop) {
-          let rv = {
-            done: false,
-            value: current,
-          };
-          current += step;
-          return rv;
+RangePrototype[Symbol.iterator] = function () {
+  let start = this.start;
+  let stop = this.stop;
+  let step = this.step;
 
-        } else {
-          return {
-            done: true,
-          };
-        }
+  let dir_neg = step < 0;
+
+  let current = start;
+
+  return {
+    next: function () {
+      if (dir_neg ? current > stop : current < stop) {
+        let rv = {
+          done: false,
+          value: current,
+        };
+        current += step;
+        return rv;
+
+      } else {
+        return {
+          done: true,
+        };
       }
-    };
-  }
-}
+    }
+  };
+};

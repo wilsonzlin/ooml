@@ -11,18 +11,20 @@ class SubscriptCompiler:
         compiled_target = ExpressionCompiler.compile(ctx, expr.value)
 
         if isinstance(expr.slice, ast.Index):
-            compiled_subscript = ".get(" + ExpressionCompiler.compile(ctx, expr.slice.value) + ")"
+            compiled_index = ExpressionCompiler.compile(ctx, expr.slice.value)
+
+            return "window.oomlpy.__delop.idx({}, {})".format(compiled_target, compiled_index)
 
         elif isinstance(expr.slice, ast.Slice):
-            if expr.slice.step is not None:
-                raise UnsupportedSyntaxError(expr.slice, "Slices with step")
-
             compiled_lower = ExpressionCompiler.compile(ctx, expr.slice.lower)
             compiled_upper = ExpressionCompiler.compile(ctx, expr.slice.upper)
+            compiled_step = ExpressionCompiler.compile(ctx, expr.slice.step)
 
-            compiled_subscript = f".slice({compiled_lower}, {compiled_upper})"
+            return "window.oomlpy.__delop.slice({}, {}, {}, {})".format(
+                compiled_target,
+                compiled_lower,
+                compiled_upper,
+                compiled_step)
 
         else:
             raise UnsupportedSyntaxError(expr.slice, "Non-index non-slice subscripting")
-
-        return f"{compiled_target}{compiled_subscript}"

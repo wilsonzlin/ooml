@@ -10,14 +10,6 @@ class bool(int):
     ...
 
 
-class bytearray:
-    ...
-
-
-class bytes:
-    ...
-
-
 class dict:
     ...
 

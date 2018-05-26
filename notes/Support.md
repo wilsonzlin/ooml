@@ -49,6 +49,10 @@
 - `class.mro()`
 - `class.__subclasses__()`
 
+- `NotImplemented`
+
+- dynamic assignment (e.g. `a[b] = 1` -/-> `a.set(b, 1)`)
+
 - abstract base classes
 - bytes literals
 - format strings

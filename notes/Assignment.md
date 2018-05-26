@@ -79,3 +79,90 @@ a, b, *c = [1, 2, 3]  # a == 1, b == 2, c == [3]
 ### `for`
 
 All of the above rules also apply to `for` loops and comprehensions.
+
+## Transpiling
+
+```python
+a[b] = c
+
+for a[b] in c: pass
+
+[x for a[b] in c]
+
+a.b = c
+
+for a.b in c: pass
+
+[x for a.b in c]
+```
+
+### Generalised transformation
+
+```python
+a.b = c = d[e] = f.g.h[i].j.k = 1
+```
+
+```javascript
+var c;
+var ___tmp;
+
+___tmp = 1;
+window.oomlpy.__delstx.assign(a, "b", ___tmp);
+c = ___tmp;
+window.oomlpy.__delstx.setitem(d, e, ___tmp);
+window.oomlpy.__delstx.assign(
+  window.oomlpy.__delop.access(
+    window.oomlpy.__delop.index(
+      window.oomlpy.__delop.access(
+        window.oomlpy.__delop.access(f, "g"), 
+        "h"
+      ),
+      i
+    ),
+    "j"
+  ),
+  "k",
+  ___tmp
+);
+```
+
+```python
+for a.b[c] in some_iter():
+  if a.b[c]:
+    break
+  elif 1:
+    continue
+  else:
+    return 3.14
+```
+
+```javascript
+// Can't use function because returning would be very difficult (esp. with nested)
+// __fn.iter wraps to handle exception-based iterators
+var __tmp_iter = window.oomlpy.__fn.iter(some_iter());
+var __tmp_next;
+while (true) {
+  __tmp_next = __tmp_iter.next();
+  if (__tmp_next.done) {
+    break;
+  }
+  window.oomlpy.__delstx.setitem(
+    window.oomlpy.__delop.access(
+      a,
+      "b"
+    ),
+    c,
+    __tmp_next.value
+  );
+  
+  if (window.oomlpy.__delstx.if(
+    window.oomlpy.__delop.index(window.oomlpy.__delop.access(a, "b"), c)
+  )) {
+    break;
+  } else if (window.oomlpy.__delstx.if(1)) {
+    continue;
+  } else {
+    return 3.14;
+  }
+}
+```

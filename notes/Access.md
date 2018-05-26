@@ -19,7 +19,3 @@
 
 - `del a.b` becomes `delete a.b`
 - `del a[b]` becomes `a.delete(b)`
-
-## Array.prototype
-
-- `oomlpy` will need to set `Array.prototype.{get|set|has|delete}`

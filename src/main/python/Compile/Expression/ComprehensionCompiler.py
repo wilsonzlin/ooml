@@ -3,7 +3,7 @@ from typing import Union, Tuple, List
 
 from Compile import Util
 from Compile.Expression.ExpressionCompiler import ExpressionCompiler
-from Compile.Expression.ListOrTupleOrSetCompiler import ListOrTupleOrSetCompiler
+from Compile.TargetsCompiler import TargetsCompiler
 from Error.UnsupportedSyntaxError import UnsupportedSyntaxError
 from Processing.Context import Context
 
@@ -13,7 +13,7 @@ class ComprehensionCompiler:
     def _compile_test_expressions(cls, ctx: Context, exprs: List[ast.expr]) -> Tuple[str, str]:
         compiled_cond = ExpressionCompiler.compile(ctx, exprs[0])
 
-        compiled_left = f"if {compiled_cond} {{\n"
+        compiled_left = f"if (window.oomlpy.__delstx.if({compiled_cond})) {{\n"
         compiled_right = "\n}"
 
         if len(exprs) > 1:
@@ -24,23 +24,33 @@ class ComprehensionCompiler:
         return compiled_left, compiled_right
 
     @classmethod
-    def _compile_comprehensions(cls, ctx: Context, comps: List[ast.comprehension], target_bases: List[str]) -> \
-            Tuple[str, str]:
+    def _compile_comprehensions(cls, ctx: Context, comps: List[ast.comprehension]) -> Tuple[str, str]:
         gen = comps[0]
 
         if gen.is_async:
             raise UnsupportedSyntaxError(gen, "Async comprehensions")
 
-        target_bases.extend(Util.get_base_names(gen.target))
+        # TODO Refactor---copied from ForCompiler
 
-        if isinstance(gen.target, ast.Tuple):
-            target = ListOrTupleOrSetCompiler.compile(ctx, gen.target, False)
-        else:
-            target = ExpressionCompiler.compile(ctx, gen.target)
+        iter_var = ctx.generate_and_use_symbol("comp_iterator")
+        compiled_iter = "{} = window.oomlpy.__fn.iter({});\n".format(
+            iter_var,
+            ExpressionCompiler.compile(ctx, gen.iter))
 
-        compiled_iter = ExpressionCompiler.compile(ctx, gen.iter)
+        next_var = ctx.generate_and_use_symbol("comp_iterator_next")
 
-        compiled_left = f"for ({target} of {compiled_iter}) {{\n"
+        compiled_target = TargetsCompiler.compile(ctx, gen.target, f"{next_var}.value")
+
+        compiled_left = f"""
+            {compiled_iter}
+            while (true) {{
+                {next_var} = {iter_var}.next();
+                if ({next_var}.done) {{
+                    break;
+                }}
+                {compiled_target}
+        """
+
         compiled_right = "\n}"
 
         if gen.ifs:
@@ -49,8 +59,8 @@ class ComprehensionCompiler:
             compiled_right += Util.indent(compiled_ifs[1])
 
         if len(comps) > 1:
-            compiled_other_gens = cls._compile_comprehensions(ctx, comps[1:], target_bases)
-            # NOTE: This indentation is not correct
+            compiled_other_gens = cls._compile_comprehensions(ctx, comps[1:])
+            # TODO: This indentation is not correct
             compiled_left += Util.indent(compiled_other_gens[0])
             compiled_right += Util.indent(compiled_other_gens[1])
 
@@ -70,10 +80,9 @@ class ComprehensionCompiler:
         else:
             compiled_eval = ExpressionCompiler.compile(ctx, expr.elt)
 
-        target_bases = []
-        compiled_left, compiled_right = cls._compile_comprehensions(ctx, expr.generators, target_bases)
+        compiled_left, compiled_right = cls._compile_comprehensions(ctx, expr.generators)
 
-        tmp_name = ctx.generate_symbol("comprehension")
+        tmp_name = Util.generate_symbol("comprehension")
 
         compiled_core = None
         if is_list or is_set:
@@ -85,14 +94,15 @@ class ComprehensionCompiler:
 
         compiled_body = compiled_left + compiled_core + compiled_right
 
-        compiled = ""
-
-        for target_base in target_bases:
-            compiled += f"var {target_base};\n"
-
         if is_gen:
-            compiled += f"function* {tmp_name} () {{\n" + Util.indent(compiled_body) + "\n}"
+            compiled = f"function* {tmp_name} () {{\n" + Util.indent(compiled_body) + "\n}"
         else:
-            compiled += f"var {tmp_name} = [];\n" + compiled_body
+            compiled = f"var {tmp_name} = [];\n" + compiled_body
 
-        return compiled
+        return f"""
+            (() => {{
+                {Util.indent(compiled)}
+                
+                return {tmp_name};
+            }})()
+        """

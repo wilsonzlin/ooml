@@ -11,4 +11,4 @@ class IfExpressionCompiler:
         compiled_body = ExpressionCompiler.compile(ctx, expr.body)
         compiled_orelse = ExpressionCompiler.compile(ctx, expr.orelse)
 
-        return "{} ? {} : {}".format(compiled_test, compiled_body, compiled_orelse)
+        return "window.oomlpy.__delstx.if({}) ? {} : {}".format(compiled_test, compiled_body, compiled_orelse)

@@ -58,8 +58,11 @@ Given this, keyword arguments should be supported if the function signature is c
 
 - Positional parameters can be fulfilled by keyword arguments if they were not already fulfilled by a positional one.
 - Unpacking a sequence argument fulfills all remaining positional parameters, not just a variable-length one. 
-- Unpacking a dictionary argument fulfills all parameters with the same names as its keys, both positional and keyword, single or variable.
+- Unpacking a dictionary argument fulfills all parameters with the same names as its keys, both positional and keyword.
   - If a parameter has already been fulfilled, a TypeError is raised. 
+  - Variable-length parameters are not fulfilled.
+  - Any extra arguments are passed to the variable-size parameter.
+    - If none exist, a TypeError is raised.
 - Keyword arguments must match a position, keyword, or variable-size parameter.
 - All matching is done at runtime.
 
