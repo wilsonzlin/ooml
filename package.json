@@ -1,34 +1,29 @@
 {
   "name": "ooml",
   "version": "13.0.1",
-  "description": "Object orientated web UI framework",
+  "description": "Polyglot web UI framework",
+  "browser": true,
   "files": [
     "dist/ooml.js"
   ],
   "main": "dist/ooml.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lerouche/ooml.git"
+    "url": "git+https://github.com/ooml/ooml.git"
   },
   "keywords": [
     "ooml",
-    "dynamic",
-    "templating",
-    "ui",
-    "json"
+    "frontend",
+    "front-end",
+    "web",
+    "UI",
+    "framework"
   ],
   "author": "Wilson Lin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lerouche/ooml/issues"
+    "url": "https://github.com/ooml/ooml/issues"
   },
-  "homepage": "https://github.com/lerouche/ooml#readme",
-  "devDependencies": {
-    "babel-core": "6.x",
-    "babel-plugin-transform-es2015-arrow-functions": "6.x",
-    "babel-plugin-transform-es2015-block-scoping": "6.x",
-    "babel-plugin-transform-es2015-template-literals": "6.x",
-    "zcompile": "4.x"
-  },
+  "homepage": "https://github.com/ooml/ooml#readme",
   "dependencies": {}
 }
