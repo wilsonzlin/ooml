@@ -1,5 +1,5 @@
-__zc_import("./__ext/oomlvm/ooml.js");
-__zc_import("./__ext/oomlc-core/ooml.js");
+__zc_import("./__ext/oomlvm/__main__.js");
+__zc_import("./__ext/oomlc-core/__main__.js");
 
 // Redirect oomlc-core compiled BC storage to oomlvm bytecode storage
 __compiled_bc_anon_classes = __rt_bc_anon_classes;
