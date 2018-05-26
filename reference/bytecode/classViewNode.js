@@ -10,8 +10,10 @@ module.exports = {
   } || undefined,
   __BC_CLASSVIEW_NODE_CHILDNODES: [classViewNode] || undefined,
 
+  __BC_CLASSVIEW_NODE_ISEXTENSIONPOINT: true || undefined,
+
   __BC_CLASSVIEW_NODE_ISTEXT: true || undefined,
-  // Must have content, otherwise would not have been compiled
+  // Must have content, otherwise would not have been added to bytecode
   __BC_CLASSVIEW_NODE_VALUE: "Text content",
 
   __BC_CLASSVIEW_NODE_ISSUB: true || undefined,

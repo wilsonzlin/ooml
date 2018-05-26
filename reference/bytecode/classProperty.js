@@ -8,7 +8,8 @@ module.exports = {
   __BC_CLASSPROP_GET: "someMethod" || undefined,
   __BC_CLASSPROP_SET: "someMethod" || undefined,
   __BC_CLASSPROP_CHANGE: "someMethod" || undefined,
-  __BC_CLASSPROP_BINDING: undefined, // TODO
+  __BC_CLASSPROP_BINDING: ["users::", undefined, "::name"] || ["static::binding"] || [undefined] || undefined,
+  __BC_CLASSPROP_BINDINGSUBMAP: {id: [1]} || undefined,
   __BC_CLASSPROP_BINDINGEXIST: "someMethod" || undefined,
   __BC_CLASSPROP_BINDINGMISSING: "someMethod" || undefined,
   __BC_CLASSPROP_DISPATCHHANDLERS: {
