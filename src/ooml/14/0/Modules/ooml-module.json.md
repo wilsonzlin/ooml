@@ -1,5 +1,0 @@
-- Group
-- Version
-- Dependencies
-  - Script loaders
-  - Dependency listeners

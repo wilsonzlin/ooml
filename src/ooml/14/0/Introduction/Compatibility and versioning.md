@@ -31,5 +31,3 @@ When comparing two versions:
         - *3000.32.10*
 
 Versions with a major number below 14 are deprecated and should not be used. They lack documentation, tests, and change history, and were only designed for private use. They are considered "prehistoric". Use them at your own risk.
-
-To see all versions and change history, go [here](https://wilsonl.in/ooml/versions).

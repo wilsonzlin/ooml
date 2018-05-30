@@ -52,6 +52,7 @@ To override a property or method, just declare it again:
 
   <m name="method">
     function() {
+      super();
       console.log("From ChildClass");
     }
   </m>
@@ -71,8 +72,11 @@ class ParentClass:
     
 class ChildClass(ParentClass):
   def method(self):
+    super().method()
     print("From ChildClass")
 ```
+
+Use the standard `super` function to call parent methods.
 
 <!-- end tabbed sections -->
 

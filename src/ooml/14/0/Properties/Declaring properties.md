@@ -7,7 +7,7 @@
 To declare a property called "myProp" for a class, use an `ooml-property` tag:
 
 ```html
-<template ooml-class="MyClass">
+<template ooml="class" name="MyClass">
   <ooml-property name="myProp">null</ooml-property>
 </template>
 ```

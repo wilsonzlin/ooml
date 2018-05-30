@@ -1,6 +1,6 @@
 {
   "private": true,
   "dependencies": {
-    "referenza": "^0.0.1"
+    "referenza": "0.0.3"
   }
 }

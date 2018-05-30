@@ -2,4 +2,4 @@
 - Minor differences to native Array
 - JS Constructor
 - Assignment from native Array (conversion, not same reference)
-- Assignment from OOML.Array
+- Assignment from ooml.Array

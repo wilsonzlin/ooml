@@ -2,7 +2,7 @@ ooml properties can be arrays, which allows the property to hold a list of value
 
 Array properties can be substituted into the view. When they are, each instance is placed into the view at the position of the substitution, in order.
 
-The property value of an array substitution is an instance of the `OOML.Array` JavaScript (not ooml) class. It is designed to be very similar to a JavaScript array, and for most purposes it's fine to treat an OOML.Array like an [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array), **but they are not the same**. For more details, see [OOML.Array](#OOML.Array).
+The property value of an array substitution is an instance of the `ooml.Array` JavaScript (not ooml) class. It is designed to be very similar to a JavaScript array, and for most purposes it's fine to treat an ooml.Array like an [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array), **but they are not the same**. For more details, see the oomlvm documentation on ooml.Array.
 
 To make a property an array property, add the `array` boolean attribute to the `ooml-property` tag:
 

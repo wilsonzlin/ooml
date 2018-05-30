@@ -1,9 +1,11 @@
-**Classes** are the templates for creating ooml instances. They:
+**Classes** are the heart and soul of ooml. They can:
 
-- have properties, methods, and fields
-- can be extended, inheriting properties and methods from ancestor classes
-- have advanced features like abstract classes, constructors, serialisation and deserialisation, and factory methods, and
-- are also JavaScript classes, making it very easy to use them in JavaScript logic.
+- have [properties](#Declaring properties), [methods](#Declaring methods), [fields](#Declaring fields), [initialisers](#Initialisation) and [nested classes](#Nested classes)
+- be [extended](#Inheritance), inheriting properties and methods from ancestor classes
+- be [abstract](#Abstract classes) or [static](#Static classes)
+- have a [view](#Declaring views)
+- be [types](#Class types), so can be used in type declarations
+- be instantiated to create instances
 
 <!-- start tabbed sections -->
 
@@ -12,7 +14,7 @@
 Classes are declared using HTML `template` tags in the HTML file:
 
 ```html
-<template ooml-class="MyClass"></template>
+<template ooml="class" name="MyClass"></template>
 ```
 
 `<template>` ensures faster processing as browsers that support it will not try to render the contents of it.
@@ -20,18 +22,21 @@ Classes are declared using HTML `template` tags in the HTML file:
 Inside the class, everything is declared:
 
 - one or more [initialisers](#Initialisation)
-- a few tags that describe the [properties](#Declaring properties), [methods](Declaring methods), and [fields](#Declaring fields) of the class
+- a few tags that describe any [properties](#Declaring properties), [methods](Declaring methods), [fields](#Declaring fields), and [nested classes](#Nested classes) of the class
 - the [view](#Declaring views) of the class is laid out
 
 Here is an example that contains a bit of everything:
 
 ```html
-<template ooml-class="MyClass">
+<template ooml="class" name="MyClass">
   <f name="field1">1</f>
 
   <i>
     alert("Hello")
   </i>
+  
+  <template ooml="class" name="NestedClass">
+  </template>
 
   <p name="prop1">null</p>
   <p name="prop2">null</p>
@@ -62,38 +67,33 @@ Here is an example that contains a bit of everything:
 </template>
 ```
 
-If a class doesn't explicitly declare its parent (i.e. doesn't have `extends` in its `ooml-class` attribute), it implicitly extends `ooml.Instance`. This means that `ooml.Instance` is the base class/type of all ooml classes.
+If a class doesn't explicitly declare its parent, it implicitly extends [`Object`](#Built-in types). This means that `Object` is the base class/type of all ooml classes.
 
 # JS
 
 ```javascript
-import {Instance} from "org.ooml.oomllib.js.ail"
-
-class MyClass extends Instance {}
+class MyClass {
+}
 ```
 
 # TSX
 
 ```typescript
-import {Instance} from "org.ooml.oomllib.js.ail"
-
-class MyClass extends Instance {}
+class MyClass {
+}
 ```
 
 # Java
 
 ```java
-import org.ooml.oomllib.java.ail.Instance;
-
-class MyClass extends Instance {}
+class MyClass {
+}
 ```
 
 # Python
 
 ```python
-from org.ooml.oomllib.python.ail import Instance
-
-class MyClass(Instance):
+class MyClass:
     ...
 ```
 

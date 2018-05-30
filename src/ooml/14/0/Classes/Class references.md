@@ -1,0 +1,219 @@
+Classes can be identified by their fully-qualified name. A FQN is equivalent to the path of classes required to reach the class from the top-most level. What the top-level is and how to reach a class depends on how the source code is declared and what language it's written in.
+
+# Terminology
+
+A FQN is a sequence of class names, joined by dots. Each class name is known as a component of the FQN.
+
+A FQN's base is its last component. It's the class name that comes after the last dot, except for FQNs with only one component, in which case it's itself.
+
+A FQN's root is its first component.
+
+A FQN's parent is the FQN without its base (not defined for FQNs with only one component).
+
+Examples:
+
+|FQN|Parent|Base|Root|
+|---|---|---|---|
+|`a.b.c.d`|`a.b.c`|`d`|`a`|
+|`a.b`|`a`|`b`|`a`|
+|`a`|N/A|`a`|`a`|
+
+Additionally, there are special names for classes relative to another class.
+
+The *module* of a class is the class with a FQN equivalent to its root. Modules are always top-level classes (i.e. are not nested within another class).
+
+The *container* of a class is the class with a FQN equivalent to its parent.
+
+Examples:
+
+|Class|Module|Container|
+|---|---|---|
+|`a.b.c.d`|`a`|`a.b.c`|
+|`a.b`|`a`|`a`|
+|`a`|`a`|N/A|
+
+# Determination rules
+
+For some languages, the FQN of a class involves the directory its in, or its location relative to the sources root. In some other languages, the FQN can simply be explicitly declared. Refer to the documentation for a specific language's compiler (e.g. `oomlc-python`) to get the actual implementation and behaviour details for that language.
+
+Given `a.b.c.d`, here's an example of a class that would have the above FQN:
+
+<!-- start tabbed sections -->
+
+# HTML
+
+A class's FQN is its containing class's FQN concatenated with its own name.
+
+If it is not a nested class, then it is considered a top-level class. Its FQN is simply its name.
+
+```html
+<template ooml="class" name="a">
+  <template ooml="class" name="b">
+    <template ooml="class" name="c">
+      <template ooml="class" name="d">
+      </template>
+    </template>
+  </template>
+</template>
+```
+
+A class can also be given an explicit FQN:
+
+```html
+<template ooml="class" fqn="a.b.c.d"></template>
+```
+
+The value of its `fqn` attribute will be used as its FQN, regardless of its containing class's FQN (if applicable).
+
+# JS
+
+In file `a/b/c.js`:
+
+```javascript
+export class d {
+}
+```
+
+# Python
+
+In file `a/b/c.py`:
+
+```python
+class d:
+  ...
+```
+
+# Java
+
+```java
+package a.b.c;
+
+class d {
+}
+```
+
+<!-- end tabbed sections -->
+
+# Existence rules
+
+There can never be two classes with the same FQN, regardless of whether they're actually the same class. An error will occur during compilation if such a situation arises.
+
+A class can have a FQN even if no class exists with its parent. For example, it's possible to have `A` and `A.B.C` but no `A.B`.
+
+# Referencing
+
+How to reference another class also depends on the language used. Outside of HTML, it most likely involves using the language's standard import system. Consult the language-specific compiler documentation for more details.
+
+Here's an example of a function referencing the class `A.B.C.D`:
+
+<!-- start tabbed sections -->
+
+# HTML
+
+Every expression for a value of a property or field, as well as every function for a method, gets access to an implicit variable called `o`. It is an object whose properties are the names of top-level classes, and their values are the actual classes. From then on, it becomes possible to access any class.
+
+```html
+<template ooml="class" name="SomeClass">
+  <m name="someMethod">
+    function () {
+      new o.A.B.C.D();
+    }
+  </m>
+</template>
+```
+ 
+`o` can be shadowed, overwritten, or mutated, so be careful.
+
+It's also possible to shorten the reference if using a class from the same module or container:
+
+```html
+<template ooml="class" fqn="A.B.C.E">
+  <m name="fromModule">
+    function () {
+      return new this.module.B.C.D();
+    }
+  </m>
+  
+  <f name="fromContainer">
+    function () {
+      return new this.container.D();
+    }
+  </f>
+</template>
+```
+
+`module` and `container` exist on every instance and class.
+
+If there are gaps in the range of FQNs (e.g. `A` and `A.B.C` exist but `A.B` doesn't), then any gap is simply filled with a static class that functions as if the gap didn't exist. As an example:
+
+```html
+<template ooml="class" fqn="A"></template>
+<template ooml="class" fqn="A.B.C.D"></template>
+
+<template ooml="class" name="SomeClass">
+  <m name="someMethod">
+    function () {
+      console.log(o.A.B);    // Logs something like "{ C: { D: [ooml class] } }"
+      console.log(o.A.B.C);  // Logs something like "{ D: [ooml class] }"
+      new o.A.B.C.D();       // This works!
+    }
+  </m>
+</template>
+```
+
+HTML also has a special way to refer to classes in declarative contexts, such as class parents or type annotations.
+
+In these examples, the target class is `A.B.C.D.Exciting`, and the class doing the referring is `A.B.C.D.Eggplant`.
+
+An absolute reference can be used. This requires the entire FQN to be written.
+
+```html
+<template ooml="class" name="Eggplant" parent="A.B.C.D.Exciting"></template>
+```
+
+If the target is in the same module, the module component can be replaced with a caret (`^`):
+
+```html
+<template ooml="class" name="Eggplant" parent="^B.C.D.Exciting"></template>
+```
+
+Additionally, the reference can be relative to the current container, by adding a dot (`.`) for each ancestor container to start from:
+
+```html
+<template ooml="class" name="Eggplant" parent=".Exciting"></template>
+```
+
+Continuing the depth is possible. This refers to `A.B.C.D.E.Fantastic`:
+
+```html
+<template ooml="class" name="Eggplant" parent=".E.Fantastic"></template>
+```
+
+Add a dot for each level higher. This refers to `A.B.C.Door`:
+
+```html
+<template ooml="class" name="Eggplant" parent="..Door"></template>
+```
+
+Add a dot for each level higher. This refers to `A.B.Cool`:
+
+```html
+<template ooml="class" name="Eggplant" parent="...Cool"></template>
+```
+
+The following refers to `A.Blue`. Probably better just to use the module-relative syntax.
+
+```html
+<template ooml="class" name="Eggplant" parent="....Blue"></template>
+<!-- Same as above, but easier to understand -->
+<template ooml="class" name="Eggplant" parent="^Blue"></template>
+```
+
+Don't go higher than the module. This is **not** allowed:
+
+```html
+<!-- Invalid parent reference -->
+<template ooml="class" name="Eggplant" parent=".....Zero"></template>
+```
+
+<!-- end tabbed sections -->

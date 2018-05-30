@@ -1,4 +1,4 @@
-Serialising an [OOML.Instance](#OOML.Instance) or [OOML.Array](#OOML.Array) is as simple as calling the `.toJSON` method on it.
+Serialising an ooml instance or array is as simple as calling the `.toJSON` method on it.
 
 A JSON-serialisable object will be built recursively, based on the properties of the instance:
 

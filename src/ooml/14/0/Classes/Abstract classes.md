@@ -14,12 +14,12 @@ Add the `abstract` boolean tag attribute:
 
 # Python
 
-Apply the `Abstract` decorator from oomllib.
+Apply the `abstract` decorator from oomllib.
 
 ```python
-from org.ooml.oomllib.python.Class import Abstract
+from org.ooml.oomllib.python.Class import abstract
 
-@Abstract
+@abstract
 class BaseClass:
   ...
 ```
