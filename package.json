@@ -1,6 +1,7 @@
 {
   "private": true,
   "dependencies": {
+    "minimist": "^1.2.0",
     "referenza": "0.0.3"
   }
 }
