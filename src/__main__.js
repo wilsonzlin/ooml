@@ -71,5 +71,5 @@ __zc_import("./ooml/Array/__after__.js");
 __zc_import("./ooml/execute/__main__.js");
 __zc_import("./ooml/execute/module.js");
 __zc_import("./ooml/execute/anonymousNamespace.js");
-__zc_import("./ooml/execute/anonymousClass.js");
-__zc_import("./ooml/execute/topLevelInstantiation.js");
+__zc_import("./ooml/execute/class.js");
+__zc_import("./ooml/execute/instantiation.js");

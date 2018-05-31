@@ -1,1 +1,3 @@
 let __IP_OOML_PROPERTIES_CONFIG_DEPENDENT_BINDINGS = "__OomlPropertiesConfigDependentBindings";
+let __IP_OOML_PROPERTIES_CONFIG_ARRAY_TYPE = "__OomlPropertiesConfigArrayType";
+let __IP_OOML_PROPERTIES_CONFIG_INSTANCE_TYPE = "__OomlPropertiesConfigInstanceType";

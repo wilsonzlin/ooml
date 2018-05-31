@@ -1,22 +1,23 @@
-let exec_class = (bc_class, module, namespace) => {
-  let class_name = bc_class[__BC_CLASS_NAME];
+let exec_class = (bc_class) => {
+  let class_fqn = bc_class[__BC_CLASS_FQN];
+  let class_name = class_fqn.split(".").pop();
   let class_parent_ref = bc_class[__BC_CLASS_PARENT];
   let class_abstract = bc_class[__BC_CLASS_ABSTRACT];
-  let class_initialisers = bc_class[__BC_CLASS_INITIALISERS];
+
+  let class_constructor = bc_class[__BC_CLASS_CONSTRUCTOR];
+
+  let class_static_units = bc_class[__BC_CLASS_STATICUNITS];
 
   let bc_class_properties = bc_class[__BC_CLASS_PROPERTIES];
   let bc_class_methods = bc_class[__BC_CLASS_METHODS];
-  let bc_class_fields = bc_class[__BC_CLASS_FIELDS];
   let bc_class_view = bc_class[__BC_CLASS_VIEW];
 
-  if (!namespace) {
-    if (__rt_bc_anon_classes[class_name]) {
-      throw ReferenceError(`Anonymous class "${class_name}" already exists`);
-    }
+  if (__rt_ld_classes[class_fqn]) {
+    throw ReferenceError(`Class "${class_fqn}" already exists`);
   }
 
   let class_parent = class_parent_ref ?
-    resolve_parent_ld_class_reference(class_parent_ref, module, namespace) :
+    __rt_ld_classes[class_parent_ref] :
     ooml.Instance;
 
   // Reasons to collapse properties:
@@ -193,9 +194,9 @@ let exec_class = (bc_class, module, namespace) => {
         }
       });
 
-      // Call post-constructor
-      if (_this.postConstructor) {
-        _this.postConstructor();
+      // Call constructor
+      if (_this[__IP_OOML_CLASS_PROTO_CONSTRUCTOR]) {
+        _this[__IP_OOML_CLASS_PROTO_CONSTRUCTOR]();
       }
     };
   }
@@ -225,7 +226,6 @@ let exec_class = (bc_class, module, namespace) => {
       prop[__BC_CLASSPROP_DISPATCHHANDLERS] = u_new_clean_object();
 
       // These are only set by root and can't be changed by overrides
-      prop[__BC_CLASSPROP_ARRAY] = bc_prop[__BC_CLASSPROP_ARRAY];
       prop[__BC_CLASSPROP_TRANSIENT] = bc_prop[__BC_CLASSPROP_TRANSIENT];
       prop[__BC_CLASSPROP_PASSTHROUGH] = bc_prop[__BC_CLASSPROP_PASSTHROUGH];
       prop[__BC_CLASSPROP_BINDING] = bc_prop[__BC_CLASSPROP_BINDING];
@@ -242,15 +242,21 @@ let exec_class = (bc_class, module, namespace) => {
     }
 
     if (bc_prop[__BC_CLASSPROP_TYPE]) {
-      if (__primitive_types_s.has(bc_prop[__BC_CLASSPROP_TYPE])) {
-        prop[__BC_CLASSPROP_TYPE] = bc_prop[__BC_CLASSPROP_TYPE];
+      let type_decl = bc_prop[__BC_CLASSPROP_TYPE];
+      if (type_decl[0] == "?") {
+        type_decl = type_decl.slice(1);
+      }
 
-      } else {
-        prop[__BC_CLASSPROP_TYPE] = resolve_property_ld_class_reference(
-          bc_prop[__BC_CLASSPROP_TYPE],
-          module,
-          namespace,
-          ooml_class);
+      let regexp_matches;
+      if (regexp_matches = /^list\[(.*?)]$/.exec(type_decl)) {
+        // Array property
+        // TODO Check if class exists and has view
+        prop[__IP_OOML_PROPERTIES_CONFIG_ARRAY_TYPE] = __rt_ld_classes[regexp_matches[1]];
+
+      } else if (__rt_ld_classes[type_decl]) {
+        // Instance property
+        prop[__IP_OOML_PROPERTIES_CONFIG_INSTANCE_TYPE] = __rt_ld_classes[type_decl];
+
       }
     }
 
@@ -296,34 +302,26 @@ let exec_class = (bc_class, module, namespace) => {
 
   let ooml_class_prototype = Object.create(class_parent.prototype);
 
-  let namespace_property = namespace || __rt_ld_anon_classes;
 
   // Static properties for internal use
-  u_define_data_property(ooml_class, "name ", class_name);
-  u_define_data_property(ooml_class, "namespace ", namespace_property);
-  if (module) {
-    u_define_data_property(ooml_class, "module ", module);
-  }
-  u_define_data_property(ooml_class, "prototype ", ooml_class_prototype);
+  u_define_data_property(ooml_class, "name", class_name);
+  // TODO
+  // u_define_data_property(ooml_class, "namespace", namespace_property);
+  // TODO
+  // if (module) {
+  //   u_define_data_property(ooml_class, "module", module);
+  // }
+  u_define_data_property(ooml_class, "prototype", ooml_class_prototype);
   u_define_data_property(ooml_class, __IP_OOML_CLASS_OWN_COLLAPSED_PROPERTY_NAMES, collapsed_property_names);
   u_define_data_property(ooml_class, __IP_OOML_CLASS_OWN_COLLAPSED_PROPERTIES, collapsed_properties);
 
-  // Apply class fields
-  u_enumerate(bc_class_fields, (bc_field, field_name) => {
-    // Don't need to bind `this` to field if function, as JS does automatically
-    u_define_property(ooml_class, field_name, {
-      value: bc_field[__BC_CLASSFIELD_VALUE], // Don't need to clone, as there is only one use
-      writable: true,
-      enumerable: true,
-    });
-  });
-
   u_define_data_property(ooml_class_prototype, "constructor", ooml_class);
   // WARNING: $namespace and $module not frozen
-  u_define_data_property(ooml_class_prototype, "namespace", namespace_property);
-  if (module) {
-    u_define_data_property(ooml_class_prototype, "module", module);
-  }
+  // TODO
+  // u_define_data_property(ooml_class_prototype, "namespace", namespace_property);
+  // if (module) {
+  //   u_define_data_property(ooml_class_prototype, "module", module);
+  // }
 
   u_enumerate(collapsed_properties, (prop, prop_name) => {
     if (ooml_class.prototype[prop_name]) {
@@ -331,11 +329,13 @@ let exec_class = (bc_class, module, namespace) => {
       return;
     }
 
-    let internal_setter_property = prop[__BC_CLASSPROP_ARRAY] ?
-      __IP_OOML_INST_PROTO_SET_ARRAY_PROPERTY : // Array property
-      u_typeof(prop[__BC_CLASSPROP_TYPE], TYPEOF_FUNCTION) ?
-        __IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY : // Instance property
-        __IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY; // Primitive or transient property
+    let internal_setter_property = prop[__BC_CLASSPROP_TRANSIENT] ?
+      __IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY : // Transient property
+      prop[__IP_OOML_PROPERTIES_CONFIG_ARRAY_TYPE] ?
+        __IP_OOML_INST_PROTO_SET_ARRAY_PROPERTY : // Array property
+        prop[__IP_OOML_PROPERTIES_CONFIG_INSTANCE_TYPE] ?
+          __IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY : // Instance property
+          __IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY; // Primitive property
 
     u_define_property(ooml_class_prototype, prop_name, {
       get: function () {
@@ -356,19 +356,34 @@ let exec_class = (bc_class, module, namespace) => {
     u_define_property(ooml_class_prototype, method_name, bc_method[__BC_CLASSMETHOD_FUNCTION]);
   });
 
+  // Set constructor as special method on class prototype
+  if (class_constructor) {
+    u_define_property(ooml_class_prototype, __IP_OOML_CLASS_PROTO_CONSTRUCTOR, class_constructor);
+  }
+
+  // Set up static units
+
   // Call initialisers
-  if (class_initialisers) {
-    u_iterate(class_initialisers, init => {
-      init.call(ooml_class);
+  if (class_static_units) {
+    u_iterate(class_static_units, u => {
+      let u_value = u[__BC_CLASSSTATICUNIT_VALUE];
+
+      switch (u[__BC_CLASSSTATICUNIT_TYPE]) {
+      case __BC_CLASSSTATICUNIT_TYPE_ENUMVAL_FIELD:
+        // Don't need to bind `this` to field if function, as JS does automatically
+        u_define_property(ooml_class, u_value[__BC_CLASSFIELD_NAME], {
+          value: u_value[__BC_CLASSFIELD_VALUE], // Don't need to clone, as there is only one use
+          writable: true,
+          enumerable: true,
+        });
+        break;
+
+      case __BC_CLASSSTATICUNIT_TYPE_ENUMVAL_INITIALISER:
+        u_value.call(ooml_class);
+        break;
+      }
     });
   }
 
-  if (!namespace) {
-    __rt_bc_anon_classes[class_name] = bc_class;
-    __rt_ld_anon_classes[class_name] = ooml_class;
-
-  } else {
-    // For when called by exec_namespace
-    return ooml_class;
-  }
+  __rt_bc_classes[class_fqn] = bc_class;
 };

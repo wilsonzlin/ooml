@@ -16,7 +16,7 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_ARRAY_PROPERTY] = function (prop_
 
   if (new_value != null) {
     if (!(new_value instanceof ooml.Array)) {
-      new_value = new ooml.Array(config[__BC_CLASSPROP_TYPE], new_value);
+      new_value = new ooml.Array(config[__IP_OOML_PROPERTIES_CONFIG_ARRAY_TYPE], new_value);
     }
     // This property might not be substituted, so NODES[0] == undefined
     new_value[__IP_OOML_EVENTSOURCE_PROTO_ATTACH](this, prop_name, state[__IP_OOML_PROPERTIES_STATE_NODES][0]);

@@ -23,7 +23,6 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
       }
 
       if (u_typeof(setter_rv.HTML, TYPEOF_STRING)) {
-        // noinspection JSUnresolvedVariable
         let custom_html = setter_rv.HTML.trim();
         if (!custom_html) {
           remove_custom_dom = true;
@@ -36,12 +35,6 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_PRIMITIVE_OR_TRANSIENT_PROPERTY] 
           custom_dom = dom.children[0];
         }
       }
-    }
-  }
-
-  if (config[__BC_CLASSPROP_TYPE]) {
-    if (!u_typeof(new_value, config[__BC_CLASSPROP_TYPE])) {
-      throw TypeError(`Value must be of type ${ config[__BC_CLASSPROP_TYPE] }`);
     }
   }
 

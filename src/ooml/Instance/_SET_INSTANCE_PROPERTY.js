@@ -37,7 +37,7 @@ oomlInstancePrototype[__IP_OOML_INST_PROTO_SET_INSTANCE_PROPERTY] = function (pr
 
   // Attach first to ensure that element is attachable
   if (new_value != null) {
-    new_value = construct_ooml_instance(config[__BC_CLASSPROP_TYPE], new_value);
+    new_value = construct_ooml_instance(config[__IP_OOML_PROPERTIES_CONFIG_INSTANCE_TYPE], new_value);
     // NODES[0] is undefined if not substituted
     new_value[__IP_OOML_EVENTSOURCE_PROTO_ATTACH](_this, prop_name, state[__IP_OOML_PROPERTIES_STATE_NODES][0]);
   }

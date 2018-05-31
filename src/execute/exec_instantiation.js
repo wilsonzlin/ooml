@@ -1,5 +1,5 @@
-let exec_instantiation = (bc_inst, namespace) => {
-  let type = resolve_parent_ld_class_reference(bc_inst[__BC_INSTANTIATION_TYPE], null, namespace);
+let exec_instantiation = bc_inst => {
+  let type = __rt_ld_classes[bc_inst[__BC_INSTANTIATION_TYPE]];
 
   let inst = construct_ooml_instance(type, bc_inst[__BC_INSTANTIATION_INITIALSTATE]);
 
