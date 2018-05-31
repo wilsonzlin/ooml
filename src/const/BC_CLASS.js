@@ -1,4 +1,4 @@
-let __BC_CLASS_NAME = "n";
+let __BC_CLASS_FQN = "F";
 let __BC_CLASS_PARENT = "P";
 let __BC_CLASS_ABSTRACT = "a";
 let __BC_CLASS_PROPERTIES = "p";
