@@ -1,6 +1,6 @@
-Abstract classes cannot be instantiated. Otherwise, they are basically the same as regular classes. They can even have a view.
+**Abstract classes** cannot be instantiated. Otherwise, they are basically the same as regular classes. They can even have a view.
 
-Abstract classes are typically used for creating a base class for subclasses to extend from, implementing the common traits between them to reduce repetition, and giving them a common base type.
+Abstract classes are typically used for creating a base class for subclasses to extend from, implementing some common functionality between them to reduce repetition, and giving them a common base type.
 
 <!-- start tabbed sections -->
 
