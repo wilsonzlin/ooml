@@ -1,4 +1,4 @@
-Classes can be identified by their fully-qualified name. A FQN is equivalent to the path of classes required to reach the class from the top-most level. What the top-level is and how to reach a class depends on how the source code is declared and what language it's written in.
+Classes can be identified by their fully-qualified name. A FQN is a globally-unique reference to a class equivalent to the path of classes required to reach the class from the top-most level. What the top-level is and how to reach a class depends on how the source code is declared and what language it's written in.
 
 # Terminology
 
