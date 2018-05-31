@@ -6,7 +6,7 @@ They are primarily used for two purposes:
 
 - To act as a namespace for its nested classes. Those classes would then have a prefix that prevents naming conflicts and provides useful grouping.
 
-Static classes cannot have a parent. They cannot be used as a type.
+Static classes cannot have a parent, and cannot be used as a parent. They cannot be used as a type.
 
 To create a static class:
 
