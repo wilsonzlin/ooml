@@ -1,4 +1,4 @@
-Normally, when inheriting a class, the view of the parent class is not inherited in any way, shape, or form. However, this can be allowed, by declaring an **extension point** on the parent class's view:
+Normally, when inheriting a class, the view of the parent class is not inherited in any way, shape, or form. However, this can be allowed, by declaring an **extension point** on the parent class's view, using an `ooml-extension-point` tag:
 
 <!-- start tabbed sections -->
 
