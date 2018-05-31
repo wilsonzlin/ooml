@@ -1,4 +1,4 @@
-Constructors are special functions that are called when instantiating a class.
+**Constructors** are special functions that are called when instantiating a class.
 
 They can be declared like so:
 
@@ -6,13 +6,15 @@ They can be declared like so:
 
 # HTML
 
+Use the tag `c`:
+
 ```html
 <template ooml="class" name="A">
-  <m name="constructor">
+  <c>
     function () {
       console.log("Hello from A");
     }
-  </m>
+  </c>
 </template>
 ```
 
@@ -28,4 +30,4 @@ class A:
 
 It is not allowed to return anything.
 
-The `this`/`self` special variable is available inside the post-constructor, and refers to the newly-instantiated ooml instance. It has all declared and inherited properties and methods, and all properties have their values set to [default](#Default property values) or [initial state](#Initial state) values.
+The `this`/`self` special variable is available inside the constructor, and refers to the newly-instantiated ooml instance. It has all declared and inherited properties and methods, and all properties have their values set to [default](#Default property values) or [initial state](#Initial state) values.
