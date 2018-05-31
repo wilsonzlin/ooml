@@ -14,6 +14,10 @@ If it's an array, each element will be serialised this way.
 
 To define what happens when an instance of some class is serialised, declare a [special method](#Special methods) on the class called `serialise`:
 
+<!-- start tabbed sections -->
+
+# HTML
+
 ```html
 <template ooml="class=" name="InputControl">
   <p name="value" type="string">""</p>
@@ -28,6 +32,8 @@ To define what happens when an instance of some class is serialised, declare a [
 </template>
 ```
 
-The method must return a primitive value.
+<!-- end tabbed sections -->
 
-If a custom serialiser method is declared, a [custom deserialiser](#Deserialisation) method should be declared too.
+The method must return a number, boolean, string, or null value.
+
+If a custom serialiser method is declared, a [custom deserialiser](#Deserialisation) field should be declared too.
