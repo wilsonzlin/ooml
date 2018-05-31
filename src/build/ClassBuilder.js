@@ -1,21 +1,25 @@
 let ClassBuilder = function () {
   this[__IP_BUILDER_MEMBER_NAMES] = new StringSet();
+  this[__IP_BUILDER_FIELD_NAMES] = new StringSet();
   this[__IP_BUILDER_UNCHECKED_PROPERTIES] = u_new_clean_object();
   this[__IP_BUILDER_UNCHECKED_METHODS] = u_new_clean_object();
   this[__IP_BUILDER_UNCHECKED_FIELDS] = u_new_clean_object();
 
-  this[__BC_CLASS_INITIALISERS] = [];
+  this[__BC_CLASS_STATICUNITS] = [];
 };
 
 let ClassBuilderPrototype = ClassBuilder.prototype = u_new_clean_object();
 
-ClassBuilderPrototype.setName = function (name) {
-  this[__BC_CLASS_NAME] = assert_valid_r("name", name, valid_class_name);
+ClassBuilderPrototype.setFQN = function (fqn) {
+  this[__BC_CLASS_FQN] = assert_valid_r("FQN", fqn, valid_class_reference);
 };
 
 ClassBuilderPrototype.setParent = function (class_reference) {
-  // Cyclic inheritance is impossible, because only loaded classes can be used as parents
   this[__BC_CLASS_PARENT] = assert_valid_r("parent", class_reference, valid_class_reference);
+};
+
+ClassBuilderPrototype.setConstructor = function (fn) {
+  this[__BC_CLASS_CONSTRUCTOR] = assert_typeof_r("constructor", fn, TYPEOF_FUNCTION);
 };
 
 ClassBuilderPrototype.isAbstract = function (abstract) {
@@ -42,13 +46,20 @@ ClassBuilderPrototype.addField = function (field) {
   assert_instanceof_r("field", field, ClassFieldBuilder);
 
   let name = field[__BC_CLASSFIELD_NAME];
-  assert_new_obj_prop("field", name, this[__IP_BUILDER_UNCHECKED_FIELDS]);
+  assert_unique_in_stringset_s_r("field", name, this[__IP_BUILDER_FIELD_NAMES]);
 
-  this[__IP_BUILDER_UNCHECKED_FIELDS][name] = field;
+  let unit = {};
+  unit[__BC_CLASSSTATICUNIT_TYPE] = __BC_CLASSSTATICUNIT_TYPE_ENUMVAL_INITIALISER;
+  unit[__BC_CLASSSTATICUNIT_VALUE] = field[__IP_BUILDER_PROTO_COMPILE]();
+
+  this[__BC_CLASS_STATICUNITS].push(unit);
 };
 
 ClassBuilderPrototype.addInitialiser = function (fn) {
-  this[__BC_CLASS_INITIALISERS].push(assert_typeof_r("initialiser", fn, TYPEOF_FUNCTION));
+  let unit = {};
+  unit[__BC_CLASSSTATICUNIT_TYPE] = __BC_CLASSSTATICUNIT_TYPE_ENUMVAL_INITIALISER;
+  unit[__BC_CLASSSTATICUNIT_VALUE] = assert_typeof_r("initialiser", fn, TYPEOF_FUNCTION);
+  this[__BC_CLASS_STATICUNITS].push(unit);
 };
 
 ClassBuilderPrototype.setView = function (view) {
@@ -57,9 +68,10 @@ ClassBuilderPrototype.setView = function (view) {
   this[__IP_BUILDER_UNCHECKED_VIEW] = view;
 };
 
-ClassBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc_ns) {
+ClassBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod) {
   // Check required values have been provided
-  assert_set("name", __BC_CLASS_NAME, this);
+  // TODO
+  // assert_set("name", __BC_CLASS_NAME, this);
 
   // NOTE: A lot of ancestor traversals in this builder are done every time
   //       and not cached/collapsed because they are context dependent
@@ -84,10 +96,11 @@ ClassBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc_ns) {
   let bc = generate_bc_from_builder(this);
 
   // Validate fields
-  bc[__BC_CLASS_FIELDS] = u_new_clean_object();
-  u_enumerate(this[__IP_BUILDER_UNCHECKED_FIELDS], (field, field_name) => {
-    bc[__BC_CLASS_FIELDS][field_name] = field[__IP_BUILDER_PROTO_COMPILE](bc_mod, bc_ns, this);
-  });
+  // TODO
+  // bc[__BC_CLASS_FIELDS] = u_new_clean_object();
+  // u_enumerate(this[__IP_BUILDER_UNCHECKED_FIELDS], (field, field_name) => {
+  //   bc[__BC_CLASS_FIELDS][field_name] = field[__IP_BUILDER_PROTO_COMPILE](bc_mod, bc_ns, this);
+  // });
 
   // Validate methods before properties and view,
   // as they can link to methods
@@ -165,4 +178,3 @@ ClassBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc_ns) {
 
   return bc;
 }
-;

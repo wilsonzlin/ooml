@@ -9,9 +9,9 @@ let __IP_BUILDER_LINKED_METHODS = "__BuilderLinkedMethods";
 
 // ClassBuilder
 let __IP_BUILDER_MEMBER_NAMES = "__BuilderMemberNames";
+let __IP_BUILDER_FIELD_NAMES = "__BuilderFieldNames";
 let __IP_BUILDER_UNCHECKED_PROPERTIES = "__BuilderUncheckedProperties";
 let __IP_BUILDER_UNCHECKED_METHODS = "__BuilderUncheckedMethods";
-let __IP_BUILDER_UNCHECKED_FIELDS = "__BuilderUncheckedFields";
 let __IP_BUILDER_UNCHECKED_VIEW = "__BuilderUncheckedView";
 
 // NamespaceBuilder

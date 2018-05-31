@@ -5,8 +5,6 @@ __zc_import("./rule/reserved_field_names_s.js");
 __zc_import("./rule/reserved_prop_method_names_s.js");
 __zc_import("./rule/restricted_view_tags_s.js");
 
-__zc_import("./compiled/__main__.js");
-
 __zc_import("./validator/identifier/valid_class_name.js");
 __zc_import("./validator/identifier/valid_field_name.js");
 __zc_import("./validator/identifier/valid_group_name.js");
@@ -28,8 +26,6 @@ __zc_import("./build/resolve/find_bc_method_from_class.js");
 __zc_import("./build/resolve/find_bc_mod_from_group.js");
 __zc_import("./build/resolve/find_bc_ns_from_mod.js");
 __zc_import("./build/resolve/find_bc_prop_from_class.js");
-__zc_import("./build/resolve/resolve_bc_class_reference.js");
-__zc_import("./build/resolve/resolve_prop_type_bc_class_reference.js");
 
 __zc_import("./build/util/generate_bc_from_builder.js");
 __zc_import("./build/util/stream_substitution_parts.js");
@@ -40,7 +36,5 @@ __zc_import("./build/ClassMethodBuilder.js");
 __zc_import("./build/ClassViewBuilder.js");
 __zc_import("./build/ClassBuilder.js");
 __zc_import("./build/InstantiationBuilder.js");
-__zc_import("./build/NamespaceBuilder.js");
-__zc_import("./build/ModuleBuilder.js");
 
 __zc_import("./ooml/Builder/__main__.js");
