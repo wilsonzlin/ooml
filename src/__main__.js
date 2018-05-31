@@ -19,14 +19,10 @@ __zc_import("./runtime/dom/update_queue.js");
 
 __zc_import("./execute/util/construct_ooml_instance.js");
 __zc_import("./execute/util/get_default_value_for_type.js");
-__zc_import("./execute/util/resolve_parent_ld_class_reference.js");
-__zc_import("./execute/util/resolve_property_ld_class_reference.js");
 __zc_import("./execute/util/traverse_dom_path.js");
 __zc_import("./execute/util/unserialise_init_state_source.js");
 
 __zc_import("./execute/exec_class.js");
-__zc_import("./execute/exec_module.js");
-__zc_import("./execute/exec_namespace.js");
 __zc_import("./execute/exec_view_node.js");
 __zc_import("./execute/exec_instantiation.js");
 
@@ -69,7 +65,5 @@ __zc_import("./ooml/Array/toString and toLocaleString.js");
 __zc_import("./ooml/Array/__after__.js");
 
 __zc_import("./ooml/execute/__main__.js");
-__zc_import("./ooml/execute/module.js");
-__zc_import("./ooml/execute/anonymousNamespace.js");
 __zc_import("./ooml/execute/class.js");
 __zc_import("./ooml/execute/instantiation.js");
