@@ -4,12 +4,11 @@ __zc_import("./const/BC_CLASS.js");
 __zc_import("./const/BC_CLASSFIELD.js");
 __zc_import("./const/BC_CLASSMETHOD.js");
 __zc_import("./const/BC_CLASSPROP.js");
+__zc_import("./const/BC_CLASSSTATICUNIT.js");
 __zc_import("./const/BC_CLASSVIEW.js");
 __zc_import("./const/BC_CLASSVIEW_ATTR.js");
 __zc_import("./const/BC_CLASSVIEW_NODE.js");
 __zc_import("./const/BC_INSTANTIATION.js");
-__zc_import("./const/BC_MOD.js");
-__zc_import("./const/BC_NS.js");
 
 __zc_import("./compat/Set.js");
 
