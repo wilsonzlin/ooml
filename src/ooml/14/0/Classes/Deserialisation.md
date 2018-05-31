@@ -6,20 +6,26 @@ If a class has a custom [serialiser](#Serialisation), it will probably need a cu
 
 A custom deserialiser is declared as a [special field](#Special fields) on the class called `deserialise`:
 
-```html
-<template ooml-class="InputControl">
-  <ooml-property name="value" type="string">""</ooml-property>
+<!-- start tabbed sections -->
 
-  <ooml-field name="deserialise">
+# HTML
+
+```html
+<template ooml="class" name="InputControl">
+  <p name="value" type="string">""</p>
+
+  <f name="deserialise">
     function (initState) {
       return {
         value: initState,
       };
     }
-  </ooml-field>
+  </f>
 
   <input value="{{ this.value }}">
 </template>
 ```
 
-The method must return an object literal.
+<!-- end tabbed sections -->
+
+The method must return an object literal or an instance.
