@@ -42,7 +42,7 @@ __zc_import("./assert/assert_instanceof_r.js");
 __zc_import("./assert/assert_not_undefined_r.js");
 __zc_import("./assert/assert_set.js");
 __zc_import("./assert/assert_typeof_r.js");
-__zc_import("./assert/assert_undefined_obj_prop.js");
+__zc_import("./assert/assert_new_obj_prop.js");
 __zc_import("./assert/assert_unique_in_stringset_s_r.js");
 __zc_import("./assert/assert_valid_prop_or_method_reference_p_r.js");
 __zc_import("./assert/assert_valid_r.js");
