@@ -33,9 +33,9 @@ __zc_import("./util/u_new_clean_object.js");
 __zc_import("./util/u_typeof.js");
 
 __zc_import("./validator/data/valid_array.js");
-__zc_import("./validator/data/valid_class_of_base.js");
-__zc_import("./validator/data/valid_empty_object.js");
-__zc_import("./validator/data/valid_object_literal.js");
+__zc_import("./validator/data/valid_subclass.js");
+__zc_import("./validator/data/valid_empty_plain_object.js");
+__zc_import("./validator/data/valid_plain_object.js");
 __zc_import("./validator/identifier/valid_dispatch_event_name.js");
 
 __zc_import("./assert/assert_instanceof_r.js");

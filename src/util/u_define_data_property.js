@@ -1,5 +1,5 @@
 let u_define_data_property = (obj, prop, value, writable) => {
-  Object.defineProperty(obj, prop, {
+  u_define_property(obj, prop, {
     value: value,
     writable: writable,
   });

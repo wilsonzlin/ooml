@@ -1,7 +1,7 @@
 let u_deep_clone = thing => {
   let cloned;
 
-  if (valid_object_literal(thing)) {
+  if (valid_plain_object(thing)) {
     cloned = u_new_clean_object();
     u_enumerate(thing, (val, key) => {
       cloned[key] = u_deep_clone(val);
