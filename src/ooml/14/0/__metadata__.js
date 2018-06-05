@@ -4,9 +4,19 @@ module.exports = {
       name: "Introduction",
       entries: [
         "Welcome",
-        "Compatibility and versioning",
-        "Environment, setup, and usage",
+        "Usage",
         "General overview",
+      ],
+    },
+    {
+      name: "Workings",
+      entries: [
+        "How it works",
+        "The ooml project",
+        "Bytecode",
+        "Packages",
+        "Interoperability",
+        "Runtime",
       ],
     },
     {
@@ -22,7 +32,6 @@ module.exports = {
         "View extension",
         "Serialisation",
         "Deserialisation",
-        "Dispatch events",
         "Initialisation",
       ],
     },
@@ -59,8 +68,7 @@ module.exports = {
         "Substitution",
         "DOM event handlers",
         "DOM exposing",
-        "Table tags",
-        "HTML attributes",
+        "Special HTML",
       ],
     },
     {
@@ -73,24 +81,43 @@ module.exports = {
       ]
     },
     {
-      name: "Arrays",
+      name: "Tables",
       entries: [
-        "Using ooml.Array",
-        "Array attachment",
+        "Using ooml.Table",
+        "Table attachment",
+      ],
+    },
+    {
+      name: "Events",
+      entries: [
+        "Dispatch events",
+        "Change events",
+      ],
+    },
+    {
+      name: "Types",
+      entries: [
+        "Type declarations",
+        "Built-in types",
+        "Class types",
       ],
     },
     {
       name: "Hive",
       entries: [
-        "Global store",
-        "Message brokering",
+        "Global object store",
       ],
     },
     {
-      name: "Typing",
+      name: "Cache",
       entries: [
-        "Built-in types",
-        "Class types",
+        "Global key-value database",
+      ],
+    },
+    {
+      name: "Broker",
+      entries: [
+        "Message brokering",
       ],
     },
     {
