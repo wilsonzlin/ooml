@@ -32,12 +32,44 @@ referenza.compile({
 
   statePath: STATE_PATH,
 
+  themePacks: [
+    referenza.resources.theme.default.common,
+    {
+      prefix: "ooml-common",
+      sourceDir: __dirname + "/../theme/common",
+      units: [
+        {
+          type: referenza.resources.theme.unitType.STYLE,
+          URL: `https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,400,600,700|Share:400,700`,
+        },
+        {
+          type: referenza.resources.theme.unitType.STYLE,
+          fileName: "app.css",
+        },
+      ],
+    },
+    {
+      prefix: "ooml-balanced",
+      sourceDir: __dirname + "/../theme/balanced",
+      units: [
+        {
+          type: referenza.resources.theme.unitType.STYLE,
+          fileName: "app.css",
+        },
+      ],
+    },
+  ],
+
   metadataFileName: METADATA_FILE_NAME,
 
-  feedbackUrl: "https://oomlapi.com/feedback",
+  feedback: {
+    type: referenza.resources.feedback.type.GITHUB,
+    repoOwner: "ooml",
+    repoName: "ooml.org-docs",
+  },
   logo: "ooml",
 
-  projectNames: PROJECT_NAMES,
+  projects: PROJECT_NAMES,
 
-  urlPathPrefix: URL_PATH_PREFIX,
+  prefix: URL_PATH_PREFIX,
 });
