@@ -10,7 +10,7 @@ let parse_dom_class = $class => {
     ooml: {
       skip: true,
     },
-    name: {},
+    fqn: {},
     parent: {},
     abstract: {
       boolean: true,

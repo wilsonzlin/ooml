@@ -1,7 +1,7 @@
 let create_class = config => {
   let builder = new ClassBuilder();
 
-  builder.setName(config.name);
+  builder.setFQN(config.fqn);
 
   if (u_has_own_property(config, "parent")) {
     builder.setParent(config.parent);

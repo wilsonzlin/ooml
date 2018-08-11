@@ -1,6 +1,4 @@
 let SV_API_CREATE_FUNCTION_MAP = {
-  module: create_module,
-  namespace: create_namespace,
   class: create_class,
   classField: create_class_field,
   classMethod: create_class_method,

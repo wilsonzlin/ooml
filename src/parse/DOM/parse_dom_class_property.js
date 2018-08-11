@@ -2,9 +2,6 @@ let parse_dom_class_property = $prop => {
   let config = collect_dom_attrs($prop, {
     name: {},
     type: {},
-    array: {
-      boolean: true,
-    },
     transient: {
       boolean: true,
     },

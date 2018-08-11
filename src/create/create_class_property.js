@@ -7,10 +7,6 @@ let create_class_property = config => {
     builder.setType(config.type);
   }
 
-  if (u_has_own_property(config, "array")) {
-    builder.isArray(config.array);
-  }
-
   if (u_has_own_property(config, "defaultValue")) {
     builder.setDefaultValue(config.defaultValue);
   }
