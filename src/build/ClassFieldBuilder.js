@@ -7,15 +7,12 @@ ClassFieldBuilderPrototype.setName = function (name) {
   this[__BC_CLASSFIELD_NAME] = assert_valid_r("name", name, valid_field_name);
 };
 
-ClassFieldBuilderPrototype.setValue = function (value) {
-  this[__BC_CLASSFIELD_VALUE] = assert_not_undefined_r("value", value);
+ClassFieldBuilderPrototype.setValue = function (raw_value) {
+  this[__BC_CLASSFIELD_VALUE] = assert_typeof_r("value", raw_value, TYPEOF_STRING);
 };
 
-ClassFieldBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function () {
+ClassFieldBuilderPrototype[__IP_BUILDER_PROTO_VALIDATE] = function () {
   // Check required values have been provided
   assert_set("name", __BC_CLASSFIELD_NAME, this);
   assert_set("value", __BC_CLASSFIELD_VALUE, this);
-
-  // Need to compile to make a copy, even with identical data
-  return generate_bc_from_builder(this);
 };

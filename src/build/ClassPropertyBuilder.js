@@ -15,12 +15,8 @@ ClassPropertyBuilderPrototype.setType = function (type) {
   this[__BC_CLASSPROP_TYPE] = assert_valid_r("type", type, valid_ooml_type);
 };
 
-ClassPropertyBuilderPrototype.isArray = function (array) {
-  this[__BC_CLASSPROP_ARRAY] = assert_typeof_r("array", array, TYPEOF_BOOLEAN);
-};
-
-ClassPropertyBuilderPrototype.setDefaultValue = function (default_value) {
-  this[__BC_CLASSPROP_DEFAULTVALUE] = assert_not_undefined_r("default value", default_value);
+ClassPropertyBuilderPrototype.setDefaultValue = function (raw_default_value) {
+  this[__BC_CLASSPROP_DEFAULTVALUE] = assert_typeof_r("default value", raw_default_value, TYPEOF_STRING);
 };
 
 ClassPropertyBuilderPrototype.isTransient = function (transient) {
@@ -110,7 +106,7 @@ ClassPropertyBuilderPrototype.addDispatchHandler = function (dispatch_event, met
   this[__BC_CLASSPROP_DISPATCHHANDLERS][dispatch_event] = method;
 };
 
-ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc_ns, bc_class, ancestor_contexts) {
+ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_VALIDATE] = function () {
   // Check required values have been provided
   assert_set("name", __BC_CLASSPROP_NAME, this);
 
@@ -125,7 +121,6 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
     // This property has a class type
     actual_type = resolve_prop_type_bc_class_reference(declared_type_raw, bc_mod, bc_ns, this);
   }
-  let array = this[__BC_CLASSPROP_ARRAY];
   let transient = this[__BC_CLASSPROP_TRANSIENT];
   let has_own_default_value = u_has_own_property(this, __BC_CLASSPROP_DEFAULTVALUE);
   let binding = this[__BC_CLASSPROP_BINDING];
@@ -167,36 +162,13 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
       }
     }
 
-    if (transient) {
-      // Transient properties cannot have a class type; this allows other checks to
-      // automatically work with transient property rules
-      if (actual_type_is_class) {
-        throw SyntaxError(`Transient property has type`);
-      }
-    }
-
-    if (array) {
-      // Array property
-      if (!actual_type_is_class) {
-        // Also blocks transient properties, as they can't have a class type
-        throw TypeError(`Array property doesn't have ooml class type`);
-      }
-    }
-
   } else {
     // Root property exists, so this property overrides
     // Make sure override rules are adhered to
 
-    // Check type is convariant last
+    // Check type is invariant last
 
-    // `array` and `transient` can be declared when overriding an
-    // array/transient property, but it is redundant
-    // Type guaranteed to be compatible because it must be covariant
-    if (!root_prop[__BC_CLASSPROP_ARRAY] && array) {
-      throw SyntaxError(`Array property overrides non-array property`);
-    }
-    array = root_prop[__BC_CLASSPROP_ARRAY];
-
+    // `transient` can be declared when overriding a transient property, but it is redundant
     if (!root_prop[__BC_CLASSPROP_TRANSIENT] && transient) {
       throw SyntaxError(`Transient property overrides non-transient property`);
     }
@@ -210,66 +182,10 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
     }
     binding = root_prop[__BC_CLASSPROP_BINDING];
 
-    // Don't need to check inherited passthrough as type must be covariant
+    // Don't need to check inherited passthrough as type must be invariant
     if (own_passthrough) {
       throw SyntaxError(`Passthrough can't be declared on an overriding property`);
     }
-
-    // Inherited default value doesn't need to be checked
-
-    // Ensure convariant type
-
-    // Find last property in the root property override chain with a type declaration
-    // (may exist even if $root_prop has no type declaration,
-    //  may be == $root_prop,
-    //  and may be undefined)
-    let last_prop_with_type_type;
-    let last_prop_with_type_type_raw = undefined;
-    let last_prop_with_type_ctx = ancestor_contexts.slice().reverse().find(ancestor_ctx => {
-      let prop = find_bc_prop_from_class(ancestor_ctx[2], name);
-      if (prop) {
-        return last_prop_with_type_type_raw = prop[__BC_CLASSPROP_TYPE];
-      }
-    });
-
-    // Resolve last property's type
-    if (!last_prop_with_type_type_raw) {
-      // $last_prop_with_type has no type declaration,
-      // which means $root_prop has no type declaration,
-      // which means $root_prop has the default type or no type if transient
-
-    } else {
-      if (u_typeof(last_prop_with_type_type_raw, TYPEOF_STRING)) {
-        // Last property has a class type
-        last_prop_with_type_type = resolve_prop_type_bc_class_reference(last_prop_with_type_type_raw,
-          last_prop_with_type_ctx[0], last_prop_with_type_ctx[1], last_prop_with_type_ctx[2]);
-      } else {
-        // Last property has a primitive type
-        last_prop_with_type_type = last_prop_with_type_type_raw;
-      }
-    }
-
-    // Compare last property's type to this property's type
-    if (!declared_type_raw) {
-      // This property overrides but has no type declaration,
-      // so it inherits the last property's type
-      actual_type = last_prop_with_type_type;
-      // $actual_type could be undefined
-      actual_type_is_class = valid_ooml_class(last_prop_with_type_type);
-
-    } else {
-      // This property overrides and has a type declaration,
-      // so make sure type is covariant
-      if (!valid_covariant_ooml_type(last_prop_with_type_type, actual_type)) {
-        throw TypeError(`Overriding property's type is not covariant`);
-      }
-    }
-  }
-
-  if ((this[__BC_CLASSPROP_GET] || this[__BC_CLASSPROP_SET]) && array) {
-    // Transient properties can have getters/setters/change listeners
-    // Array and instance properties can have change listeners
-    throw SyntaxError(`Getter or setter on array property`);
   }
 
   if (this[__BC_CLASSPROP_DISPATCHHANDLERS].length && !actual_type_is_class) {
@@ -290,31 +206,5 @@ ClassPropertyBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function (bc_mod, bc
     }
   }
 
-  // Check default value
-  if (has_own_default_value) {
-    if (array) {
-      // Array property's default value must be null or array JSON
-      if (own_default_value !== null && !valid_json_array(own_default_value)) {
-        throw TypeError(`Array property doesn't have JSON array default value`);
-      }
-
-    } else if (actual_type_is_class) {
-      // Instance property's default value must be null or object JSON
-      if (own_default_value !== null && !valid_json_object(own_default_value)) {
-        throw TypeError(`Instance property doesn't have JSON object default value`);
-      }
-
-    } else {
-      // Transient or primitive property
-      if (actual_type) {
-        // Property has type declaration
-        if (!u_is_a_type(own_default_value, actual_type)) {
-          throw TypeError(`Primitive property doesn't match declared type`);
-        }
-      }
-    }
-  }
-
-  // Need to compile to make a copy, even with identical data
-  return generate_bc_from_builder(this);
+  // Don't check default value
 };

@@ -7,15 +7,12 @@ ClassMethodBuilderPrototype.setName = function (name) {
   this[__BC_CLASSMETHOD_NAME] = assert_valid_r("name", name, valid_property_or_method_name);
 };
 
-ClassMethodBuilderPrototype.setFunction = function (fn) {
-  this[__BC_CLASSMETHOD_FUNCTION] = assert_typeof_r("function", fn, TYPEOF_FUNCTION);
+ClassMethodBuilderPrototype.setFunction = function (raw_fn) {
+  this[__BC_CLASSMETHOD_FUNCTION] = assert_typeof_r("function", raw_fn, TYPEOF_STRING);
 };
 
-ClassMethodBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function () {
+ClassMethodBuilderPrototype[__IP_BUILDER_PROTO_VALIDATE] = function () {
   // Check required values have been provided
   assert_set("name", __BC_CLASSMETHOD_NAME, this);
   assert_set("function", __BC_CLASSMETHOD_FUNCTION, this);
-
-  // Need to compile to make a copy, even with identical data
-  return generate_bc_from_builder(this);
 };

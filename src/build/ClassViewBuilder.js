@@ -7,7 +7,7 @@ let ClassViewBuilder = function () {
 let ClassViewBuilderPrototype = ClassViewBuilder.prototype = u_new_clean_object();
 
 ClassViewBuilderPrototype.setRoot = function ($root) {
-  // Don't assert instanceof Element as this might not be a browser
+  // Don't assert instanceof Element as execution environment might not be a browser
 
   let root;
   let queue = [[$root]];
@@ -20,7 +20,7 @@ ClassViewBuilderPrototype.setRoot = function ($root) {
     let parent = current[1];
     let bc = u_new_clean_object();
 
-    // Use nodeType as this might not be a browser
+    // Use nodeType as execution environment might not be a browser
     if ($current.nodeType === 1) {
       let tag_name = $current.tagName.toLocaleLowerCase();
 
@@ -64,14 +64,14 @@ ClassViewBuilderPrototype.setRoot = function ($root) {
           } else if (/^on/.test(attr_name)) {
             throw SyntaxError(`on* view tag attribute is not allowed`);
 
-          } else if (attr_name == "ooml-expose") {
+          } else if (attr_name == "oomlExpose") {
             bc[__BC_CLASSVIEW_NODE_EXPOSEKEY] = assert_unique_in_stringset_s_r(
               "expose key",
               assert_valid_r("expose key", attr_value, valid_property_or_method_name),
               this[__IP_BUILDER_EXPOSE_KEYS]);
 
           } else {
-            if (attr_name == "ooml-style") {
+            if (attr_name == "oomlStyle") {
               // IE discards invalid style attributes (and ones with substitutions count as invalid),
               // so allow alternative syntax
               attr_name = "style";
@@ -149,10 +149,7 @@ ClassViewBuilderPrototype.setRoot = function ($root) {
   this[__BC_CLASSVIEW_ROOT] = root;
 };
 
-ClassViewBuilderPrototype[__IP_BUILDER_PROTO_COMPILE] = function () {
+ClassViewBuilderPrototype[__IP_BUILDER_PROTO_VALIDATE] = function () {
   // Check required values have been provided
   assert_set("root", __BC_CLASSVIEW_ROOT, this);
-
-  // Need to compile to make a copy, even with identical data
-  return generate_bc_from_builder(this);
 };

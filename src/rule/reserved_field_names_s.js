@@ -3,4 +3,6 @@ let __reserved_field_names_s = new StringSet([
   // Mirror with ooml class static properties
   "name",
   "prototype",
+  "length",
+  "from",
 ]);

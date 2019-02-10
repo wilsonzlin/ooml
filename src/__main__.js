@@ -7,19 +7,11 @@ __zc_import("./rule/restricted_view_tags_s.js");
 
 __zc_import("./validator/identifier/valid_class_name.js");
 __zc_import("./validator/identifier/valid_field_name.js");
-__zc_import("./validator/identifier/valid_group_name.js");
-__zc_import("./validator/identifier/valid_module_name.js");
-__zc_import("./validator/identifier/valid_namespace_name.js");
 __zc_import("./validator/identifier/valid_property_or_method_name.js");
 
 __zc_import("./validator/reference/valid_class_reference.js");
-__zc_import("./validator/reference/valid_covariant_ooml_type.js");
 __zc_import("./validator/reference/valid_ooml_type.js");
 __zc_import("./validator/reference/valid_property_or_method_reference.js");
-
-__zc_import("./validator/json/valid_json_array.js");
-__zc_import("./validator/json/valid_json_object.js");
-__zc_import("./validator/json/valid_json_value.js");
 
 __zc_import("./build/resolve/find_bc_class_from_ns.js");
 __zc_import("./build/resolve/find_bc_method_from_class.js");

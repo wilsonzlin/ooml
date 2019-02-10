@@ -14,7 +14,11 @@
     "ooml",
     "oomlc"
   ],
-  "author": "Wilson Lin",
+  "author": {
+    "email": "contact@wilsonl.in",
+    "name": "Wilson Lin",
+    "url": "https://wilsonl.in/"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ooml/oomlc-core/issues"
