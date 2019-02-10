@@ -1,7 +1,7 @@
 from Error.CompileError import CompileError
-from Processing.Compilation.PFile import PFile
+from Pos import Pos
 
 
 class DependencyError(CompileError):
-    def __init__(self, msg: str, source: PFile):
-        super().__init__(f'{msg} [{source.path}]')
+    def __init__(self, position: Pos, message: str):
+        super().__init__(position, message)
