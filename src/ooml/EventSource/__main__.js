@@ -7,9 +7,6 @@ ooml.EventSource = function () {
     throw TypeError(`Illegal constructor invocation`);
   }
 
-  u_define_data_property(_this, __IP_OOML_EVENTSOURCE_OWN_PARENT_INSTANCE, undefined, true);
-  u_define_data_property(_this, __IP_OOML_EVENTSOURCE_OWN_PARENT_PROPERTY, undefined, true);
-
   u_define_data_property(_this, __IP_OOML_EVENTSOURCE_OWN_DISPATCH_HANDLERS, u_new_clean_object());
   u_define_data_property(_this, __IP_OOML_EVENTSOURCE_OWN_CHANGE_LISTENERS, u_new_clean_object());
 

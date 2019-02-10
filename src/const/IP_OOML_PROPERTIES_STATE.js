@@ -1,6 +1,4 @@
 let __IP_OOML_PROPERTIES_STATE_CURRENTVALUE = "__OomlPropertiesStateCurrentValue";
-let __IP_OOML_PROPERTIES_STATE_NODES = "__OomlPropertiesStateNodes";
-let __IP_OOML_PROPERTIES_STATE_CUSTOMHTMLDOMELEMS = "__OomlPropertiesStateCustomHTMLRootDOMElements";
 
 let __IP_OOML_PROPERTIES_STATE_BINDINGID = "__OomlPropertiesStateBindingID";
 let __IP_OOML_PROPERTIES_STATE_BINDINGPARTS = "__OomlPropertiesStateBindingParts";

@@ -20,7 +20,7 @@ oomlHivePrototype[__IP_OOML_HIVE_PROTO_BIND] = function (key, inst) {
     // .get does NOT auto call _HANDLE_BINDING_CHANGE on this instance,
     // only .set does
 
-    inst[__IP_OOML_INST_PROTO_HANDLE_BINDING_CHANGE](id, val);
+    inst[__IP_OOML_OBJ_PROTO_HANDLE_BINDING_CHANGE](id, val);
   });
 
   return id;

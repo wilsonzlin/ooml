@@ -45,7 +45,7 @@ oomlHivePrototype[__IP_OOML_HIVE_PROTO_GET_OR_SET] = function (key, value, cb) {
                   // Could be deleted
                   return;
                 }
-                inst[__IP_OOML_INST_PROTO_HANDLE_BINDING_CHANGE](id, rv);
+                inst[__IP_OOML_OBJ_PROTO_HANDLE_BINDING_CHANGE](id, rv);
               });
             }
           }

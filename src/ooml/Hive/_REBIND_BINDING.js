@@ -1,10 +1,10 @@
-oomlInstancePrototype[__IP_OOML_INST_PROTO_REBIND_BINDING] = function (prop_name) {
+oomlObjectPrototype[__IP_OOML_OBJ_PROTO_REBIND_BINDING] = function (prop_name) {
   let _this = this;
 
-  let state = _this[__IP_OOML_INST_OWN_PROPERTIES_STATE][prop_name];
+  let state = _this[__IP_OOML_OBJ_OWN_PROPERTIES_STATE][prop_name];
 
-  let bindings = this[__IP_OOML_INST_OWN_BINDINGS];
-  let rebinding_set_timeouts = _this[__IP_OOML_INST_OWN_REBINDING_SET_TIMEOUTS];
+  let bindings = this[__IP_OOML_OBJ_OWN_BINDINGS];
+  let rebinding_set_timeouts = _this[__IP_OOML_OBJ_OWN_REBINDING_SET_TIMEOUTS];
 
   clearTimeout(rebinding_set_timeouts[prop_name]);
 

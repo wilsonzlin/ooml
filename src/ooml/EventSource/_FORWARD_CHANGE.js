@@ -7,21 +7,7 @@ oomlEventSourcePrototype[__IP_OOML_EVENTSOURCE_PROTO_FORWARD_CHANGE] = function 
 
   if (change_listeners[event_name]) {
     u_iterate(change_listeners[event_name], handler => {
-      let eventObject = {
-        data: event_data,
-      };
-
-      handler.call(_this, eventObject);
+      handler.call(_this, event_data);
     });
-  }
-
-  let attachment_parent_instance = _this[__IP_OOML_EVENTSOURCE_OWN_PARENT_INSTANCE];
-  let attachment_parent_property = _this[__IP_OOML_EVENTSOURCE_OWN_PARENT_PROPERTY];
-
-  if (attachment_parent_instance) {
-    attachment_parent_instance[__IP_OOML_EVENTSOURCE_PROTO_RECEIVE_CHANGE](
-      attachment_parent_property,
-      event_name,
-      event_data);
   }
 };

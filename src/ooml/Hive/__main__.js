@@ -2,7 +2,7 @@ ooml.Hive = function () {
   let _this = this;
 
   if (!(_this instanceof ooml.Hive)) {
-    throw TypeError(`Invalid Hive constructor invocation`);
+    throw TypeError(`Illegal constructor invocation`);
   }
 
   let vals = u_new_clean_object();
