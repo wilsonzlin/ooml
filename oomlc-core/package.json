@@ -1,0 +1,27 @@
+{
+  "name": "oomlc-core",
+  "version": "14.0.0",
+  "description": "Build and generate ooml bytecode",
+  "main": "dist/oomlc-core.js",
+  "files": [
+    "dist/oomlc-core.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ooml/oomlc-core.git"
+  },
+  "keywords": [
+    "ooml",
+    "oomlc"
+  ],
+  "author": {
+    "email": "contact@wilsonl.in",
+    "name": "Wilson Lin",
+    "url": "https://wilsonl.in/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ooml/oomlc-core/issues"
+  },
+  "homepage": "https://github.com/ooml/oomlc-core#readme"
+}

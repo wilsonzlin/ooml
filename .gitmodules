@@ -1,9 +1,0 @@
-[submodule "submodules/libooml"]
-	path = submodules/libooml
-	url = https://github.com/ooml/libooml
-[submodule "submodules/oomlvm"]
-	path = submodules/oomlvm
-	url = https://github.com/ooml/oomlvm
-[submodule "submodules/oomlc-core"]
-	path = submodules/oomlc-core
-	url = https://github.com/ooml/oomlc-core
