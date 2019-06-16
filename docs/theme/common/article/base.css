@@ -1,0 +1,65 @@
+#article header {
+  /*background: white;*/
+}
+
+#article h1, h2, h3 {
+  text-decoration: underline;
+}
+
+#article td, #article th {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+#article th {
+  color: #859900;
+}
+
+#article pre /* Block of code */
+{
+  background: rgba(0, 0, 0, 0.05);
+
+  color: #777;
+}
+
+#article pre.signature {
+  background: #282c34;
+  border-color: #181a1f;
+  color: #abb2bf;
+}
+
+#article pre .type { /* .type exists in x-referenza-typedline code */
+  color: #1a1a1a;
+}
+
+#article pre .literal { /* .literal exists in x-referenza-typedline code */
+  color: #d19a66;
+}
+
+#article pre.signature .type {
+  color: #98c379;
+}
+
+#article pre.signature .literal {
+  color: #61aeee;
+}
+
+#article code /* Inline code */
+{
+  color: #555;
+}
+
+.tabbed-sections {
+  border-color: rgba(0, 0, 0, 0.25); /* Same colour as table borders */
+}
+
+.tabbed-sections-labels {
+  border-bottom-color: rgba(0, 0, 0, 0.25); /* Same colour as .tabbed-sections */
+}
+
+.tabbed-section-label {
+  color: gray; /* TODO Choose better colour */
+}
+
+.tabbed-section-label.active {
+  color: #268BD2; /* Same as <button> */
+}

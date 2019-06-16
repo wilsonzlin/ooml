@@ -1,0 +1,21 @@
+#feedback-form {
+  background: #27343b;
+  box-shadow: 0.25rem 0.25rem 1rem black;
+}
+
+.feedback-form-text-input {
+  background: #101e26;
+}
+
+.feedback-form-text-input:focus {
+  border-color: #2AA198;
+}
+
+#feedback-form-keywords > label > span {
+  background: rgba(248, 248, 248, 0.9);
+}
+
+#feedback-form-keywords > label > input:checked + span {
+  background: #B58900;
+  color: #FDF6E3;
+}
