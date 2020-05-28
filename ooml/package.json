@@ -6,6 +6,20 @@
   "files": [
     "dist/**/*"
   ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wilsonzlin/ooml.git"
+  },
+  "author": {
+    "email": "npm@wilsonl.in",
+    "name": "Wilson Lin",
+    "url": "https://wilsonl.in"
+  },
+  "bugs": {
+    "url": "https://github.com/wilsonzlin/ooml/issues"
+  },
+  "homepage": "https://github.com/wilsonzlin/ooml/ooml",
   "scripts": {
     "clean": "rm -rf dist",
     "dev": "webpack --mode development --watch",
