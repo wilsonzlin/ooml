@@ -6,6 +6,15 @@ export {AutoWrapProps, ViewTemplate, attachInstance, isOomlInstance} from './ins
 export {TemplateElement, TemplateAttr, TemplateBinding} from './template';
 export * from './jsx';
 
+const applyAttr = (name: string, value: any, elem: HTMLElement) => {
+  const nameLc = name.toLowerCase();
+  if (name in elem) {
+    elem[name] = value;
+  } else {
+    elem[nameLc] = value;
+  }
+};
+
 const setUpBoundProp = (name: string, instance: OomlInstance) => {
   const boundProps = instance[BoundProps];
 
@@ -55,7 +64,7 @@ const setUpBoundProp = (name: string, instance: OomlInstance) => {
         const newValue = compute.call(instance);
         if (typeof anchor == 'string') {
           // It's an attribute.
-          instance[anchor] = newValue;
+          applyAttr(anchor, newValue, instance[ViewRoot]);
         } else {
           // It's an element's child.
           const oldType = determineBindingType(oldValue);
@@ -79,7 +88,8 @@ const buildElement = (template: TemplateElement, instance: OomlInstance) => {
   const boundProps = instance[BoundProps];
 
   for (const attr of template.attrs) {
-    const initialValue = elem[attr.name] = attr.binding.compute.call(instance);
+    const initialValue = attr.binding.compute.call(instance);
+    applyAttr(attr.name, initialValue, elem);
     for (const varName of attr.binding.boundProps) {
       setUpBoundProp(varName, instance);
       boundProps.get(varName)!.bindings.push({
