@@ -1,8 +1,8 @@
 import {attachBinding, BindingType, detachBinding, determineBindingType} from './dom';
-import {BoundPropDescriptor, BoundProps, OomlInstance, ViewRoot, ViewTemplate} from './instance';
+import {AutoWrapProps, BoundPropDescriptor, BoundProps, isPojo, OomlInstance, ViewRoot, ViewTemplate} from './instance';
 import {TemplateElement} from './template';
 
-export {ViewTemplate, attachInstance, isOomlInstance} from './instance';
+export {AutoWrapProps, ViewTemplate, attachInstance, isOomlInstance} from './instance';
 export {TemplateElement, TemplateAttr, TemplateBinding} from './template';
 export * from './jsx';
 
@@ -43,6 +43,10 @@ const setUpBoundProp = (name: string, instance: OomlInstance) => {
       if ('setter' in boundProp.value) {
         boundProp.value.setter.call(instance, value);
       } else {
+        const autoWrapper = instance[AutoWrapProps][name];
+        if (isPojo(value) && autoWrapper) {
+          value = autoWrapper(value);
+        }
         boundProp.value.value = value;
       }
 
@@ -113,6 +117,13 @@ const buildElement = (template: TemplateElement, instance: OomlInstance) => {
   return elem;
 };
 
+export const AutoWrap = (wrapper: Function) => {
+  return (classProto: any, prop: string) => {
+    classProto[AutoWrapProps] = classProto[AutoWrapProps] || {};
+    classProto[AutoWrapProps][prop] = wrapper;
+  };
+};
+
 export const OomlClass = <T extends {
   new (...args: any[]): {
     [ViewTemplate]: TemplateElement;
@@ -123,6 +134,7 @@ export const OomlClass = <T extends {
       super(...args);
       // If this is not the leaf class, then leave these to the leaf class.
       if (this.constructor === wrapped) {
+        this[AutoWrapProps] = this[AutoWrapProps] || {};
         this[BoundProps] = new Map();
         this[ViewRoot] = buildElement(this[ViewTemplate], this as any);
       }
