@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/wilsonzlin/ooml/issues"
   },
-  "homepage": "https://github.com/wilsonzlin/ooml/ooml",
+  "homepage": "https://github.com/wilsonzlin/ooml/tree/master/ooml",
   "scripts": {
     "clean": "rm -rf dist",
     "dev": "webpack --mode development --watch",
