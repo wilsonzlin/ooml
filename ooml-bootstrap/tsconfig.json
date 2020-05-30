@@ -3,11 +3,11 @@
     "src/**/*"
   ],
   "compilerOptions": {
-    "experimentalDecorators": true,
     "allowJs": false,
     "alwaysStrict": true,
     "declaration": false,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
     "jsx": "preserve",
     "lib": [
       "es2020",
