@@ -17,7 +17,7 @@ const SRC_INDEX_TSX = resolveRelativeToProject('src/index.tsx');
 const PUBLIC_INDEX_HTML = resolveRelativeToProject('public/index.html');
 const BUILD = resolveRelativeToProject('build');
 
-module.exports = {
+module.exports = (env, options) => ({
   devtool: false,
   entry: SRC_INDEX_TSX,
   output: {
@@ -86,12 +86,16 @@ module.exports = {
       inject: true,
       template: PUBLIC_INDEX_HTML,
     }),
-    new ScriptExtHtmlWebpackPlugin({
-      inline: ['index.js'],
-    }),
     new MiniCssExtractPlugin({
       filename: 'index.css',
     }),
-    new StyleExtHtmlWebpackPlugin(),
+    // We don't want these in development mode, as we use webpack-dev-server with
+    // HMR and it won't regenerate the index.html because it doesn't change.
+    ...(options.mode === 'development' ? [] : [
+      new ScriptExtHtmlWebpackPlugin({
+        inline: ['index.js'],
+      }),
+      new StyleExtHtmlWebpackPlugin(),
+    ]),
   ],
-};
+});
