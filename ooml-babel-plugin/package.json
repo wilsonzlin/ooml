@@ -1,6 +1,6 @@
 {
   "name": "ooml-babel-plugin",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Babel plugin to transpile JSX into ooml templates",
   "main": "index.js",
   "license": "MIT",
