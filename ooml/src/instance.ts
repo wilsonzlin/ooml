@@ -13,7 +13,7 @@ export type BoundPropDescriptor = {
     value: any;
   };
   bindings: {
-    anchor: string | Comment;
+    anchor: [HTMLElement, string] | Comment;
     compute: Function;
     value: any;
   }[];

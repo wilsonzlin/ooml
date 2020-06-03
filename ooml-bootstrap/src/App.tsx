@@ -6,7 +6,7 @@ export class App {
   name: string = 'World';
 
   [ViewTemplate] = (
-    <div className={styles.app}>
+    <div className={styles.App}>
       <h1>Hello {this.name}!</h1>
     </div>
   );

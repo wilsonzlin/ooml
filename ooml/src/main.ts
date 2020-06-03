@@ -62,9 +62,9 @@ const setUpBoundProp = (name: string, instance: OomlInstance) => {
       for (const binding of boundProp.bindings) {
         const {anchor, compute, value: oldValue} = binding;
         const newValue = compute.call(instance);
-        if (typeof anchor == 'string') {
+        if (Array.isArray(anchor)) {
           // It's an attribute.
-          applyAttr(anchor, newValue, instance[ViewRoot]);
+          applyAttr(anchor[1], newValue, anchor[0]);
         } else {
           // It's an element's child.
           const oldType = determineBindingType(oldValue);
@@ -93,7 +93,7 @@ const buildElement = (template: TemplateElement, instance: OomlInstance) => {
     for (const varName of attr.binding.boundProps) {
       setUpBoundProp(varName, instance);
       boundProps.get(varName)!.bindings.push({
-        anchor: attr.name,
+        anchor: [elem, attr.name],
         compute: attr.binding.compute,
         value: initialValue,
       });
