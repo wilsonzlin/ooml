@@ -1,6 +1,6 @@
 {
   "name": "ooml",
-  "version": "20.0.0-alpha.0",
+  "version": "20.0.0-alpha.1",
   "description": "Transparent object-orientated web UI framework",
   "main": "dist/main.js",
   "files": [
