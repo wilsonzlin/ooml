@@ -2,6 +2,13 @@ const throwIllegalFunctionInExpressionError = () => {
   throw new SyntaxError('Illegal function or class inside binding expression');
 };
 
+const createBinding = (boundProps, expr) => t.objectExpression([
+  t.objectProperty(t.identifier('boundProps'), t.arrayExpression(boundProps.map(v => t.stringLiteral(v)))),
+  t.objectProperty(t.identifier('compute'), t.functionExpression(null, [], t.blockStatement([
+    t.returnStatement(expr),
+  ]))),
+]);
+
 const parseExpressionContainer = (t, jsxExprPath) => {
   const boundVariables = [];
 
@@ -17,18 +24,17 @@ const parseExpressionContainer = (t, jsxExprPath) => {
       }
     },
   });
-  return t.objectExpression([
-    t.objectProperty(t.identifier('boundProps'), t.arrayExpression(boundVariables.map(v => t.stringLiteral(v)))),
-    t.objectProperty(t.identifier('compute'), t.functionExpression(null, [], t.blockStatement([
-      t.returnStatement(jsxExprPath.node.expression),
-    ]))),
-  ]);
+  return createBinding(boundVariables, jsxExprPath.node.expression);
 };
 
 const transformAttr = (t, jsxAttrPath) => {
+  const valuePath = jsxAttrPath.get('value');
   return t.objectExpression([
     t.objectProperty(t.identifier('name'), t.stringLiteral(jsxAttrPath.node.name.name.toLowerCase())),
-    t.objectProperty(t.identifier('binding'), parseExpressionContainer(t, jsxAttrPath.get('value'))),
+    t.objectProperty(
+      t.identifier('binding'),
+      t.isJSXExpressionContainer(valuePath.node) ? parseExpressionContainer(t, valuePath) : createBinding([], valuePath.node),
+    ),
   ]);
 };
 
