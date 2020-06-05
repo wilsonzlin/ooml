@@ -30,7 +30,7 @@ const parseExpressionContainer = (t, jsxExprPath) => {
 const transformAttr = (t, jsxAttrPath) => {
   const valuePath = jsxAttrPath.get('value');
   return t.objectExpression([
-    t.objectProperty(t.identifier('name'), t.stringLiteral(jsxAttrPath.node.name.name.toLowerCase())),
+    t.objectProperty(t.identifier('name'), t.stringLiteral(jsxAttrPath.node.name.name)),
     t.objectProperty(
       t.identifier('binding'),
       t.isJSXExpressionContainer(valuePath.node) ? parseExpressionContainer(t, valuePath) : createBinding(t, [], valuePath.node),
