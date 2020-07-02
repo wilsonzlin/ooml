@@ -13,7 +13,7 @@ const parseExpressionContainer = (t, jsxExprPath) => {
   const boundVariables = [];
 
   jsxExprPath.traverse({
-    ArrowFunctionExpression: throwIllegalFunctionInExpressionError,
+    // Arrow functions are OK because they don't alter `this`.
     ClassDeclaration: throwIllegalFunctionInExpressionError,
     ClassExpression: throwIllegalFunctionInExpressionError,
     FunctionDeclaration: throwIllegalFunctionInExpressionError,
