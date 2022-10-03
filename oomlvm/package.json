@@ -1,0 +1,29 @@
+{
+  "name": "oomlvm",
+  "version": "14.0.0",
+  "description": "JS runtime to execute ooml bytecode",
+  "browser": true,
+  "main": "dist/oomlvm.js",
+  "files": [
+    "dist/oomlvm.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ooml/oomlvm.git"
+  },
+  "keywords": [
+    "ooml",
+    "oomlvm",
+    "runtime"
+  ],
+  "author": {
+    "email": "contact@wilsonl.in",
+    "name": "Wilson Lin",
+    "url": "https://wilsonl.in/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ooml/oomlvm/issues"
+  },
+  "homepage": "https://github.com/ooml/oomlvm#readme"
+}

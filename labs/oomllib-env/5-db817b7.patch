@@ -1,0 +1,2940 @@
+From db817b752597455b4d580b217abc5b473278c356 Mon Sep 17 00:00:00 2001
+From: Wilson Lin <contact@wilsonl.in>
+Date: Tue, 1 May 2018 15:31:39 +1200
+Subject: [PATCH] Complete preliminary Java API
+
+---
+ .gitignore                                    |    1 +
+ dec/dom.generated.d.ts                        |    2 +-
+ dec/dom.iterable.d.ts                         |   48 +-
+ dec/es2015.collection.d.ts                    |    6 +-
+ dec/es2015.core.d.ts                          |    5 -
+ dec/es2015.iterable.d.ts                      |   24 +-
+ dec/es2015.promise.d.ts                       |   12 +-
+ dec/es2017.typedarrays.d.ts                   |    3 +
+ dec/es2018.promise.d.ts                       |    2 +-
+ dec/es2018.regexp.d.ts                        |   10 +-
+ dec/webworker.generated.d.ts                  | 1773 -----------------
+ dec/webworker.importscripts.d.ts              |    6 -
+ .../env/gen/Compiling/Java/JavaBuiltin.java   |    2 +
+ .../env/gen/Compiling/Java/JavaClass.java     |    4 +-
+ .../gen/Compiling/Java/JavaClassMethod.java   |   10 +-
+ .../Java/JavaClassMethodParameter.java        |    3 -
+ .../gen/Compiling/Java/JavaClassVariable.java |   26 +-
+ .../env/gen/Compiling/Java/JavaCompiler.java  |  156 +-
+ .../env/gen/Compiling/Java/JavaPackage.java   |   33 +
+ .../core/env/gen/Compiling/Java/JavaType.java |   25 +-
+ .../Compiling/Java/STNormalisedUnionType.java |    2 +-
+ .../core/env/gen/Compiling/Java/UtilJava.java |    7 +-
+ .../org/ooml/oomlc/core/env/gen/Main.java     |   33 +-
+ .../BodyUnit/STInterfaceIndexSignature.java   |    2 +-
+ .../env/gen/Syntax/Namespace/STNamespace.java |    2 +-
+ .../Statement/STInterfaceStatement.java       |    3 -
+ .../Statement/STTypeAliasStatement.java       |    2 +-
+ .../Syntax/Statement/STVariableStatement.java |    2 +-
+ .../core/env/gen/Syntax/Type/STType.java      |    3 +-
+ compile.sh => generate.sh                     |    4 +
+ notes/TypeScript spec/Exporting interfaces.md |    7 +
+ pom.xml                                       |    8 +-
+ 32 files changed, 288 insertions(+), 1938 deletions(-)
+ delete mode 100644 dec/webworker.generated.d.ts
+ delete mode 100644 dec/webworker.importscripts.d.ts
+ create mode 100644 gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaPackage.java
+ rename compile.sh => generate.sh (64%)
+
+diff --git a/.gitignore b/.gitignore
+index 357cb66f0f..4f6dc553a5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1 +1,2 @@
+ /oomlc-core-env-gen-*.jar
++/lib/
+diff --git a/dec/dom.generated.d.ts b/dec/dom.generated.d.ts
+index d955f954b7..a86903a2f4 100644
+--- a/dec/dom.generated.d.ts
++++ b/dec/dom.generated.d.ts
+@@ -9168,7 +9168,7 @@ declare var RTCStatsProvider: {
+ };
+ 
+ interface RandomSource {
+-    getRandomValues<T extends Int8Array | Uint8ClampedArray | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array>(array: T): T;
++    getRandomValues<T extends TypedArray<T>>(array: T): T;
+ }
+ 
+ declare var RandomSource: {
+diff --git a/dec/dom.iterable.d.ts b/dec/dom.iterable.d.ts
+index 38ee4741c8..f2b6e5bed8 100644
+--- a/dec/dom.iterable.d.ts
++++ b/dec/dom.iterable.d.ts
+@@ -1,30 +1,28 @@
+ /// <reference path="lib.dom.d.ts" />
+ 
+-interface DOMTokenList {
+-    [Symbol.iterator](): IterableIterator<string>;
++interface DOMTokenList extends __Iterable<string> {
+ }
+ 
+-interface Headers {
+-    [Symbol.iterator](): IterableIterator<[string, string]>;
++interface Headers extends __Iterable<__Tuple2<string, string>> {
+     /**
+      * Returns an iterator allowing to go through all key/value pairs contained in this object.
+      */
+-    entries(): IterableIterator<[string, string]>;
++    entries(): __Iterator<__Tuple2<string, string>>;
+     /**
+      * Returns an iterator allowing to go through all keys f the key/value pairs contained in this object.
+      */
+-    keys(): IterableIterator<string>;
++    keys(): __Iterator<string>;
+     /**
+      * Returns an iterator allowing to go through all values of the key/value pairs contained in this object.
+      */
+-    values(): IterableIterator<string>;
++    values(): __Iterator<string>;
+ }
+ 
+-interface NodeList<T extends Node> {
++interface NodeList<T extends Node> extends __Iterable<T> {
+     /**
+      * Returns an array of key, value pairs for every entry in the list
+      */
+-    entries(): IterableIterator<[number, T]>;
++    entries(): __Iterator<__Tuple2<number, T>>;
+     /**
+      * Performs the specified action for each node in an list.
+      * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the list.
+@@ -34,53 +32,43 @@ interface NodeList<T extends Node> {
+     /**
+      * Returns an list of keys in the list
+      */
+-    keys(): IterableIterator<number>;
++    keys(): __Iterator<number>;
+ 
+     /**
+      * Returns an list of values in the list
+      */
+-    values(): IterableIterator<T>;
+-
+-
+-    [Symbol.iterator](): IterableIterator<T>;
++    values(): __Iterator<T>;
+ }
+ 
+-interface HTMLCollection<T extends Element> {
+-    [Symbol.iterator](): IterableIterator<T>;
++interface HTMLCollection<T extends Element> extends __Iterable<T> {
+ }
+ 
+-interface FormData {
++interface FormData extends __Iterable<string | File> {
+     /**
+      * Returns an array of key, value pairs for every entry in the list
+      */
+-    entries(): IterableIterator<[string, string | File]>;
++    entries(): __Iterator<__Tuple2<string, string | File>>;
+     /**
+      * Returns a list of keys in the list
+      */
+-    keys(): IterableIterator<string>;
++    keys(): __Iterator<string>;
+     /**
+      * Returns a list of values in the list
+      */
+-    values(): IterableIterator<string | File>;
+-
+-    [Symbol.iterator](): IterableIterator<string | File>;
++    values(): __Iterator<string | File>;
+ }
+ 
+-interface URLSearchParams {
++interface URLSearchParams extends __Iterable<__Tuple2<string, string>> {
+     /**
+      * Returns an array of key, value pairs for every entry in the search params
+      */
+-    entries(): IterableIterator<[string, string]>;
++    entries(): __Iterator<__Tuple2<string, string>>;
+     /**
+      * Returns a list of keys in the search params
+      */
+-    keys(): IterableIterator<string>;
++    keys(): __Iterator<string>;
+     /**
+      * Returns a list of values in the search params
+      */
+-    values(): IterableIterator<string>;
+-    /**
+-     * iterate over key/value pairs
+-     */
+-    [Symbol.iterator](): IterableIterator<[string, string]>;
++    values(): __Iterator<string>;
+ }
+diff --git a/dec/es2015.collection.d.ts b/dec/es2015.collection.d.ts
+index 4c08eb609e..b592af7ee1 100644
+--- a/dec/es2015.collection.d.ts
++++ b/dec/es2015.collection.d.ts
+@@ -2,18 +2,18 @@ interface WeakMap<K extends object, V> {
+     delete(key: K): boolean;
+     get(key: K): V | null;
+     has(key: K): boolean;
+-    set(key: K, value: V): this;
++    set(key: K, value: V): WeakMap<K, V>;
+ }
+ 
+ interface WeakMapConstructor {
+     new (): WeakMap<object, any>;
+-    new <K extends object, V>(entries?: ReadonlyArray<[K, V]> | null): WeakMap<K, V>;
++    new <K extends object, V>(entries?: ReadonlyArray<__Tuple2<K, V>> | null): WeakMap<K, V>;
+     readonly prototype: WeakMap<object, any>;
+ }
+ declare var WeakMap: WeakMapConstructor;
+ 
+ interface WeakSet<T extends object> {
+-    add(value: T): this;
++    add(value: T): WeakSet<T>;
+     delete(value: T): boolean;
+     has(value: T): boolean;
+ }
+diff --git a/dec/es2015.core.d.ts b/dec/es2015.core.d.ts
+index 8edf9dd390..54f60fcbed 100644
+--- a/dec/es2015.core.d.ts
++++ b/dec/es2015.core.d.ts
+@@ -25,8 +25,3 @@ interface RegExp {
+      */
+     readonly unicode: boolean;
+ }
+-
+-interface RegExpConstructor {
+-    new (pattern: RegExp, flags?: string): RegExp;
+-    (pattern: RegExp, flags?: string): RegExp;
+-}
+diff --git a/dec/es2015.iterable.d.ts b/dec/es2015.iterable.d.ts
+index 0e0780ed53..4832df4711 100644
+--- a/dec/es2015.iterable.d.ts
++++ b/dec/es2015.iterable.d.ts
+@@ -3,13 +3,13 @@
+ interface WeakMap<K extends object, V> { }
+ 
+ interface WeakMapConstructor {
+-    new <K extends object, V>(iterable: Iterable<[K, V]>): WeakMap<K, V>;
++    new <K extends object, V>(iterable: __Iterable<__Tuple2<K, V>>): WeakMap<K, V>;
+ }
+ 
+ interface WeakSet<T extends object> { }
+ 
+ interface WeakSetConstructor {
+-    new <T extends object>(iterable: Iterable<T>): WeakSet<T>;
++    new <T extends object>(iterable: __Iterable<T>): WeakSet<T>;
+ }
+ 
+ interface Promise<T> { }
+@@ -21,7 +21,7 @@ interface PromiseConstructor {
+      * @param values An array of Promises.
+      * @returns A new Promise.
+      */
+-    all<TAll>(values: Iterable<TAll | Promise<TAll>>): Promise<TAll[]>;
++    all<TAll>(values: __Iterable<Promise<TAll>>): Promise<TAll[]>;
+ 
+     /**
+      * Creates a Promise that is resolved or rejected when any of the provided Promises are resolved
+@@ -29,27 +29,27 @@ interface PromiseConstructor {
+      * @param values An array of Promises.
+      * @returns A new Promise.
+      */
+-    race<T>(values: Iterable<T | Promise<T>>): Promise<T>;
++    race<T>(values: __Iterable<Promise<T>>): Promise<T>;
+ }
+ 
+-interface ArrayBufferView<T extends ArrayBufferView<T>> {
+-  [Symbol.iterator](): IterableIterator<number>;
++interface ArrayBufferView<T extends ArrayBufferView<T>> extends __Iterable<number> {
+   /**
+    * Returns an array of key, value pairs for every entry in the array
+    */
+-  entries(): IterableIterator<[number, number]>;
++  entries(): __Iterator<__Tuple2<number, number>>;
+   /**
+    * Returns an list of keys in the array
+    */
+-  keys(): IterableIterator<number>;
++  keys(): __Iterator<number>;
+   /**
+    * Returns an list of values in the array
+    */
+-  values(): IterableIterator<number>;
++  values(): __Iterator<number>;
+ }
+ 
+ interface ArrayBufferViewConstructor {
+-  new (elements: Iterable<number>): T;
++  new (elements: __Iterable<number>): T;
++  prototype: ArrayBufferView<T>;
+ 
+   /**
+    * Creates an array from an array-like or iterable object.
+@@ -57,5 +57,7 @@ interface ArrayBufferViewConstructor {
+    * @param mapfn A mapping function to call on every element of the array.
+    * @param thisArg Value of 'this' used to invoke the mapfn.
+    */
+-  from(arrayLike: Iterable<number>, mapfn?: (v: number, k: number) => number, thisArg?: any): T;
++  from<S extends ArrayBufferView<S>>(iterable: __Iterable<number>, mapper?: (v: number, k: number) => number): S;
+ }
++
++declare const ArrayBufferView : ArrayBufferViewConstructor;
+diff --git a/dec/es2015.promise.d.ts b/dec/es2015.promise.d.ts
+index d6f39ec920..86c3d0ce5e 100644
+--- a/dec/es2015.promise.d.ts
++++ b/dec/es2015.promise.d.ts
+@@ -1,3 +1,13 @@
++interface PromiseExecutorCallbacks<T> {
++    resolve(value?: T): void;
++    resolve(value: Promise<T>): void;
++    reject(reason?: any): void;
++}
++
++interface PromiseExecutor<T> {
++  (callbacks: PromiseExecutorCallbacks<T>): void;
++}
++
+ interface PromiseConstructor {
+     /**
+      * A reference to the prototype.
+@@ -10,7 +20,7 @@ interface PromiseConstructor {
+      * a resolve callback used resolve the promise with a value or the result of another promise,
+      * and a reject callback used to reject the promise with a provided reason or error.
+      */
+-    new <T>(executor: (resolve: (value?: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
++    new <T>(executor: PromiseExecutor<T>): Promise<T>;
+ 
+     /**
+      * Creates a Promise that is resolved with an array of results when all of the provided Promises
+diff --git a/dec/es2017.typedarrays.d.ts b/dec/es2017.typedarrays.d.ts
+index 2392b5d190..3f330c490a 100644
+--- a/dec/es2017.typedarrays.d.ts
++++ b/dec/es2017.typedarrays.d.ts
+@@ -1,3 +1,6 @@
+ interface ArrayBufferViewConstructor {
+     new (): T;
++    prototype: ArrayBufferView<T>;
+ }
++
++declare const ArrayBufferView : ArrayBufferViewConstructor;
+diff --git a/dec/es2018.promise.d.ts b/dec/es2018.promise.d.ts
+index 714b9d1b5b..38b96db0c4 100644
+--- a/dec/es2018.promise.d.ts
++++ b/dec/es2018.promise.d.ts
+@@ -8,5 +8,5 @@ interface Promise<T> {
+      * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+      * @returns A Promise for the completion of the callback.
+      */
+-    finally(onfinally?: (() => void) | null): Promise<T>
++    finally(onfinally?: (() => void) | null): Promise<T>;
+ }
+diff --git a/dec/es2018.regexp.d.ts b/dec/es2018.regexp.d.ts
+index fd2b48a8f3..123bab9084 100644
+--- a/dec/es2018.regexp.d.ts
++++ b/dec/es2018.regexp.d.ts
+@@ -1,11 +1,11 @@
+ interface RegExpMatchArray {
+     groups?: {
+-        [key: string]: string
+-    }
++        [key: string]: string;
++    };
+ }
+ 
+ interface RegExpExecArray {
+     groups?: {
+-        [key: string]: string
+-    }
+-}
+\ No newline at end of file
++        [key: string]: string;
++    };
++}
+diff --git a/dec/webworker.generated.d.ts b/dec/webworker.generated.d.ts
+deleted file mode 100644
+index abdfd73b4f..0000000000
+--- a/dec/webworker.generated.d.ts
++++ /dev/null
+@@ -1,1773 +0,0 @@
+-/////////////////////////////
+-/// Worker APIs
+-/////////////////////////////
+-
+-interface AddEventListenerOptions extends EventListenerOptions {
+-    once?: boolean;
+-    passive?: boolean;
+-}
+-
+-interface Algorithm {
+-    name: string;
+-}
+-
+-interface CacheQueryOptions {
+-    cacheName?: string;
+-    ignoreMethod?: boolean;
+-    ignoreSearch?: boolean;
+-    ignoreVary?: boolean;
+-}
+-
+-interface ClientQueryOptions {
+-    includeReserved?: boolean;
+-    includeUncontrolled?: boolean;
+-    type?: ClientTypes;
+-}
+-
+-interface CloseEventInit extends EventInit {
+-    code?: number;
+-    reason?: string;
+-    wasClean?: boolean;
+-}
+-
+-interface ErrorEventInit extends EventInit {
+-    colno?: number;
+-    error?: any;
+-    filename?: string;
+-    lineno?: number;
+-    message?: string;
+-}
+-
+-interface EventInit {
+-    bubbles?: boolean;
+-    cancelable?: boolean;
+-    scoped?: boolean;
+-}
+-
+-interface EventListenerOptions {
+-    capture?: boolean;
+-}
+-
+-interface ExtendableEventInit extends EventInit {
+-}
+-
+-interface ExtendableMessageEventInit extends ExtendableEventInit {
+-    data?: any;
+-    lastEventId?: string;
+-    origin?: string;
+-    ports?: MessagePort[] | null;
+-    source?: Client | ServiceWorker | MessagePort | null;
+-}
+-
+-interface FetchEventInit extends ExtendableEventInit {
+-    clientId?: string;
+-    request: Request;
+-    reservedClientId?: string;
+-    targetClientId?: string;
+-}
+-
+-interface GetNotificationOptions {
+-    tag?: string;
+-}
+-
+-interface IDBIndexParameters {
+-    multiEntry?: boolean;
+-    unique?: boolean;
+-}
+-
+-interface IDBObjectStoreParameters {
+-    autoIncrement?: boolean;
+-    keyPath?: string | string[];
+-}
+-
+-interface KeyAlgorithm {
+-    name: string;
+-}
+-
+-interface MessageEventInit extends EventInit {
+-    channel?: string;
+-    data?: any;
+-    lastEventId?: string;
+-    origin?: string;
+-    ports?: MessagePort[];
+-    source?: object | null;
+-}
+-
+-interface NotificationEventInit extends ExtendableEventInit {
+-    action?: string;
+-    notification: Notification;
+-}
+-
+-interface NotificationOptions {
+-    body?: string;
+-    data?: any;
+-    dir?: NotificationDirection;
+-    icon?: string;
+-    lang?: string;
+-    tag?: string;
+-}
+-
+-interface ObjectURLOptions {
+-    oneTimeOnly?: boolean;
+-}
+-
+-interface ProgressEventInit extends EventInit {
+-    lengthComputable?: boolean;
+-    loaded?: number;
+-    total?: number;
+-}
+-
+-interface PushEventInit extends ExtendableEventInit {
+-    data?: Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | string | null;
+-}
+-
+-interface PushSubscriptionChangeInit extends ExtendableEventInit {
+-    newSubscription?: PushSubscription;
+-    oldSubscription?: PushSubscription;
+-}
+-
+-interface PushSubscriptionOptionsInit {
+-    applicationServerKey?: Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | string | null;
+-    userVisibleOnly?: boolean;
+-}
+-
+-interface RequestInit {
+-    body?: Blob | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | FormData | string | null;
+-    cache?: RequestCache;
+-    credentials?: RequestCredentials;
+-    headers?: HeadersInit;
+-    integrity?: string;
+-    keepalive?: boolean;
+-    method?: string;
+-    mode?: RequestMode;
+-    redirect?: RequestRedirect;
+-    referrer?: string;
+-    referrerPolicy?: ReferrerPolicy;
+-    signal?: object;
+-    window?: any;
+-}
+-
+-interface ResponseInit {
+-    headers?: HeadersInit;
+-    status?: number;
+-    statusText?: string;
+-}
+-
+-interface SyncEventInit extends ExtendableEventInit {
+-    lastChance?: boolean;
+-    tag: string;
+-}
+-
+-interface EventListener {
+-    (evt: Event): void;
+-}
+-
+-interface AbstractWorkerEventMap {
+-    "error": ErrorEvent;
+-}
+-
+-interface AbstractWorker {
+-    onerror: ((this: AbstractWorker, ev: ErrorEvent) => any) | null;
+-    addEventListener<K extends keyof AbstractWorkerEventMap>(type: K, listener: (this: AbstractWorker, ev: AbstractWorkerEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof AbstractWorkerEventMap>(type: K, listener: (this: AbstractWorker, ev: AbstractWorkerEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-interface AudioBuffer {
+-    readonly duration: number;
+-    readonly length: number;
+-    readonly numberOfChannels: number;
+-    readonly sampleRate: number;
+-    copyFromChannel(destination: Float32Array, channelNumber: number, startInChannel?: number): void;
+-    copyToChannel(source: Float32Array, channelNumber: number, startInChannel?: number): void;
+-    getChannelData(channel: number): Float32Array;
+-}
+-
+-declare var AudioBuffer: {
+-    prototype: AudioBuffer;
+-    new(): AudioBuffer;
+-};
+-
+-interface Blob {
+-    readonly size: number;
+-    readonly type: string;
+-    msClose(): void;
+-    msDetachStream(): any;
+-    slice(start?: number, end?: number, contentType?: string): Blob;
+-}
+-
+-declare var Blob: {
+-    prototype: Blob;
+-    new (blobParts?: any[], options?: BlobPropertyBag): Blob;
+-};
+-
+-interface BlobPropertyBag {
+-    endings?: string;
+-    type?: string;
+-}
+-
+-interface Body {
+-    readonly bodyUsed: boolean;
+-    arrayBuffer(): Promise<ArrayBuffer>;
+-    blob(): Promise<Blob>;
+-    formData(): Promise<FormData>;
+-    json(): Promise<any>;
+-    text(): Promise<string>;
+-}
+-
+-interface Cache {
+-    add(request: Request | string): Promise<void>;
+-    addAll(requests: (Request | string)[]): Promise<void>;
+-    delete(request: Request | string, options?: CacheQueryOptions): Promise<boolean>;
+-    keys(request?: Request | string, options?: CacheQueryOptions): Promise<Request[]>;
+-    match(request: Request | string, options?: CacheQueryOptions): Promise<Response>;
+-    matchAll(request?: Request | string, options?: CacheQueryOptions): Promise<Response[]>;
+-    put(request: Request | string, response: Response): Promise<void>;
+-}
+-
+-declare var Cache: {
+-    prototype: Cache;
+-    new(): Cache;
+-};
+-
+-interface CacheStorage {
+-    delete(cacheName: string): Promise<boolean>;
+-    has(cacheName: string): Promise<boolean>;
+-    keys(): Promise<string[]>;
+-    match(request: Request | string, options?: CacheQueryOptions): Promise<any>;
+-    open(cacheName: string): Promise<Cache>;
+-}
+-
+-declare var CacheStorage: {
+-    prototype: CacheStorage;
+-    new(): CacheStorage;
+-};
+-
+-interface Client {
+-    readonly id: string;
+-    readonly reserved: boolean;
+-    readonly type: ClientTypes;
+-    readonly url: string;
+-    postMessage(message: any, transfer?: any[]): void;
+-}
+-
+-declare var Client: {
+-    prototype: Client;
+-    new(): Client;
+-};
+-
+-interface Clients {
+-    claim(): Promise<void>;
+-    get(id: string): Promise<any>;
+-    matchAll(options?: ClientQueryOptions): Promise<Client[]>;
+-    openWindow(url: string): Promise<WindowClient | null>;
+-}
+-
+-declare var Clients: {
+-    prototype: Clients;
+-    new(): Clients;
+-};
+-
+-interface CloseEvent extends Event {
+-    readonly code: number;
+-    readonly reason: string;
+-    readonly wasClean: boolean;
+-    /** @deprecated */
+-    initCloseEvent(typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, wasCleanArg: boolean, codeArg: number, reasonArg: string): void;
+-}
+-
+-declare var CloseEvent: {
+-    prototype: CloseEvent;
+-    new(type: string, eventInitDict?: CloseEventInit): CloseEvent;
+-};
+-
+-interface Console {
+-    memory: any;
+-    assert(condition?: boolean, message?: string, ...data: any[]): void;
+-    clear(): void;
+-    count(label?: string): void;
+-    debug(message?: any, ...optionalParams: any[]): void;
+-    dir(value?: any, ...optionalParams: any[]): void;
+-    dirxml(value: any): void;
+-    error(message?: any, ...optionalParams: any[]): void;
+-    exception(message?: string, ...optionalParams: any[]): void;
+-    group(groupTitle?: string, ...optionalParams: any[]): void;
+-    groupCollapsed(groupTitle?: string, ...optionalParams: any[]): void;
+-    groupEnd(): void;
+-    info(message?: any, ...optionalParams: any[]): void;
+-    log(message?: any, ...optionalParams: any[]): void;
+-    markTimeline(label?: string): void;
+-    msIsIndependentlyComposed(element: object): boolean;
+-    profile(reportName?: string): void;
+-    profileEnd(): void;
+-    select(element: object): void;
+-    table(...tabularData: any[]): void;
+-    time(label?: string): void;
+-    timeEnd(label?: string): void;
+-    timeStamp(label?: string): void;
+-    timeline(label?: string): void;
+-    timelineEnd(label?: string): void;
+-    trace(message?: any, ...optionalParams: any[]): void;
+-    warn(message?: any, ...optionalParams: any[]): void;
+-}
+-
+-declare var Console: {
+-    prototype: Console;
+-    new(): Console;
+-};
+-
+-interface Coordinates {
+-    readonly accuracy: number;
+-    readonly altitude: number | null;
+-    readonly altitudeAccuracy: number | null;
+-    readonly heading: number | null;
+-    readonly latitude: number;
+-    readonly longitude: number;
+-    readonly speed: number | null;
+-}
+-
+-declare var Coordinates: {
+-    prototype: Coordinates;
+-    new(): Coordinates;
+-};
+-
+-interface CryptoKey {
+-    readonly algorithm: KeyAlgorithm;
+-    readonly extractable: boolean;
+-    readonly type: string;
+-    readonly usages: string[];
+-}
+-
+-declare var CryptoKey: {
+-    prototype: CryptoKey;
+-    new(): CryptoKey;
+-};
+-
+-interface DOMError {
+-    readonly name: string;
+-    toString(): string;
+-}
+-
+-declare var DOMError: {
+-    prototype: DOMError;
+-    new(): DOMError;
+-};
+-
+-interface DOMException {
+-    readonly code: number;
+-    readonly message: string;
+-    readonly name: string;
+-    toString(): string;
+-    readonly ABORT_ERR: number;
+-    readonly DATA_CLONE_ERR: number;
+-    readonly DOMSTRING_SIZE_ERR: number;
+-    readonly HIERARCHY_REQUEST_ERR: number;
+-    readonly INDEX_SIZE_ERR: number;
+-    readonly INUSE_ATTRIBUTE_ERR: number;
+-    readonly INVALID_ACCESS_ERR: number;
+-    readonly INVALID_CHARACTER_ERR: number;
+-    readonly INVALID_MODIFICATION_ERR: number;
+-    readonly INVALID_NODE_TYPE_ERR: number;
+-    readonly INVALID_STATE_ERR: number;
+-    readonly NAMESPACE_ERR: number;
+-    readonly NETWORK_ERR: number;
+-    readonly NOT_FOUND_ERR: number;
+-    readonly NOT_SUPPORTED_ERR: number;
+-    readonly NO_DATA_ALLOWED_ERR: number;
+-    readonly NO_MODIFICATION_ALLOWED_ERR: number;
+-    readonly PARSE_ERR: number;
+-    readonly QUOTA_EXCEEDED_ERR: number;
+-    readonly SECURITY_ERR: number;
+-    readonly SERIALIZE_ERR: number;
+-    readonly SYNTAX_ERR: number;
+-    readonly TIMEOUT_ERR: number;
+-    readonly TYPE_MISMATCH_ERR: number;
+-    readonly URL_MISMATCH_ERR: number;
+-    readonly VALIDATION_ERR: number;
+-    readonly WRONG_DOCUMENT_ERR: number;
+-}
+-
+-declare var DOMException: {
+-    prototype: DOMException;
+-    new(message?: string, name?: string): DOMException;
+-    readonly ABORT_ERR: number;
+-    readonly DATA_CLONE_ERR: number;
+-    readonly DOMSTRING_SIZE_ERR: number;
+-    readonly HIERARCHY_REQUEST_ERR: number;
+-    readonly INDEX_SIZE_ERR: number;
+-    readonly INUSE_ATTRIBUTE_ERR: number;
+-    readonly INVALID_ACCESS_ERR: number;
+-    readonly INVALID_CHARACTER_ERR: number;
+-    readonly INVALID_MODIFICATION_ERR: number;
+-    readonly INVALID_NODE_TYPE_ERR: number;
+-    readonly INVALID_STATE_ERR: number;
+-    readonly NAMESPACE_ERR: number;
+-    readonly NETWORK_ERR: number;
+-    readonly NOT_FOUND_ERR: number;
+-    readonly NOT_SUPPORTED_ERR: number;
+-    readonly NO_DATA_ALLOWED_ERR: number;
+-    readonly NO_MODIFICATION_ALLOWED_ERR: number;
+-    readonly PARSE_ERR: number;
+-    readonly QUOTA_EXCEEDED_ERR: number;
+-    readonly SECURITY_ERR: number;
+-    readonly SERIALIZE_ERR: number;
+-    readonly SYNTAX_ERR: number;
+-    readonly TIMEOUT_ERR: number;
+-    readonly TYPE_MISMATCH_ERR: number;
+-    readonly URL_MISMATCH_ERR: number;
+-    readonly VALIDATION_ERR: number;
+-    readonly WRONG_DOCUMENT_ERR: number;
+-};
+-
+-interface DOMStringList {
+-    readonly length: number;
+-    contains(str: string): boolean;
+-    item(index: number): string | null;
+-    [index: number]: string;
+-}
+-
+-declare var DOMStringList: {
+-    prototype: DOMStringList;
+-    new(): DOMStringList;
+-};
+-
+-interface DedicatedWorkerGlobalScopeEventMap extends WorkerGlobalScopeEventMap {
+-    "message": MessageEvent;
+-}
+-
+-interface DedicatedWorkerGlobalScope extends WorkerGlobalScope {
+-    onmessage: ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any) | null;
+-    close(): void;
+-    postMessage(message: any, transfer?: any[]): void;
+-    addEventListener<K extends keyof DedicatedWorkerGlobalScopeEventMap>(type: K, listener: (this: DedicatedWorkerGlobalScope, ev: DedicatedWorkerGlobalScopeEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof DedicatedWorkerGlobalScopeEventMap>(type: K, listener: (this: DedicatedWorkerGlobalScope, ev: DedicatedWorkerGlobalScopeEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var DedicatedWorkerGlobalScope: {
+-    prototype: DedicatedWorkerGlobalScope;
+-    new(): DedicatedWorkerGlobalScope;
+-};
+-
+-interface ErrorEvent extends Event {
+-    readonly colno: number;
+-    readonly error: any;
+-    readonly filename: string;
+-    readonly lineno: number;
+-    readonly message: string;
+-    initErrorEvent(typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, messageArg: string, filenameArg: string, linenoArg: number): void;
+-}
+-
+-declare var ErrorEvent: {
+-    prototype: ErrorEvent;
+-    new(typeArg: string, eventInitDict?: ErrorEventInit): ErrorEvent;
+-};
+-
+-interface Event {
+-    readonly bubbles: boolean;
+-    cancelBubble: boolean;
+-    readonly cancelable: boolean;
+-    readonly currentTarget: EventTarget | null;
+-    readonly defaultPrevented: boolean;
+-    readonly eventPhase: number;
+-    readonly isTrusted: boolean;
+-    returnValue: boolean;
+-    readonly scoped: boolean;
+-    readonly srcElement: object | null;
+-    readonly target: EventTarget | null;
+-    readonly timeStamp: number;
+-    readonly type: string;
+-    deepPath(): EventTarget[];
+-    initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void;
+-    preventDefault(): void;
+-    stopImmediatePropagation(): void;
+-    stopPropagation(): void;
+-    readonly AT_TARGET: number;
+-    readonly BUBBLING_PHASE: number;
+-    readonly CAPTURING_PHASE: number;
+-    readonly NONE: number;
+-}
+-
+-declare var Event: {
+-    prototype: Event;
+-    new(typeArg: string, eventInitDict?: EventInit): Event;
+-    readonly AT_TARGET: number;
+-    readonly BUBBLING_PHASE: number;
+-    readonly CAPTURING_PHASE: number;
+-    readonly NONE: number;
+-};
+-
+-interface EventListenerObject {
+-    handleEvent(evt: Event): void;
+-}
+-
+-interface EventTarget {
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void;
+-    dispatchEvent(evt: Event): boolean;
+-    removeEventListener(type: string, listener?: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
+-}
+-
+-declare var EventTarget: {
+-    prototype: EventTarget;
+-    new(): EventTarget;
+-};
+-
+-interface ExtendableEvent extends Event {
+-    waitUntil(f: Promise<any>): void;
+-}
+-
+-declare var ExtendableEvent: {
+-    prototype: ExtendableEvent;
+-    new(type: string, eventInitDict?: ExtendableEventInit): ExtendableEvent;
+-};
+-
+-interface ExtendableMessageEvent extends ExtendableEvent {
+-    readonly data: any;
+-    readonly lastEventId: string;
+-    readonly origin: string;
+-    readonly ports: ReadonlyArray<MessagePort> | null;
+-    readonly source: Client | ServiceWorker | MessagePort | null;
+-}
+-
+-declare var ExtendableMessageEvent: {
+-    prototype: ExtendableMessageEvent;
+-    new(type: string, eventInitDict?: ExtendableMessageEventInit): ExtendableMessageEvent;
+-};
+-
+-interface FetchEvent extends ExtendableEvent {
+-    readonly clientId: string;
+-    readonly request: Request;
+-    readonly reservedClientId: string;
+-    readonly targetClientId: string;
+-    respondWith(r: Promise<Response>): void;
+-}
+-
+-declare var FetchEvent: {
+-    prototype: FetchEvent;
+-    new(type: string, eventInitDict: FetchEventInit): FetchEvent;
+-};
+-
+-interface File extends Blob {
+-    readonly lastModified: number;
+-    /** @deprecated */
+-    readonly lastModifiedDate: Date;
+-    readonly name: string;
+-    readonly webkitRelativePath: string;
+-}
+-
+-declare var File: {
+-    prototype: File;
+-    new (parts: (ArrayBuffer | ArrayBufferView | Blob | string)[], filename: string, properties?: FilePropertyBag): File;
+-};
+-
+-interface FileList {
+-    readonly length: number;
+-    item(index: number): File | null;
+-    [index: number]: File;
+-}
+-
+-declare var FileList: {
+-    prototype: FileList;
+-    new(): FileList;
+-};
+-
+-interface FilePropertyBag extends BlobPropertyBag {
+-    lastModified?: number;
+-}
+-
+-interface FileReaderEventMap {
+-    "abort": ProgressEvent;
+-    "error": ProgressEvent;
+-    "load": ProgressEvent;
+-    "loadend": ProgressEvent;
+-    "loadstart": ProgressEvent;
+-    "progress": ProgressEvent;
+-}
+-
+-interface FileReader extends EventTarget {
+-    readonly error: DOMException | null;
+-    onabort: ((this: FileReader, ev: FileReaderProgressEvent) => any) | null;
+-    onerror: ((this: FileReader, ev: FileReaderProgressEvent) => any) | null;
+-    onload: ((this: FileReader, ev: FileReaderProgressEvent) => any) | null;
+-    onloadend: ((this: FileReader, ev: FileReaderProgressEvent) => any) | null;
+-    onloadstart: ((this: FileReader, ev: FileReaderProgressEvent) => any) | null;
+-    onprogress: ((this: FileReader, ev: FileReaderProgressEvent) => any) | null;
+-    readonly readyState: number;
+-    readonly result: any;
+-    abort(): void;
+-    readAsArrayBuffer(blob: Blob): void;
+-    readAsBinaryString(blob: Blob): void;
+-    readAsDataURL(blob: Blob): void;
+-    readAsText(blob: Blob, label?: string): void;
+-    readonly DONE: number;
+-    readonly EMPTY: number;
+-    readonly LOADING: number;
+-    addEventListener<K extends keyof FileReaderEventMap>(type: K, listener: (this: FileReader, ev: FileReaderEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof FileReaderEventMap>(type: K, listener: (this: FileReader, ev: FileReaderEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var FileReader: {
+-    prototype: FileReader;
+-    new(): FileReader;
+-    readonly DONE: number;
+-    readonly EMPTY: number;
+-    readonly LOADING: number;
+-};
+-
+-interface FileReaderProgressEvent extends ProgressEvent {
+-    readonly target: FileReader | null;
+-}
+-
+-interface FileReaderSync {
+-    readAsArrayBuffer(blob: Blob): any;
+-    readAsBinaryString(blob: Blob): void;
+-    readAsDataURL(blob: Blob): string;
+-    readAsText(blob: Blob, encoding?: string): string;
+-}
+-
+-declare var FileReaderSync: {
+-    prototype: FileReaderSync;
+-    new(): FileReaderSync;
+-};
+-
+-interface FormData {
+-    append(name: string, value: string | Blob, fileName?: string): void;
+-    delete(name: string): void;
+-    get(name: string): FormDataEntryValue | null;
+-    getAll(name: string): FormDataEntryValue[];
+-    has(name: string): boolean;
+-    set(name: string, value: string | Blob, fileName?: string): void;
+-}
+-
+-declare var FormData: {
+-    prototype: FormData;
+-    new(): FormData;
+-    new(form: object): FormData;
+-};
+-
+-interface GlobalFetch {
+-    fetch(input?: Request | string, init?: RequestInit): Promise<Response>;
+-}
+-
+-interface Headers {
+-    append(name: string, value: string): void;
+-    delete(name: string): void;
+-    forEach(callback: Function, thisArg?: any): void;
+-    get(name: string): string | null;
+-    has(name: string): boolean;
+-    set(name: string, value: string): void;
+-}
+-
+-declare var Headers: {
+-    prototype: Headers;
+-    new(init?: HeadersInit): Headers;
+-};
+-
+-interface IDBArrayKey extends Array<number | string | Date | IDBArrayKey> {
+-}
+-
+-interface IDBCursor {
+-    readonly direction: IDBCursorDirection;
+-    readonly key: IDBKeyRange | number | string | Date | IDBArrayKey;
+-    readonly primaryKey: any;
+-    readonly source: IDBObjectStore | IDBIndex;
+-    advance(count: number): void;
+-    continue(key?: IDBKeyRange | number | string | Date | IDBArrayKey): void;
+-    delete(): IDBRequest;
+-    update(value: any): IDBRequest;
+-    readonly NEXT: string;
+-    readonly NEXT_NO_DUPLICATE: string;
+-    readonly PREV: string;
+-    readonly PREV_NO_DUPLICATE: string;
+-}
+-
+-declare var IDBCursor: {
+-    prototype: IDBCursor;
+-    new(): IDBCursor;
+-    readonly NEXT: string;
+-    readonly NEXT_NO_DUPLICATE: string;
+-    readonly PREV: string;
+-    readonly PREV_NO_DUPLICATE: string;
+-};
+-
+-interface IDBCursorWithValue extends IDBCursor {
+-    readonly value: any;
+-}
+-
+-declare var IDBCursorWithValue: {
+-    prototype: IDBCursorWithValue;
+-    new(): IDBCursorWithValue;
+-};
+-
+-interface IDBDatabaseEventMap {
+-    "abort": Event;
+-    "error": Event;
+-}
+-
+-interface IDBDatabase extends EventTarget {
+-    readonly name: string;
+-    readonly objectStoreNames: DOMStringList;
+-    onabort: ((this: IDBDatabase, ev: Event) => any) | null;
+-    onerror: ((this: IDBDatabase, ev: Event) => any) | null;
+-    onversionchange: ((this: IDBDatabase, ev: Event) => any) | null;
+-    readonly version: number;
+-    close(): void;
+-    createObjectStore(name: string, optionalParameters?: IDBObjectStoreParameters): IDBObjectStore;
+-    deleteObjectStore(name: string): void;
+-    transaction(storeNames: string | string[], mode?: IDBTransactionMode): IDBTransaction;
+-    addEventListener<K extends keyof IDBDatabaseEventMap>(type: K, listener: (this: IDBDatabase, ev: IDBDatabaseEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof IDBDatabaseEventMap>(type: K, listener: (this: IDBDatabase, ev: IDBDatabaseEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var IDBDatabase: {
+-    prototype: IDBDatabase;
+-    new(): IDBDatabase;
+-};
+-
+-interface IDBFactory {
+-    cmp(first: any, second: any): number;
+-    deleteDatabase(name: string): IDBOpenDBRequest;
+-    open(name: string, version?: number): IDBOpenDBRequest;
+-}
+-
+-declare var IDBFactory: {
+-    prototype: IDBFactory;
+-    new(): IDBFactory;
+-};
+-
+-interface IDBIndex {
+-    readonly keyPath: string | string[];
+-    multiEntry: boolean;
+-    readonly name: string;
+-    readonly objectStore: IDBObjectStore;
+-    readonly unique: boolean;
+-    count(key?: IDBKeyRange | number | string | Date | IDBArrayKey): IDBRequest;
+-    get(key: IDBKeyRange | number | string | Date | IDBArrayKey): IDBRequest;
+-    getKey(key: IDBKeyRange | number | string | Date | IDBArrayKey): IDBRequest;
+-    openCursor(range?: IDBKeyRange | number | string | Date | IDBArrayKey, direction?: IDBCursorDirection): IDBRequest;
+-    openKeyCursor(range?: IDBKeyRange | number | string | Date | IDBArrayKey, direction?: IDBCursorDirection): IDBRequest;
+-}
+-
+-declare var IDBIndex: {
+-    prototype: IDBIndex;
+-    new(): IDBIndex;
+-};
+-
+-interface IDBKeyRange {
+-    readonly lower: any;
+-    readonly lowerOpen: boolean;
+-    readonly upper: any;
+-    readonly upperOpen: boolean;
+-}
+-
+-declare var IDBKeyRange: {
+-    prototype: IDBKeyRange;
+-    new(): IDBKeyRange;
+-    bound(lower: any, upper: any, lowerOpen?: boolean, upperOpen?: boolean): IDBKeyRange;
+-    lowerBound(lower: any, open?: boolean): IDBKeyRange;
+-    only(value: any): IDBKeyRange;
+-    upperBound(upper: any, open?: boolean): IDBKeyRange;
+-};
+-
+-interface IDBObjectStore {
+-    autoIncrement: boolean;
+-    readonly indexNames: DOMStringList;
+-    readonly keyPath: string | string[] | null;
+-    readonly name: string;
+-    readonly transaction: IDBTransaction;
+-    add(value: any, key?: IDBKeyRange | number | string | Date | IDBArrayKey): IDBRequest;
+-    clear(): IDBRequest;
+-    count(key?: IDBKeyRange | number | string | Date | IDBArrayKey): IDBRequest;
+-    createIndex(name: string, keyPath: string | string[], optionalParameters?: IDBIndexParameters): IDBIndex;
+-    delete(key: IDBKeyRange | number | string | Date | IDBArrayKey): IDBRequest;
+-    deleteIndex(indexName: string): void;
+-    get(key: any): IDBRequest;
+-    index(name: string): IDBIndex;
+-    openCursor(range?: IDBKeyRange | number | string | Date | IDBArrayKey, direction?: IDBCursorDirection): IDBRequest;
+-    put(value: any, key?: IDBKeyRange | number | string | Date | IDBArrayKey): IDBRequest;
+-}
+-
+-declare var IDBObjectStore: {
+-    prototype: IDBObjectStore;
+-    new(): IDBObjectStore;
+-};
+-
+-interface IDBOpenDBRequestEventMap extends IDBRequestEventMap {
+-    "blocked": Event;
+-    "upgradeneeded": IDBVersionChangeEvent;
+-}
+-
+-interface IDBOpenDBRequest extends IDBRequest {
+-    onblocked: ((this: IDBOpenDBRequest, ev: Event) => any) | null;
+-    onupgradeneeded: ((this: IDBOpenDBRequest, ev: IDBVersionChangeEvent) => any) | null;
+-    addEventListener<K extends keyof IDBOpenDBRequestEventMap>(type: K, listener: (this: IDBOpenDBRequest, ev: IDBOpenDBRequestEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof IDBOpenDBRequestEventMap>(type: K, listener: (this: IDBOpenDBRequest, ev: IDBOpenDBRequestEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var IDBOpenDBRequest: {
+-    prototype: IDBOpenDBRequest;
+-    new(): IDBOpenDBRequest;
+-};
+-
+-interface IDBRequestEventMap {
+-    "error": Event;
+-    "success": Event;
+-}
+-
+-interface IDBRequest extends EventTarget {
+-    readonly error: DOMException;
+-    onerror: ((this: IDBRequest, ev: Event) => any) | null;
+-    onsuccess: ((this: IDBRequest, ev: Event) => any) | null;
+-    readonly readyState: IDBRequestReadyState;
+-    readonly result: any;
+-    readonly source: IDBObjectStore | IDBIndex | IDBCursor;
+-    readonly transaction: IDBTransaction;
+-    addEventListener<K extends keyof IDBRequestEventMap>(type: K, listener: (this: IDBRequest, ev: IDBRequestEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof IDBRequestEventMap>(type: K, listener: (this: IDBRequest, ev: IDBRequestEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var IDBRequest: {
+-    prototype: IDBRequest;
+-    new(): IDBRequest;
+-};
+-
+-interface IDBTransactionEventMap {
+-    "abort": Event;
+-    "complete": Event;
+-    "error": Event;
+-}
+-
+-interface IDBTransaction extends EventTarget {
+-    readonly db: IDBDatabase;
+-    readonly error: DOMException;
+-    readonly mode: IDBTransactionMode;
+-    onabort: ((this: IDBTransaction, ev: Event) => any) | null;
+-    oncomplete: ((this: IDBTransaction, ev: Event) => any) | null;
+-    onerror: ((this: IDBTransaction, ev: Event) => any) | null;
+-    abort(): void;
+-    objectStore(name: string): IDBObjectStore;
+-    readonly READ_ONLY: string;
+-    readonly READ_WRITE: string;
+-    readonly VERSION_CHANGE: string;
+-    addEventListener<K extends keyof IDBTransactionEventMap>(type: K, listener: (this: IDBTransaction, ev: IDBTransactionEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof IDBTransactionEventMap>(type: K, listener: (this: IDBTransaction, ev: IDBTransactionEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var IDBTransaction: {
+-    prototype: IDBTransaction;
+-    new(): IDBTransaction;
+-    readonly READ_ONLY: string;
+-    readonly READ_WRITE: string;
+-    readonly VERSION_CHANGE: string;
+-};
+-
+-interface IDBVersionChangeEvent extends Event {
+-    readonly newVersion: number | null;
+-    readonly oldVersion: number;
+-}
+-
+-declare var IDBVersionChangeEvent: {
+-    prototype: IDBVersionChangeEvent;
+-    new(): IDBVersionChangeEvent;
+-};
+-
+-interface ImageBitmap {
+-    readonly height: number;
+-    readonly width: number;
+-    close(): void;
+-}
+-
+-interface ImageBitmapOptions {
+-    colorSpaceConversion?: "none" | "default";
+-    imageOrientation?: "none" | "flipY";
+-    premultiplyAlpha?: "none" | "premultiply" | "default";
+-    resizeHeight?: number;
+-    resizeQuality?: "pixelated" | "low" | "medium" | "high";
+-    resizeWidth?: number;
+-}
+-
+-interface ImageData {
+-    readonly data: Uint8ClampedArray;
+-    readonly height: number;
+-    readonly width: number;
+-}
+-
+-declare var ImageData: {
+-    prototype: ImageData;
+-    new(width: number, height: number): ImageData;
+-    new(array: Uint8ClampedArray, width: number, height: number): ImageData;
+-};
+-
+-interface MessageChannel {
+-    readonly port1: MessagePort;
+-    readonly port2: MessagePort;
+-}
+-
+-declare var MessageChannel: {
+-    prototype: MessageChannel;
+-    new(): MessageChannel;
+-};
+-
+-interface MessageEvent extends Event {
+-    readonly data: any;
+-    readonly origin: string;
+-    readonly ports: ReadonlyArray<MessagePort>;
+-    readonly source: object | null;
+-    initMessageEvent(type: string, bubbles: boolean, cancelable: boolean, data: any, origin: string, lastEventId: string, source: object): void;
+-}
+-
+-declare var MessageEvent: {
+-    prototype: MessageEvent;
+-    new(type: string, eventInitDict?: MessageEventInit): MessageEvent;
+-};
+-
+-interface MessagePortEventMap {
+-    "message": MessageEvent;
+-}
+-
+-interface MessagePort extends EventTarget {
+-    onmessage: ((this: MessagePort, ev: MessageEvent) => any) | null;
+-    close(): void;
+-    postMessage(message?: any, transfer?: any[]): void;
+-    start(): void;
+-    addEventListener<K extends keyof MessagePortEventMap>(type: K, listener: (this: MessagePort, ev: MessagePortEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof MessagePortEventMap>(type: K, listener: (this: MessagePort, ev: MessagePortEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var MessagePort: {
+-    prototype: MessagePort;
+-    new(): MessagePort;
+-};
+-
+-interface NavigatorBeacon {
+-    sendBeacon(url: string, data?: Blob | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | FormData | string | null): boolean;
+-}
+-
+-interface NavigatorConcurrentHardware {
+-    readonly hardwareConcurrency: number;
+-}
+-
+-interface NavigatorID {
+-    readonly appCodeName: string;
+-    readonly appName: string;
+-    readonly appVersion: string;
+-    readonly platform: string;
+-    readonly product: string;
+-    readonly productSub: string;
+-    readonly userAgent: string;
+-    readonly vendor: string;
+-    readonly vendorSub: string;
+-}
+-
+-interface NavigatorOnLine {
+-    readonly onLine: boolean;
+-}
+-
+-interface NotificationEventMap {
+-    "click": Event;
+-    "close": Event;
+-    "error": Event;
+-    "show": Event;
+-}
+-
+-interface Notification extends EventTarget {
+-    readonly body: string | null;
+-    readonly data: any;
+-    readonly dir: NotificationDirection;
+-    readonly icon: string | null;
+-    readonly lang: string | null;
+-    onclick: ((this: Notification, ev: Event) => any) | null;
+-    onclose: ((this: Notification, ev: Event) => any) | null;
+-    onerror: ((this: Notification, ev: Event) => any) | null;
+-    onshow: ((this: Notification, ev: Event) => any) | null;
+-    readonly permission: NotificationPermission;
+-    readonly tag: string | null;
+-    readonly title: string;
+-    close(): void;
+-    addEventListener<K extends keyof NotificationEventMap>(type: K, listener: (this: Notification, ev: NotificationEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof NotificationEventMap>(type: K, listener: (this: Notification, ev: NotificationEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var Notification: {
+-    prototype: Notification;
+-    new(title: string, options?: NotificationOptions): Notification;
+-    requestPermission(callback?: NotificationPermissionCallback): Promise<NotificationPermission>;
+-};
+-
+-interface NotificationEvent extends ExtendableEvent {
+-    readonly action: string;
+-    readonly notification: Notification;
+-}
+-
+-declare var NotificationEvent: {
+-    prototype: NotificationEvent;
+-    new(type: string, eventInitDict: NotificationEventInit): NotificationEvent;
+-};
+-
+-interface Performance {
+-    /** @deprecated */
+-    readonly navigation: PerformanceNavigation;
+-    readonly timeOrigin: number;
+-    /** @deprecated */
+-    readonly timing: PerformanceTiming;
+-    clearMarks(markName?: string): void;
+-    clearMeasures(measureName?: string): void;
+-    clearResourceTimings(): void;
+-    getEntries(): any;
+-    getEntriesByName(name: string, type?: string): any;
+-    getEntriesByType(type: string): any;
+-    /** @deprecated */
+-    getMarks(markName?: string): any;
+-    /** @deprecated */
+-    getMeasures(measureName?: string): any;
+-    mark(markName: string): void;
+-    measure(measureName: string, startMarkName?: string, endMarkName?: string): void;
+-    now(): number;
+-    setResourceTimingBufferSize(maxSize: number): void;
+-    toJSON(): any;
+-}
+-
+-declare var Performance: {
+-    prototype: Performance;
+-    new(): Performance;
+-};
+-
+-interface PerformanceNavigation {
+-    readonly redirectCount: number;
+-    readonly type: number;
+-    toJSON(): any;
+-    readonly TYPE_BACK_FORWARD: number;
+-    readonly TYPE_NAVIGATE: number;
+-    readonly TYPE_RELOAD: number;
+-    readonly TYPE_RESERVED: number;
+-}
+-
+-declare var PerformanceNavigation: {
+-    prototype: PerformanceNavigation;
+-    new(): PerformanceNavigation;
+-    readonly TYPE_BACK_FORWARD: number;
+-    readonly TYPE_NAVIGATE: number;
+-    readonly TYPE_RELOAD: number;
+-    readonly TYPE_RESERVED: number;
+-};
+-
+-interface PerformanceTiming {
+-    readonly connectEnd: number;
+-    readonly connectStart: number;
+-    readonly domComplete: number;
+-    readonly domContentLoadedEventEnd: number;
+-    readonly domContentLoadedEventStart: number;
+-    readonly domInteractive: number;
+-    readonly domLoading: number;
+-    readonly domainLookupEnd: number;
+-    readonly domainLookupStart: number;
+-    readonly fetchStart: number;
+-    readonly loadEventEnd: number;
+-    readonly loadEventStart: number;
+-    readonly msFirstPaint: number;
+-    readonly navigationStart: number;
+-    readonly redirectEnd: number;
+-    readonly redirectStart: number;
+-    readonly requestStart: number;
+-    readonly responseEnd: number;
+-    readonly responseStart: number;
+-    readonly secureConnectionStart: number;
+-    readonly unloadEventEnd: number;
+-    readonly unloadEventStart: number;
+-    toJSON(): any;
+-}
+-
+-declare var PerformanceTiming: {
+-    prototype: PerformanceTiming;
+-    new(): PerformanceTiming;
+-};
+-
+-interface Position {
+-    readonly coords: Coordinates;
+-    readonly timestamp: number;
+-}
+-
+-declare var Position: {
+-    prototype: Position;
+-    new(): Position;
+-};
+-
+-interface PositionError {
+-    readonly code: number;
+-    readonly message: string;
+-    toString(): string;
+-    readonly PERMISSION_DENIED: number;
+-    readonly POSITION_UNAVAILABLE: number;
+-    readonly TIMEOUT: number;
+-}
+-
+-declare var PositionError: {
+-    prototype: PositionError;
+-    new(): PositionError;
+-    readonly PERMISSION_DENIED: number;
+-    readonly POSITION_UNAVAILABLE: number;
+-    readonly TIMEOUT: number;
+-};
+-
+-interface ProgressEvent extends Event {
+-    readonly lengthComputable: boolean;
+-    readonly loaded: number;
+-    readonly total: number;
+-    initProgressEvent(typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, lengthComputableArg: boolean, loadedArg: number, totalArg: number): void;
+-}
+-
+-declare var ProgressEvent: {
+-    prototype: ProgressEvent;
+-    new(typeArg: string, eventInitDict?: ProgressEventInit): ProgressEvent;
+-};
+-
+-interface PushEvent extends ExtendableEvent {
+-    readonly data: PushMessageData | null;
+-}
+-
+-declare var PushEvent: {
+-    prototype: PushEvent;
+-    new(type: string, eventInitDict?: PushEventInit): PushEvent;
+-};
+-
+-interface PushManager {
+-    readonly supportedContentEncodings: ReadonlyArray<string>;
+-    getSubscription(): Promise<PushSubscription | null>;
+-    permissionState(options?: PushSubscriptionOptionsInit): Promise<PushPermissionState>;
+-    subscribe(options?: PushSubscriptionOptionsInit): Promise<PushSubscription>;
+-}
+-
+-declare var PushManager: {
+-    prototype: PushManager;
+-    new(): PushManager;
+-};
+-
+-interface PushMessageData {
+-    arrayBuffer(): ArrayBuffer;
+-    blob(): Blob;
+-    json(): any;
+-    text(): string;
+-}
+-
+-declare var PushMessageData: {
+-    prototype: PushMessageData;
+-    new(): PushMessageData;
+-};
+-
+-interface PushSubscription {
+-    readonly endpoint: string;
+-    readonly expirationTime: number | null;
+-    readonly options: PushSubscriptionOptions;
+-    getKey(name: PushEncryptionKeyName): ArrayBuffer | null;
+-    toJSON(): any;
+-    unsubscribe(): Promise<boolean>;
+-}
+-
+-declare var PushSubscription: {
+-    prototype: PushSubscription;
+-    new(): PushSubscription;
+-};
+-
+-interface PushSubscriptionChangeEvent extends ExtendableEvent {
+-    readonly newSubscription: PushSubscription | null;
+-    readonly oldSubscription: PushSubscription | null;
+-}
+-
+-declare var PushSubscriptionChangeEvent: {
+-    prototype: PushSubscriptionChangeEvent;
+-    new(type: string, eventInitDict?: PushSubscriptionChangeInit): PushSubscriptionChangeEvent;
+-};
+-
+-interface PushSubscriptionOptions {
+-    readonly applicationServerKey: ArrayBuffer | null;
+-    readonly userVisibleOnly: boolean;
+-}
+-
+-declare var PushSubscriptionOptions: {
+-    prototype: PushSubscriptionOptions;
+-    new(): PushSubscriptionOptions;
+-};
+-
+-interface ReadableStream {
+-    readonly locked: boolean;
+-    cancel(): Promise<void>;
+-    getReader(): ReadableStreamReader;
+-}
+-
+-declare var ReadableStream: {
+-    prototype: ReadableStream;
+-    new(): ReadableStream;
+-};
+-
+-interface ReadableStreamReader {
+-    cancel(): Promise<void>;
+-    read(): Promise<any>;
+-    releaseLock(): void;
+-}
+-
+-declare var ReadableStreamReader: {
+-    prototype: ReadableStreamReader;
+-    new(): ReadableStreamReader;
+-};
+-
+-interface Request extends Body {
+-    readonly cache: RequestCache;
+-    readonly credentials: RequestCredentials;
+-    readonly destination: RequestDestination;
+-    readonly headers: Headers;
+-    readonly integrity: string;
+-    readonly keepalive: boolean;
+-    readonly method: string;
+-    readonly mode: RequestMode;
+-    readonly redirect: RequestRedirect;
+-    readonly referrer: string;
+-    readonly referrerPolicy: ReferrerPolicy;
+-    readonly signal: object | null;
+-    readonly type: RequestType;
+-    readonly url: string;
+-    clone(): Request;
+-}
+-
+-declare var Request: {
+-    prototype: Request;
+-    new(input: Request | string, init?: RequestInit): Request;
+-};
+-
+-interface Response extends Body {
+-    readonly body: ReadableStream | null;
+-    readonly headers: Headers;
+-    readonly ok: boolean;
+-    readonly redirected: boolean;
+-    readonly status: number;
+-    readonly statusText: string;
+-    readonly type: ResponseType;
+-    readonly url: string;
+-    clone(): Response;
+-}
+-
+-declare var Response: {
+-    prototype: Response;
+-    new(body?: Blob | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | FormData | string | null, init?: ResponseInit): Response;
+-    error(): Response;
+-    redirect(url: string, status?: number): Response;
+-};
+-
+-interface ServiceWorkerEventMap extends AbstractWorkerEventMap {
+-    "statechange": Event;
+-}
+-
+-interface ServiceWorker extends EventTarget, AbstractWorker {
+-    onstatechange: ((this: ServiceWorker, ev: Event) => any) | null;
+-    readonly scriptURL: string;
+-    readonly state: ServiceWorkerState;
+-    postMessage(message: any, transfer?: any[]): void;
+-    addEventListener<K extends keyof ServiceWorkerEventMap>(type: K, listener: (this: ServiceWorker, ev: ServiceWorkerEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof ServiceWorkerEventMap>(type: K, listener: (this: ServiceWorker, ev: ServiceWorkerEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var ServiceWorker: {
+-    prototype: ServiceWorker;
+-    new(): ServiceWorker;
+-};
+-
+-interface ServiceWorkerGlobalScopeEventMap extends WorkerGlobalScopeEventMap {
+-    "activate": ExtendableEvent;
+-    "fetch": FetchEvent;
+-    "install": ExtendableEvent;
+-    "message": ExtendableMessageEvent;
+-    "messageerror": MessageEvent;
+-    "notificationclick": NotificationEvent;
+-    "notificationclose": NotificationEvent;
+-    "push": PushEvent;
+-    "pushsubscriptionchange": PushSubscriptionChangeEvent;
+-    "sync": SyncEvent;
+-}
+-
+-interface ServiceWorkerGlobalScope extends WorkerGlobalScope {
+-    readonly clients: Clients;
+-    onactivate: ((this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => any) | null;
+-    onfetch: ((this: ServiceWorkerGlobalScope, ev: FetchEvent) => any) | null;
+-    oninstall: ((this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => any) | null;
+-    onmessage: ((this: ServiceWorkerGlobalScope, ev: ExtendableMessageEvent) => any) | null;
+-    onmessageerror: ((this: ServiceWorkerGlobalScope, ev: MessageEvent) => any) | null;
+-    onnotificationclick: ((this: ServiceWorkerGlobalScope, ev: NotificationEvent) => any) | null;
+-    onnotificationclose: ((this: ServiceWorkerGlobalScope, ev: NotificationEvent) => any) | null;
+-    onpush: ((this: ServiceWorkerGlobalScope, ev: PushEvent) => any) | null;
+-    onpushsubscriptionchange: ((this: ServiceWorkerGlobalScope, ev: PushSubscriptionChangeEvent) => any) | null;
+-    onsync: ((this: ServiceWorkerGlobalScope, ev: SyncEvent) => any) | null;
+-    readonly registration: ServiceWorkerRegistration;
+-    skipWaiting(): Promise<void>;
+-    addEventListener<K extends keyof ServiceWorkerGlobalScopeEventMap>(type: K, listener: (this: ServiceWorkerGlobalScope, ev: ServiceWorkerGlobalScopeEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof ServiceWorkerGlobalScopeEventMap>(type: K, listener: (this: ServiceWorkerGlobalScope, ev: ServiceWorkerGlobalScopeEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var ServiceWorkerGlobalScope: {
+-    prototype: ServiceWorkerGlobalScope;
+-    new(): ServiceWorkerGlobalScope;
+-};
+-
+-interface ServiceWorkerRegistrationEventMap {
+-    "updatefound": Event;
+-}
+-
+-interface ServiceWorkerRegistration extends EventTarget {
+-    readonly active: ServiceWorker | null;
+-    readonly installing: ServiceWorker | null;
+-    onupdatefound: ((this: ServiceWorkerRegistration, ev: Event) => any) | null;
+-    readonly pushManager: PushManager;
+-    readonly scope: string;
+-    readonly sync: SyncManager;
+-    readonly waiting: ServiceWorker | null;
+-    getNotifications(filter?: GetNotificationOptions): Promise<Notification[]>;
+-    showNotification(title: string, options?: NotificationOptions): Promise<void>;
+-    unregister(): Promise<boolean>;
+-    update(): Promise<void>;
+-    addEventListener<K extends keyof ServiceWorkerRegistrationEventMap>(type: K, listener: (this: ServiceWorkerRegistration, ev: ServiceWorkerRegistrationEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof ServiceWorkerRegistrationEventMap>(type: K, listener: (this: ServiceWorkerRegistration, ev: ServiceWorkerRegistrationEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var ServiceWorkerRegistration: {
+-    prototype: ServiceWorkerRegistration;
+-    new(): ServiceWorkerRegistration;
+-};
+-
+-interface SyncEvent extends ExtendableEvent {
+-    readonly lastChance: boolean;
+-    readonly tag: string;
+-}
+-
+-declare var SyncEvent: {
+-    prototype: SyncEvent;
+-    new(type: string, init: SyncEventInit): SyncEvent;
+-};
+-
+-interface SyncManager {
+-    getTags(): Promise<string[]>;
+-    register(tag: string): Promise<void>;
+-}
+-
+-declare var SyncManager: {
+-    prototype: SyncManager;
+-    new(): SyncManager;
+-};
+-
+-interface URL {
+-    hash: string;
+-    host: string;
+-    hostname: string;
+-    href: string;
+-    readonly origin: string;
+-    password: string;
+-    pathname: string;
+-    port: string;
+-    protocol: string;
+-    search: string;
+-    readonly searchParams: URLSearchParams;
+-    username: string;
+-    toString(): string;
+-}
+-
+-declare var URL: {
+-    prototype: URL;
+-    new(url: string, base?: string | URL): URL;
+-    createObjectURL(object: any, options?: ObjectURLOptions): string;
+-    revokeObjectURL(url: string): void;
+-};
+-
+-interface URLSearchParams {
+-    /**
+-     * Appends a specified key/value pair as a new search parameter.
+-     */
+-    append(name: string, value: string): void;
+-    /**
+-     * Deletes the given search parameter, and its associated value, from the list of all search parameters.
+-     */
+-    delete(name: string): void;
+-    /**
+-     * Returns the first value associated to the given search parameter.
+-     */
+-    get(name: string): string | null;
+-    /**
+-     * Returns all the values association with a given search parameter.
+-     */
+-    getAll(name: string): string[];
+-    /**
+-     * Returns a Boolean indicating if such a search parameter exists.
+-     */
+-    has(name: string): boolean;
+-    /**
+-     * Sets the value associated to a given search parameter to the given value. If there were several values, delete the others.
+-     */
+-    set(name: string, value: string): void;
+-}
+-
+-declare var URLSearchParams: {
+-    prototype: URLSearchParams;
+-    new (init?: string | URLSearchParams): URLSearchParams;
+-};
+-
+-interface WebSocketEventMap {
+-    "close": CloseEvent;
+-    "error": Event;
+-    "message": MessageEvent;
+-    "open": Event;
+-}
+-
+-interface WebSocket extends EventTarget {
+-    binaryType: BinaryType;
+-    readonly bufferedAmount: number;
+-    readonly extensions: string;
+-    onclose: ((this: WebSocket, ev: CloseEvent) => any) | null;
+-    onerror: ((this: WebSocket, ev: Event) => any) | null;
+-    onmessage: ((this: WebSocket, ev: MessageEvent) => any) | null;
+-    onopen: ((this: WebSocket, ev: Event) => any) | null;
+-    readonly protocol: string;
+-    readonly readyState: number;
+-    readonly url: string;
+-    close(code?: number, reason?: string): void;
+-    send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void;
+-    readonly CLOSED: number;
+-    readonly CLOSING: number;
+-    readonly CONNECTING: number;
+-    readonly OPEN: number;
+-    addEventListener<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var WebSocket: {
+-    prototype: WebSocket;
+-    new(url: string, protocols?: string | string[]): WebSocket;
+-    readonly CLOSED: number;
+-    readonly CLOSING: number;
+-    readonly CONNECTING: number;
+-    readonly OPEN: number;
+-};
+-
+-interface WindowBase64 {
+-    atob(encodedString: string): string;
+-    btoa(rawString: string): string;
+-}
+-
+-interface WindowClient extends Client {
+-    readonly ancestorOrigins: ReadonlyArray<string>;
+-    readonly focused: boolean;
+-    readonly visibilityState: VisibilityState;
+-    focus(): Promise<WindowClient>;
+-    navigate(url: string): Promise<WindowClient>;
+-}
+-
+-declare var WindowClient: {
+-    prototype: WindowClient;
+-    new(): WindowClient;
+-};
+-
+-interface WindowConsole {
+-    readonly console: Console;
+-}
+-
+-interface WorkerEventMap extends AbstractWorkerEventMap {
+-    "message": MessageEvent;
+-}
+-
+-interface Worker extends EventTarget, AbstractWorker {
+-    onmessage: ((this: Worker, ev: MessageEvent) => any) | null;
+-    /** @deprecated */
+-    postMessage(message: any, transfer?: any[]): void;
+-    terminate(): void;
+-    addEventListener<K extends keyof WorkerEventMap>(type: K, listener: (this: Worker, ev: WorkerEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof WorkerEventMap>(type: K, listener: (this: Worker, ev: WorkerEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var Worker: {
+-    prototype: Worker;
+-    new(stringUrl: string): Worker;
+-};
+-
+-interface WorkerGlobalScopeEventMap {
+-    "error": ErrorEvent;
+-}
+-
+-interface WorkerGlobalScope extends EventTarget, WorkerUtils, WindowConsole, GlobalFetch {
+-    readonly caches: CacheStorage;
+-    readonly isSecureContext: boolean;
+-    readonly location: WorkerLocation;
+-    onerror: ((this: WorkerGlobalScope, ev: ErrorEvent) => any) | null;
+-    readonly performance: Performance;
+-    readonly self: WorkerGlobalScope;
+-    createImageBitmap(image: ImageBitmap | ImageData | Blob, options?: ImageBitmapOptions): Promise<ImageBitmap>;
+-    createImageBitmap(image: ImageBitmap | ImageData | Blob, sx: number, sy: number, sw: number, sh: number, options?: ImageBitmapOptions): Promise<ImageBitmap>;
+-    msWriteProfilerMark(profilerMarkName: string): void;
+-    addEventListener<K extends keyof WorkerGlobalScopeEventMap>(type: K, listener: (this: WorkerGlobalScope, ev: WorkerGlobalScopeEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof WorkerGlobalScopeEventMap>(type: K, listener: (this: WorkerGlobalScope, ev: WorkerGlobalScopeEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var WorkerGlobalScope: {
+-    prototype: WorkerGlobalScope;
+-    new(): WorkerGlobalScope;
+-};
+-
+-interface WorkerLocation {
+-    readonly hash: string;
+-    readonly host: string;
+-    readonly hostname: string;
+-    readonly href: string;
+-    readonly origin: string;
+-    readonly pathname: string;
+-    readonly port: string;
+-    readonly protocol: string;
+-    readonly search: string;
+-    toString(): string;
+-}
+-
+-declare var WorkerLocation: {
+-    prototype: WorkerLocation;
+-    new(): WorkerLocation;
+-};
+-
+-interface WorkerNavigator extends NavigatorID, NavigatorOnLine, NavigatorBeacon, NavigatorConcurrentHardware {
+-}
+-
+-declare var WorkerNavigator: {
+-    prototype: WorkerNavigator;
+-    new(): WorkerNavigator;
+-};
+-
+-interface WorkerUtils extends WindowBase64 {
+-    readonly indexedDB: IDBFactory;
+-    readonly msIndexedDB: IDBFactory;
+-    readonly navigator: WorkerNavigator;
+-    clearImmediate(handle: number): void;
+-    clearInterval(handle: number): void;
+-    clearTimeout(handle: number): void;
+-    importScripts(...urls: string[]): void;
+-    setImmediate(handler: any, ...args: any[]): number;
+-    setInterval(handler: any, timeout?: any, ...args: any[]): number;
+-    setTimeout(handler: any, timeout?: any, ...args: any[]): number;
+-}
+-
+-interface XMLHttpRequestEventMap extends XMLHttpRequestEventTargetEventMap {
+-    "readystatechange": Event;
+-}
+-
+-interface XMLHttpRequest extends EventTarget, XMLHttpRequestEventTarget {
+-    msCaching: string;
+-    onreadystatechange: ((this: XMLHttpRequest, ev: Event) => any) | null;
+-    readonly readyState: number;
+-    readonly response: any;
+-    readonly responseText: string;
+-    responseType: XMLHttpRequestResponseType;
+-    readonly responseURL: string;
+-    readonly responseXML: object | null;
+-    readonly status: number;
+-    readonly statusText: string;
+-    timeout: number;
+-    readonly upload: XMLHttpRequestUpload;
+-    withCredentials: boolean;
+-    abort(): void;
+-    getAllResponseHeaders(): string;
+-    getResponseHeader(header: string): string | null;
+-    msCachingEnabled(): boolean;
+-    open(method: string, url: string, async?: boolean, user?: string | null, password?: string | null): void;
+-    overrideMimeType(mime: string): void;
+-    send(data?: any): void;
+-    setRequestHeader(header: string, value: string): void;
+-    readonly DONE: number;
+-    readonly HEADERS_RECEIVED: number;
+-    readonly LOADING: number;
+-    readonly OPENED: number;
+-    readonly UNSENT: number;
+-    addEventListener<K extends keyof XMLHttpRequestEventMap>(type: K, listener: (this: XMLHttpRequest, ev: XMLHttpRequestEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof XMLHttpRequestEventMap>(type: K, listener: (this: XMLHttpRequest, ev: XMLHttpRequestEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var XMLHttpRequest: {
+-    prototype: XMLHttpRequest;
+-    new(): XMLHttpRequest;
+-    readonly DONE: number;
+-    readonly HEADERS_RECEIVED: number;
+-    readonly LOADING: number;
+-    readonly OPENED: number;
+-    readonly UNSENT: number;
+-};
+-
+-interface XMLHttpRequestEventTargetEventMap {
+-    "abort": Event;
+-    "error": ErrorEvent;
+-    "load": Event;
+-    "loadend": ProgressEvent;
+-    "loadstart": Event;
+-    "progress": ProgressEvent;
+-    "timeout": ProgressEvent;
+-}
+-
+-interface XMLHttpRequestEventTarget {
+-    onabort: ((this: XMLHttpRequest, ev: Event) => any) | null;
+-    onerror: ((this: XMLHttpRequest, ev: ErrorEvent) => any) | null;
+-    onload: ((this: XMLHttpRequest, ev: Event) => any) | null;
+-    onloadend: ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null;
+-    onloadstart: ((this: XMLHttpRequest, ev: Event) => any) | null;
+-    onprogress: ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null;
+-    ontimeout: ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null;
+-    addEventListener<K extends keyof XMLHttpRequestEventTargetEventMap>(type: K, listener: (this: XMLHttpRequestEventTarget, ev: XMLHttpRequestEventTargetEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof XMLHttpRequestEventTargetEventMap>(type: K, listener: (this: XMLHttpRequestEventTarget, ev: XMLHttpRequestEventTargetEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-interface XMLHttpRequestUpload extends EventTarget, XMLHttpRequestEventTarget {
+-    addEventListener<K extends keyof XMLHttpRequestEventTargetEventMap>(type: K, listener: (this: XMLHttpRequestUpload, ev: XMLHttpRequestEventTargetEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-    removeEventListener<K extends keyof XMLHttpRequestEventTargetEventMap>(type: K, listener: (this: XMLHttpRequestUpload, ev: XMLHttpRequestEventTargetEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-}
+-
+-declare var XMLHttpRequestUpload: {
+-    prototype: XMLHttpRequestUpload;
+-    new(): XMLHttpRequestUpload;
+-};
+-
+-declare type EventListenerOrEventListenerObject = EventListener | EventListenerObject;
+-
+-interface DecodeErrorCallback {
+-    (error: DOMException): void;
+-}
+-
+-interface DecodeSuccessCallback {
+-    (decodedData: AudioBuffer): void;
+-}
+-
+-interface ErrorEventHandler {
+-    (event: Event | string, source?: string, fileno?: number, columnNumber?: number, error?: Error): void;
+-}
+-
+-interface ForEachCallback {
+-    (keyId: Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | null, status: MediaKeyStatus): void;
+-}
+-
+-interface FunctionStringCallback {
+-    (data: string): void;
+-}
+-
+-interface NotificationPermissionCallback {
+-    (permission: NotificationPermission): void;
+-}
+-
+-interface PositionCallback {
+-    (position: Position): void;
+-}
+-
+-interface PositionErrorCallback {
+-    (error: PositionError): void;
+-}
+-
+-declare var onmessage: ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any) | null;
+-declare function close(): void;
+-declare function postMessage(message: any, transfer?: any[]): void;
+-declare function dispatchEvent(evt: Event): boolean;
+-declare var caches: CacheStorage;
+-declare var isSecureContext: boolean;
+-declare var location: WorkerLocation;
+-declare var onerror: ((this: DedicatedWorkerGlobalScope, ev: ErrorEvent) => any) | null;
+-declare var performance: Performance;
+-declare var self: WorkerGlobalScope;
+-declare function createImageBitmap(image: ImageBitmap | ImageData | Blob, options?: ImageBitmapOptions): Promise<ImageBitmap>;
+-declare function createImageBitmap(image: ImageBitmap | ImageData | Blob, sx: number, sy: number, sw: number, sh: number, options?: ImageBitmapOptions): Promise<ImageBitmap>;
+-declare function msWriteProfilerMark(profilerMarkName: string): void;
+-declare function dispatchEvent(evt: Event): boolean;
+-declare var indexedDB: IDBFactory;
+-declare var msIndexedDB: IDBFactory;
+-declare var navigator: WorkerNavigator;
+-declare function clearImmediate(handle: number): void;
+-declare function clearInterval(handle: number): void;
+-declare function clearTimeout(handle: number): void;
+-declare function importScripts(...urls: string[]): void;
+-declare function setImmediate(handler: any, ...args: any[]): number;
+-declare function setInterval(handler: any, timeout?: any, ...args: any[]): number;
+-declare function setTimeout(handler: any, timeout?: any, ...args: any[]): number;
+-declare function atob(encodedString: string): string;
+-declare function btoa(rawString: string): string;
+-declare var console: Console;
+-declare function fetch(input?: Request | string, init?: RequestInit): Promise<Response>;
+-declare function addEventListener<K extends keyof DedicatedWorkerGlobalScopeEventMap>(type: K, listener: (this: DedicatedWorkerGlobalScope, ev: DedicatedWorkerGlobalScopeEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+-declare function addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+-declare function removeEventListener<K extends keyof DedicatedWorkerGlobalScopeEventMap>(type: K, listener: (this: DedicatedWorkerGlobalScope, ev: DedicatedWorkerGlobalScopeEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+-declare function removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+-type FormDataEntryValue = string | File;
+-type HeadersInit = Headers | string[][] | { [key: string]: string };
+-type AlgorithmIdentifier = string | Algorithm;
+-type AAGUID = string;
+-type BodyInit = any;
+-type ByteString = string;
+-type CryptoOperationData = ArrayBufferView;
+-type GLbitfield = number;
+-type GLboolean = boolean;
+-type GLbyte = number;
+-type GLclampf = number;
+-type GLenum = number;
+-type GLfloat = number;
+-type GLint = number;
+-type GLintptr = number;
+-type GLshort = number;
+-type GLsizei = number;
+-type GLsizeiptr = number;
+-type GLubyte = number;
+-type GLuint = number;
+-type GLushort = number;
+-type IDBKeyPath = string;
+-type RequestInfo = Request | string;
+-type USVString = string;
+-type payloadtype = number;
+-type ClientTypes = "window" | "worker" | "sharedworker" | "all";
+-type BinaryType = "blob" | "arraybuffer";
+-type IDBCursorDirection = "next" | "nextunique" | "prev" | "prevunique";
+-type IDBRequestReadyState = "pending" | "done";
+-type IDBTransactionMode = "readonly" | "readwrite" | "versionchange";
+-type KeyFormat = "raw" | "spki" | "pkcs8" | "jwk";
+-type KeyType = "public" | "private" | "secret";
+-type KeyUsage = "encrypt" | "decrypt" | "sign" | "verify" | "deriveKey" | "deriveBits" | "wrapKey" | "unwrapKey";
+-type MediaKeyStatus = "usable" | "expired" | "output-downscaled" | "output-not-allowed" | "status-pending" | "internal-error";
+-type NotificationDirection = "auto" | "ltr" | "rtl";
+-type NotificationPermission = "default" | "denied" | "granted";
+-type PushEncryptionKeyName = "p256dh" | "auth";
+-type PushPermissionState = "granted" | "denied" | "prompt";
+-type ReferrerPolicy = "" | "no-referrer" | "no-referrer-when-downgrade" | "origin-only" | "origin-when-cross-origin" | "unsafe-url";
+-type RequestCache = "default" | "no-store" | "reload" | "no-cache" | "force-cache";
+-type RequestCredentials = "omit" | "same-origin" | "include";
+-type RequestDestination = "" | "document" | "sharedworker" | "subresource" | "unknown" | "worker";
+-type RequestMode = "navigate" | "same-origin" | "no-cors" | "cors";
+-type RequestRedirect = "follow" | "error" | "manual";
+-type RequestType = "" | "audio" | "font" | "image" | "script" | "style" | "track" | "video";
+-type ResponseType = "basic" | "cors" | "default" | "error" | "opaque" | "opaqueredirect";
+-type ServiceWorkerState = "installing" | "installed" | "activating" | "activated" | "redundant";
+-type VisibilityState = "hidden" | "visible" | "prerender" | "unloaded";
+-type XMLHttpRequestResponseType = "" | "arraybuffer" | "blob" | "document" | "json" | "text";
+\ No newline at end of file
+diff --git a/dec/webworker.importscripts.d.ts b/dec/webworker.importscripts.d.ts
+deleted file mode 100644
+index c3cedebd93..0000000000
+--- a/dec/webworker.importscripts.d.ts
++++ /dev/null
+@@ -1,6 +0,0 @@
+-
+-/////////////////////////////
+-/// WorkerGlobalScope APIs
+-/////////////////////////////
+-// These are only available in a Web Worker
+-declare function importScripts(...urls: string[]): void;
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaBuiltin.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaBuiltin.java
+index 455910a15b..c763ed3ef0 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaBuiltin.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaBuiltin.java
+@@ -2,5 +2,7 @@ package org.ooml.oomlc.core.env.gen.Compiling.Java;
+ 
+ public class JavaBuiltin {
+   public static final JavaClass[] CLASSES = new JavaClass[]{
++    new JavaClass(JavaClass.ClassType.ANNOTATION, "Nullable"),
++    new JavaClass(JavaClass.ClassType.ANNOTATION, "NotNull"),
+   };
+ }
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClass.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClass.java
+index e491e5a6f6..04fd840094 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClass.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClass.java
+@@ -7,6 +7,8 @@ import java.util.Collections;
+ import java.util.List;
+ 
+ class JavaClass {
++  List<String> imports = new ArrayList<>();
++
+   ClassType classType;
+   boolean isFinal;
+   String name;
+@@ -151,7 +153,7 @@ class JavaClass {
+   }
+ 
+   public enum ClassType {
+-    REGULAR("class"), ABSTRACT("abstract class"), INTERFACE("interface"), ENUM("enum");
++    REGULAR("class"), ABSTRACT("abstract class"), INTERFACE("interface"), ENUM("enum"), ANNOTATION("@interface");
+ 
+     private final String syntax;
+ 
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethod.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethod.java
+index b3911ab64a..98b71185c6 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethod.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethod.java
+@@ -6,8 +6,6 @@ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.List;
+ 
+-import static org.ooml.oomlc.core.env.gen.Compiling.Java.JavaCompiler.TYPE_VOID;
+-
+ class JavaClassMethod {
+   boolean isStatic;
+   List<JavaGenericParameter> genericParameters = new ArrayList<>();
+@@ -15,7 +13,7 @@ class JavaClassMethod {
+   String name;
+   List<JavaClassMethodParameter> parameters = new ArrayList<>();
+ 
+-  JavaClassMethod(JavaType returnType, String name) {
++  JavaClassMethod (JavaType returnType, String name) {
+     this(false, null, returnType, name);
+   }
+ 
+@@ -44,7 +42,7 @@ class JavaClassMethod {
+     return toString(false);
+   }
+ 
+-  public String toString(boolean inInterface) {
++  public String toString (boolean inInterface) {
+     return toString(inInterface, true);
+   }
+ 
+@@ -65,7 +63,7 @@ class JavaClassMethod {
+     }
+ 
+     syntax
+-      .append(returnType)
++      .append(returnType.toString(true))
+       .append(' ')
+       .append(UtilJava.safeIdentifier(name));
+ 
+@@ -79,7 +77,7 @@ class JavaClassMethod {
+       syntax.append(';');
+ 
+     } else {
+-      if (returnType == TYPE_VOID) {
++      if (returnType.reference.equals("void")) {
+         syntax.append(" {}");
+       } else {
+         syntax.append(" { return null; }");
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethodParameter.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethodParameter.java
+index 8e30e281f6..6430499da6 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethodParameter.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassMethodParameter.java
+@@ -1,8 +1,5 @@
+ package org.ooml.oomlc.core.env.gen.Compiling.Java;
+ 
+-import java.util.HashMap;
+-import java.util.Map;
+-
+ class JavaClassMethodParameter {
+   boolean isVariableLength;
+   String name;
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassVariable.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassVariable.java
+index a3baeacf9d..67fea80070 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassVariable.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaClassVariable.java
+@@ -5,27 +5,15 @@ import java.util.Map;
+ 
+ class JavaClassVariable {
+   private static final Map<String, String> DEFAULT_VALUES = _createDefaultValuesMap();
+-
+-  private static Map<String, String> _createDefaultValuesMap () {
+-    Map<String, String> map = new HashMap<>();
+-
+-    map.put("Number", "0");
+-    map.put("String", "\"\"");
+-    map.put("Boolean", "false");
+-
+-    return map;
+-  }
+-
+   boolean isStatic;
+   boolean isFinal;
+   JavaType type;
+   String name;
+-
+-  JavaClassVariable(JavaType type, String name) {
++  JavaClassVariable (JavaType type, String name) {
+     this(false, false, type, name);
+   }
+ 
+-  JavaClassVariable(boolean isFinal, JavaType type, String name) {
++  JavaClassVariable (boolean isFinal, JavaType type, String name) {
+     this(false, isFinal, type, name);
+   }
+ 
+@@ -36,6 +24,16 @@ class JavaClassVariable {
+     this.name = name;
+   }
+ 
++  private static Map<String, String> _createDefaultValuesMap () {
++    Map<String, String> map = new HashMap<>();
++
++    map.put("Number", "0");
++    map.put("String", "\"\"");
++    map.put("Boolean", "false");
++
++    return map;
++  }
++
+   @Override
+   public String toString () {
+     return "public " +
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaCompiler.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaCompiler.java
+index aaab1399ee..8256b750ac 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaCompiler.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaCompiler.java
+@@ -42,8 +42,6 @@ import static org.ooml.oomlc.core.env.gen.Compiling.Java.JavaClass.ClassType.REG
+ 
+ public class JavaCompiler {
+   static final Map<STPrimitiveType.Primitive, String> PRIMITIVE_TYPES = _createPrimitiveTypesMap();
+-  static final JavaType TYPE_ANY = new JavaType("Object");
+-  static final JavaType TYPE_VOID = new JavaType("void");
+ 
+   private final STNamespace stNamespace;
+   private final JavaCompiler parent; // Can be null
+@@ -59,6 +57,16 @@ public class JavaCompiler {
+     this.interfacesQueue = new ArrayList<>(stNamespace.getInterfaces().keySet());
+   }
+ 
++  private static JavaType createAnyType () {
++    // Don't create constant as types are modified (e.g. isNullable)
++    // If you don't modify, then having constant is pointless
++    return new JavaType("Object");
++  }
++
++  private static JavaType createVoidType () {
++    return new JavaType("void");
++  }
++
+   private static Map<STPrimitiveType.Primitive, String> _createPrimitiveTypesMap () {
+     Map<STPrimitiveType.Primitive, String> map = new HashMap<>();
+ 
+@@ -71,25 +79,32 @@ public class JavaCompiler {
+     return map;
+   }
+ 
+-  public static String compileAll (List<STNamespace> stNamespaces) {
++  public static JavaPackage compileAll (Map<String, STNamespace> stNamespaces) {
++    JavaPackage javaPackage = new JavaPackage("org.ooml.oomlc.env");
++
+     JavaClass window = new JavaClass(REGULAR, "window");
+     window.isFinal = true;
+-
+-    window.nestedClasses.addAll(Arrays.asList(JavaBuiltin.CLASSES));
+-
+-    for (STNamespace stNamespace : stNamespaces) {
+-      new JavaCompiler(null, window, stNamespace)
+-        .compile();
++    window.imports.add("java.util.ArrayList");
++    window.imports.add("java.util.Date");
++    window.imports.add("java.util.Iterator");
++    window.imports.add("java.util.Map");
++    window.imports.add("java.util.Optional");
++    window.imports.add("org.ooml.oomlc.env.NotNull");
++    window.imports.add("org.ooml.oomlc.env.Nullable");
++    javaPackage.classes.add(window);
++
++    javaPackage.classes.addAll(Arrays.asList(JavaBuiltin.CLASSES));
++
++    for (Map.Entry<String, STNamespace> stNamespace : stNamespaces.entrySet()) {
++      try {
++        new JavaCompiler(null, window, stNamespace.getValue())
++          .compile();
++      } catch (Exception e) {
++        throw new RuntimeException(format("%s\n  while compiling %s", e.toString(), stNamespace.getKey()), e);
++      }
+     }
+-    String code = window.toString(false, false);
+ 
+-    return "package org.ooml.oomlc.env;" +
+-           "\n\n" +
+-           "import java.util.ArrayList;\n" +
+-           "import java.util.Date;\n" +
+-           "import java.util.Optional;\n" +
+-           '\n' +
+-           code;
++    return javaPackage;
+   }
+ 
+   private void compile () {
+@@ -133,8 +148,6 @@ public class JavaCompiler {
+       processInterface(name);
+     }
+ 
+-    // TODO
+-
+     // Compile namespaces
+     for (Map.Entry<String, STNamespace> stNestedNs : stNamespace.getNestedNamespaces().entrySet()) {
+       String name = stNestedNs.getKey();
+@@ -185,42 +198,67 @@ public class JavaCompiler {
+       processEventMap(stIntfStmt);
+ 
+     } else if (stIntfBody.getConstructors().isEmpty() &&
+-        stIntfBody.getIndexSignature() == null &&
+-        stIntfBody.getProperties().isEmpty() &&
+-        stIntfBody.getMethods().isEmpty() &&
+-        stIntfBody.getCallSignatures().size() == 1) {
++               stIntfBody.getIndexSignature() == null &&
++               stIntfBody.getProperties().isEmpty() &&
++               stIntfBody.getMethods().isEmpty() &&
++               stIntfBody.getCallSignatures().size() == 1) {
+       processFunctionalInterface(stIntfStmt);
+ 
+     } else {
+       JavaClass intface = compileInterfaceBody(stIntfBody, name);
+ 
+-      intface.genericParameters.addAll(Util.map(stIntfStmt.getGenericParameters(), this::compileGenericParameter));
++      JavaClass existingClass = UtilJava.find(namespace.nestedClasses, c -> c.name.equals(name));
+ 
+-      for (STType stParent : stIntfStmt.getParents()) {
+-        String parent = compileParentDeclaration(stParent);
++      if (existingClass == null) {
++        existingClass = intface;
++        namespace.nestedClasses.add(intface);
+ 
+-        STType parentClassReferenceType = stParent;
+-        if (stParent.getTypeType() == STType.TypeType.GENERIC) {
+-          parentClassReferenceType = ((STGenericType) parentClassReferenceType).getReferenceType();
+-        }
++      } else {
++        // Assumed that index and call signatures do not overlap
++        existingClass.constructors.addAll(intface.constructors);
++        existingClass.variables.addAll(intface.variables);
++        existingClass.methods.addAll(intface.methods);
++      }
++
++      if ((existingClass.genericParameters.isEmpty() && existingClass.extendsClasses.isEmpty() &&
++           existingClass.implementsClasses.isEmpty()) &&
++          (!stIntfStmt.getGenericParameters().isEmpty() || !stIntfStmt.getParents().isEmpty())) {
++        // All declarations of the same interface should have the same generic parameters and parents
++        // However, if a static-side class refers to a non-existent prototype class because the prototype class hasn't been loaded yet,
++        // a skeleton prototype class is created, which won't have generic parameters or parents
+ 
+-        String parentClassName = compileParentDeclaration(parentClassReferenceType);
+-        processInterface(parentClassName);
++        existingClass.genericParameters.addAll(Util.map(stIntfStmt.getGenericParameters(), this::compileGenericParameter));
+ 
+-        JavaClass parentClass = UtilJava.find(namespace.nestedClasses, c -> c.name.equals(parentClassName));
++        for (STType stParent : stIntfStmt.getParents()) {
++          JavaType parent = compileParentDeclaration(stParent);
+ 
+-        if (intface.classType != INTERFACE && parentClass != null && parentClass.classType == INTERFACE) {
+-          intface.implementsClasses.add(parent);
+-        } else {
+-          intface.extendsClasses.add(parent);
++          if (parent.reference.equals("Iterable")) {
++            JavaType iteratorReturnType = new JavaType("Iterator");
++            iteratorReturnType.genericArguments = parent.genericArguments;
++
++            existingClass.methods.add(new JavaClassMethod(iteratorReturnType, "iterator"));
++
++            existingClass.implementsClasses.add(parent.toString());
++
++          } else {
++            String parentClassName = parent.reference;
++            processInterface(parentClassName);
++
++            JavaClass parentClass = UtilJava.find(namespace.nestedClasses, c -> c.name.equals(parentClassName));
++
++            if (existingClass.classType != INTERFACE && parentClass != null && parentClass.classType == INTERFACE) {
++              existingClass.implementsClasses.add(parent.toString());
++            } else {
++              existingClass.extendsClasses.add(parent.toString());
++            }
++          }
+         }
+       }
+ 
+-      namespace.nestedClasses.add(intface);
+     }
+   }
+ 
+-  private void processFunctionalInterface(STInterfaceStatement stIntfStmt) {
++  private void processFunctionalInterface (STInterfaceStatement stIntfStmt) {
+     String name = stIntfStmt.getName();
+ 
+     if (!stIntfStmt.getParents().isEmpty()) {
+@@ -270,9 +308,9 @@ public class JavaCompiler {
+       JavaClass baseClass = UtilJava.find(namespace.nestedClasses, compiled -> compiled.name.equals(baseClassName));
+ 
+       if (baseClass == null) {
+-        throw new MalformedSyntaxException(
+-          format("Static-side interface with prototype does not point to compiled interface \"%s\"", baseClassName),
+-          position);
++        // Base class hasn't been declared yet (probably in another file)
++        baseClass = new JavaClass(baseClassName);
++        namespace.nestedClasses.add(baseClass);
+       }
+ 
+       // Static class will be merged, so remove it if it isn't inline
+@@ -314,14 +352,14 @@ public class JavaCompiler {
+     namespace.nestedClasses.add(eventTypeClass);
+   }
+ 
+-  private String compileParentDeclaration (STType stParent) {
++  private JavaType compileParentDeclaration (STType stParent) {
+     JavaType compiled;
+     if (stParent.getTypeType() == STType.TypeType.REFERENCE) {
+       compiled = compileReferenceType((STReferenceType) stParent);
+     } else {
+       compiled = compileGenericType((STGenericType) stParent);
+     }
+-    return compiled.toString();
++    return compiled;
+   }
+ 
+   private JavaClass compileInterfaceBody (STInterfaceBody stIntf, String forName) {
+@@ -346,7 +384,7 @@ public class JavaCompiler {
+         new JavaClassMethodParameter("index", paramType),
+       }));
+       if (!stIndexSig.isReadOnly()) {
+-        i.methods.add(new JavaClassMethod(false, null, TYPE_VOID, "__setIndex", new JavaClassMethodParameter[]{
++        i.methods.add(new JavaClassMethod(false, null, createVoidType(), "__setIndex", new JavaClassMethodParameter[]{
+           new JavaClassMethodParameter("index", paramType),
+           new JavaClassMethodParameter("value", returnType),
+         }));
+@@ -361,7 +399,9 @@ public class JavaCompiler {
+       i.constructors.add(new JavaClassConstructor(true, forName));
+     }
+     for (STInterfaceConstructor stConstructor : stIntf.getConstructors()) {
+-      for (List<JavaClassMethodParameter> overloadSignature : compileSignature(stConstructor.getCallable().getParameters(),
++      for (List<JavaClassMethodParameter> overloadSignature : compileSignature(stConstructor
++          .getCallable()
++          .getParameters(),
+         forName + "Constructor")) {
+         JavaClassConstructor constructor = new JavaClassConstructor(forName);
+         constructor.parameters = overloadSignature;
+@@ -398,7 +438,7 @@ public class JavaCompiler {
+         i.methods.add(getter);
+ 
+         if (!variable.isFinal) {
+-          JavaClassMethod setter = new JavaClassMethod(TYPE_VOID, "set" + UtilJava.capitalise(name));
++          JavaClassMethod setter = new JavaClassMethod(createVoidType(), "set" + UtilJava.capitalise(name));
+           setter.parameters.add(new JavaClassMethodParameter("value", type));
+           i.methods.add(setter);
+         }
+@@ -409,7 +449,7 @@ public class JavaCompiler {
+     for (STInterfaceMethod stMethod : stIntf.getMethods()) {
+       String name = stMethod.getName();
+ 
+-      for (JavaClassMethod method : compileCallable(name, stMethod.getCallable(), forName)){
++      for (JavaClassMethod method : compileCallable(name, stMethod.getCallable(), forName)) {
+         // Don't just set isStatic = isJavaStatic as method may have own annotation
+         if (isJavaStatic) {
+           method.isStatic = true;
+@@ -475,7 +515,7 @@ public class JavaCompiler {
+   private JavaType compileGenericParameterBoundOrArgument (STType stType) {
+     switch (stType.getTypeType()) {
+     case ANY:
+-      return TYPE_ANY;
++      return createAnyType();
+ 
+     case PRIMITIVE:
+       return compilePrimitiveType((STPrimitiveType) stType);
+@@ -606,7 +646,7 @@ public class JavaCompiler {
+       return compileGenericType((STGenericType) stType);
+ 
+     case ANY:
+-      return TYPE_ANY;
++      return createAnyType();
+ 
+     case UNION:
+       return compileUnionType((STUnionType) stType, forName);
+@@ -615,7 +655,7 @@ public class JavaCompiler {
+       return new JavaType(PRIMITIVE_TYPES.get(STPrimitiveType.Primitive.BOOLEAN));
+ 
+     case VOID:
+-      return TYPE_VOID;
++      return createVoidType();
+ 
+     default:
+       throw new MalformedSyntaxException(format("Unsupported type \"%s\"", typeType), position);
+@@ -683,6 +723,18 @@ public class JavaCompiler {
+       reference = "Class";
+       break;
+ 
++    case "__Tuple2":
++      reference = "Map.Entry";
++      break;
++
++    case "__Iterator":
++      reference = "Iterator";
++      break;
++
++    case "__Iterable":
++      reference = "Iterable";
++      break;
++
+     default:
+       if (compiledTypeAliases.containsKey(reference)) {
+         return compiledTypeAliases.get(reference);
+@@ -737,7 +789,7 @@ public class JavaCompiler {
+ 
+     // TODO Reasearch transformation method where common interface is created and implemented on subtype classes
+ 
+-    return TYPE_ANY;
++    return createAnyType();
+   }
+ 
+   private JavaType createEnumType (boolean nullable, String name, List<String> values) {
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaPackage.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaPackage.java
+new file mode 100644
+index 0000000000..0536227ff9
+--- /dev/null
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaPackage.java
+@@ -0,0 +1,33 @@
++package org.ooml.oomlc.core.env.gen.Compiling.Java;
++
++import org.ooml.oomlc.core.env.gen.Utils.Util;
++
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++
++import static java.lang.String.format;
++
++public class JavaPackage {
++  String name;
++  List<JavaClass> classes = new ArrayList<>();
++
++  JavaPackage (String name) {
++    this.name = name;
++  }
++
++  public Map<String, String> generateCode () {
++    Map<String, String> packageCode = new HashMap<>();
++
++    for (JavaClass c : classes) {
++      packageCode.put(c.name, "package " + name + ";" +
++                              "\n\n" +
++                              Util.join("\n", Util.map(c.imports, i -> format("import %s;", i))) +
++                              "\n\n" +
++                              c.toString(false, false));
++    }
++
++    return packageCode;
++  }
++}
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaType.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaType.java
+index 973b7e218a..ba280cbc42 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaType.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/JavaType.java
+@@ -33,10 +33,29 @@ class JavaType {
+ 
+   @Override
+   public String toString () {
+-    String type = reference;
++    return toString(false);
++  }
++
++  public String toString (boolean shouldUseOptional) {
++    String syntax = reference;
+     if (!genericArguments.isEmpty()) {
+-      type += '<' + Util.join(", ", genericArguments) + '>';
++      syntax += '<' + Util.join(", ", Util.map(genericArguments, gt -> gt.toString(true))) + '>';
+     }
+-    return type;
++
++    if (isNullable != null) {
++      if (isNullable) {
++        if (!shouldUseOptional) {
++          syntax = "@Nullable " + syntax;
++        } else {
++          syntax = "Optional<" + syntax + ">";
++        }
++      } else {
++        if (!shouldUseOptional) {
++          syntax = "@NotNull " + syntax;
++        }
++      }
++    }
++
++    return syntax;
+   }
+ }
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/STNormalisedUnionType.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/STNormalisedUnionType.java
+index 3550667c0c..8663941e4b 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/STNormalisedUnionType.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/STNormalisedUnionType.java
+@@ -19,7 +19,7 @@ public class STNormalisedUnionType {
+     this.literals = literals;
+   }
+ 
+-  public static STNormalisedUnionType from(STUnionType st_union_type) {
++  public static STNormalisedUnionType from (STUnionType st_union_type) {
+     boolean nullable = false;
+     List<STType> subtypes = new ArrayList<>();
+     List<String> literals = new ArrayList<>();
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/UtilJava.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/UtilJava.java
+index a044464023..ff379186c8 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/UtilJava.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Compiling/Java/UtilJava.java
+@@ -23,6 +23,7 @@ public class UtilJava {
+     set.add("continue");
+     set.add("default");
+     set.add("extends");
++    set.add("finally");
+     set.add("import");
+     set.add("public");
+     set.add("this");
+@@ -38,12 +39,12 @@ public class UtilJava {
+     return wrapType("Optional", nonOptionalType);
+   }
+ 
+-  public static <T> T find(List<T> from, Predicate<T> predicate) {
++  public static <T> T find (List<T> from, Predicate<T> predicate) {
+     Optional<T> value = from.stream().filter(predicate).findFirst();
+     return value.orElse(null);
+   }
+ 
+-  public static <T> T findAndRemove(List<T> from, Predicate<T> predicate) {
++  public static <T> T findAndRemove (List<T> from, Predicate<T> predicate) {
+     T found = find(from, predicate);
+     if (found != null) {
+       from.remove(found);
+@@ -52,7 +53,7 @@ public class UtilJava {
+     return null;
+   }
+ 
+-  public static <T> List<T> listFrom(T... elements) {
++  public static <T> List<T> listFrom (T... elements) {
+     return new ArrayList<>(Arrays.asList(elements));
+   }
+ 
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Main.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Main.java
+index cd61f92b12..94fe724544 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Main.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Main.java
+@@ -1,6 +1,7 @@
+ package org.ooml.oomlc.core.env.gen;
+ 
+ import org.ooml.oomlc.core.env.gen.Compiling.Java.JavaCompiler;
++import org.ooml.oomlc.core.env.gen.Compiling.Java.JavaPackage;
+ import org.ooml.oomlc.core.env.gen.Lexing.Code;
+ import org.ooml.oomlc.core.env.gen.Lexing.Lexer;
+ import org.ooml.oomlc.core.env.gen.Parsing.Parser;
+@@ -15,8 +16,9 @@ import java.nio.charset.Charset;
+ import java.nio.file.Files;
+ import java.nio.file.Path;
+ import java.nio.file.Paths;
+-import java.util.ArrayList;
+ import java.util.Collections;
++import java.util.HashMap;
++import java.util.Map;
+ 
+ public class Main {
+   private static STNamespace parseFile (String filePath) throws FileNotFoundException {
+@@ -36,14 +38,35 @@ public class Main {
+       throw new IllegalArgumentException("Malformed arguments");
+     }
+ 
+-    ArrayList<STNamespace> stNamespaces = new ArrayList<>();
++    Map<String, STNamespace> stNamespaces = new HashMap<>();
+     for (int i = 0; i < args.length - 1; i++) {
+-      stNamespaces.add(parseFile(args[i]));
++      String filePath = args[i];
++      STNamespace parsed;
++      try {
++        parsed = parseFile(filePath);
++      } catch (Exception e) {
++        throw new RuntimeException(String.format("%s\n  while parsing %s", e.toString(), filePath), e);
++      }
++      stNamespaces.put(filePath, parsed);
+     }
+ 
+     Path outputPath = Paths.get(args[args.length - 1]);
++    File output = outputPath.toFile();
+ 
+-    String java = JavaCompiler.compileAll(stNamespaces);
+-    Files.write(outputPath, Collections.singleton(java), Charset.forName("UTF-8"));
++    File javaOutputDir = new File(output, "java/org/ooml/oomlc/env");
++    javaOutputDir.mkdirs();
++
++    JavaPackage javaPackage = JavaCompiler.compileAll(stNamespaces);
++    for (Map.Entry<String, String> classCode : javaPackage.generateCode().entrySet()) {
++      String name = classCode.getKey();
++      String code = classCode.getValue();
++
++      Files.write(
++        Paths.get(
++          javaOutputDir.getAbsolutePath(),
++          name + ".java"),
++        Collections.singleton(code),
++        Charset.forName("UTF-8"));
++    }
+   }
+ }
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Interface/BodyUnit/STInterfaceIndexSignature.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Interface/BodyUnit/STInterfaceIndexSignature.java
+index 6645ac9974..3e3faa8c19 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Interface/BodyUnit/STInterfaceIndexSignature.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Interface/BodyUnit/STInterfaceIndexSignature.java
+@@ -2,8 +2,8 @@ package org.ooml.oomlc.core.env.gen.Syntax.Interface.BodyUnit;
+ 
+ import org.ooml.oomlc.core.env.gen.Parsing.TokenType;
+ import org.ooml.oomlc.core.env.gen.Parsing.Tokens;
+-import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Syntax.STIdentifier;
++import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Utils.Position;
+ 
+ public class STInterfaceIndexSignature extends STInterfaceBodyUnit {
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Namespace/STNamespace.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Namespace/STNamespace.java
+index 6f31168d4d..964ba9103e 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Namespace/STNamespace.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Namespace/STNamespace.java
+@@ -5,7 +5,6 @@ import org.ooml.oomlc.core.env.gen.Exception.MalformedSyntaxException;
+ import org.ooml.oomlc.core.env.gen.Exception.UnexpectedEndOfCodeException;
+ import org.ooml.oomlc.core.env.gen.Parsing.TokenType;
+ import org.ooml.oomlc.core.env.gen.Parsing.Tokens;
+-import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Syntax.STCallableOverloads;
+ import org.ooml.oomlc.core.env.gen.Syntax.Statement.STFunctionStatement;
+ import org.ooml.oomlc.core.env.gen.Syntax.Statement.STInterfaceStatement;
+@@ -13,6 +12,7 @@ import org.ooml.oomlc.core.env.gen.Syntax.Statement.STNamespaceStatement;
+ import org.ooml.oomlc.core.env.gen.Syntax.Statement.STStatement;
+ import org.ooml.oomlc.core.env.gen.Syntax.Statement.STTypeAliasStatement;
+ import org.ooml.oomlc.core.env.gen.Syntax.Statement.STVariableStatement;
++import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Utils.Position;
+ 
+ import java.util.HashMap;
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STInterfaceStatement.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STInterfaceStatement.java
+index ed95e7979c..e11166209f 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STInterfaceStatement.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STInterfaceStatement.java
+@@ -2,15 +2,12 @@ package org.ooml.oomlc.core.env.gen.Syntax.Statement;
+ 
+ import org.ooml.oomlc.core.env.gen.Parsing.Tokens;
+ import org.ooml.oomlc.core.env.gen.Syntax.Interface.STInterfaceBody;
+-import org.ooml.oomlc.core.env.gen.Syntax.STAnnotation;
+ import org.ooml.oomlc.core.env.gen.Syntax.STGenericParameter;
+ import org.ooml.oomlc.core.env.gen.Syntax.STIdentifier;
+-import org.ooml.oomlc.core.env.gen.Syntax.STSyntax;
+ import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Utils.Position;
+ 
+ import java.util.ArrayList;
+-import java.util.Collection;
+ import java.util.List;
+ 
+ import static org.ooml.oomlc.core.env.gen.Parsing.TokenType.T_COMMA;
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STTypeAliasStatement.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STTypeAliasStatement.java
+index 2acbfb6719..ccfc5a69ae 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STTypeAliasStatement.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STTypeAliasStatement.java
+@@ -2,8 +2,8 @@ package org.ooml.oomlc.core.env.gen.Syntax.Statement;
+ 
+ import org.ooml.oomlc.core.env.gen.Parsing.TokenType;
+ import org.ooml.oomlc.core.env.gen.Parsing.Tokens;
+-import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Syntax.STIdentifier;
++import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Utils.Position;
+ 
+ public class STTypeAliasStatement extends STTypingStatement {
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STVariableStatement.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STVariableStatement.java
+index 23dce29c1b..99bfe30fd3 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STVariableStatement.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Statement/STVariableStatement.java
+@@ -3,8 +3,8 @@ package org.ooml.oomlc.core.env.gen.Syntax.Statement;
+ import org.ooml.oomlc.core.env.gen.Parsing.Token;
+ import org.ooml.oomlc.core.env.gen.Parsing.TokenType;
+ import org.ooml.oomlc.core.env.gen.Parsing.Tokens;
+-import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Syntax.STIdentifier;
++import org.ooml.oomlc.core.env.gen.Syntax.Type.STType;
+ import org.ooml.oomlc.core.env.gen.Utils.Position;
+ 
+ public class STVariableStatement extends STDataStatement {
+diff --git a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Type/STType.java b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Type/STType.java
+index 732f33cf7d..1041e32c2e 100644
+--- a/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Type/STType.java
++++ b/gen/main/java/org/ooml/oomlc/core/env/gen/Syntax/Type/STType.java
+@@ -91,7 +91,8 @@ public abstract class STType extends STSyntax {
+       case T_LEFT_PARENTHESIS:
+         if (tokens.peekType(2) == TokenType.T_RIGHT_PARENTHESIS ||
+             tokens.peekType(2) == TokenType.T_ELLIPSIS ||
+-            tokens.peekType(3) == TokenType.T_COLON) {
++            tokens.peekType(3) == TokenType.T_COLON ||
++            tokens.peekType(3) == TokenType.T_QUESTION_AND_COLON) {
+           // Callable type
+           subtype = STCallableType.parseCallableType(tokens);
+         } else {
+diff --git a/compile.sh b/generate.sh
+similarity index 64%
+rename from compile.sh
+rename to generate.sh
+index c2cbc27def..90def1136a 100755
+--- a/compile.sh
++++ b/generate.sh
+@@ -4,9 +4,13 @@ set -e
+ 
+ pushd "$(dirname "$0")"
+ 
++rm -f oomlc-core-env-gen-*.jar
++
+ mvn clean compile assembly:single
+ cp target/oomlc-core-env-gen-*.jar .
+ 
++java -jar oomlc-core-env-gen-*.jar dec/* lib
++
+ popd
+ 
+ exit 0
+diff --git a/notes/TypeScript spec/Exporting interfaces.md b/notes/TypeScript spec/Exporting interfaces.md
+index 501f677053..49c50e5f63 100644
+--- a/notes/TypeScript spec/Exporting interfaces.md	
++++ b/notes/TypeScript spec/Exporting interfaces.md	
+@@ -44,3 +44,10 @@ declare var Audio: {
+   new(src?: string): HTMLAudioElement;
+ }
+ ```
++
++## Out-of-order declarations and extensions
++
++- Variable declarations are always parsed at the end.
++- Another file may extend a prototype-side interface.
++- Another file may extend a static-side interface, and then declare the variablbe again.
++- Another file may extend an interface that hasn't been declared yet (because it has yet to be loaded).
+diff --git a/pom.xml b/pom.xml
+index 5020dedaad..f0e6b7acdf 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -11,6 +11,8 @@
+   <properties>
+     <maven.compiler.source>1.8</maven.compiler.source>
+     <maven.compiler.target>1.8</maven.compiler.target>
++    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
++    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+     <src.dir>gen/main/java</src.dir>
+   </properties>
+ 
+@@ -20,12 +22,6 @@
+       <artifactId>gson</artifactId>
+       <version>2.8.2</version>
+     </dependency>
+-    <dependency>
+-      <groupId>org.junit.jupiter</groupId>
+-      <artifactId>junit-jupiter-api</artifactId>
+-      <version>RELEASE</version>
+-      <scope>test</scope>
+-    </dependency>
+   </dependencies>
+ 
+   <build>
+-- 
+2.19.1
+

@@ -1,0 +1,22 @@
+#header {
+  font-family: Share, sans-serif;
+  background: #2a2a2a;
+}
+
+#header-logo {
+  color: #ccc;
+}
+
+.header-project-link,
+.header-project-menu-container {
+  border-color: #74907c;
+}
+
+.header-project-menu-container:target,
+.header-project-menu-container:target + .header-project-link {
+  background: #f8f8f8;
+}
+
+.header-project-menu-close-link {
+  color: gray;
+}

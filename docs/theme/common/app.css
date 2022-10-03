@@ -1,0 +1,32 @@
+html {
+  /* Do not change button, input, etc. font size (defaults look good) */
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@media print {
+  html {
+    font-size: 14px;
+  }
+}
+
+body, button, select, input, textarea {
+  font-family: "IBM Plex Sans", sans-serif;
+  color: #333;
+}
+
+button {
+  color: #268BD2;
+}
+
+a {
+  color: #74907C;
+}
+
+<ZC-IMPORT[feedback/base.css]>
+<ZC-IMPORT[article/base.css]>
+<ZC-IMPORT[header/base.css]>
+
+@media print {
+  <ZC-IMPORT[article/print.css]>
+}

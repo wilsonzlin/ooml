@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "dependencies": {
+    "highlight.js": "^9.12.0",
+    "minimist": "^1.2.0",
+    "referenza": "^0.0.6"
+  }
+}

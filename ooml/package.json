@@ -1,0 +1,33 @@
+{
+  "name": "ooml",
+  "version": "13.0.1",
+  "description": "Polyglot web UI framework",
+  "browser": true,
+  "files": [
+    "dist/ooml.js"
+  ],
+  "main": "dist/ooml.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ooml/ooml.git"
+  },
+  "keywords": [
+    "ooml",
+    "frontend",
+    "front-end",
+    "web",
+    "UI",
+    "framework"
+  ],
+  "author": {
+    "email": "contact@wilsonl.in",
+    "name": "Wilson Lin",
+    "url": "https://wilsonl.in/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ooml/ooml/issues"
+  },
+  "homepage": "https://github.com/ooml/ooml#readme",
+  "dependencies": {}
+}
