@@ -1,33 +1,39 @@
 {
   "name": "ooml",
-  "version": "13.0.1",
-  "description": "Polyglot web UI framework",
-  "browser": true,
+  "version": "20.0.0-alpha.1",
+  "description": "Transparent object-orientated web UI framework",
+  "main": "dist/main.js",
   "files": [
-    "dist/ooml.js"
+    "dist/**/*"
   ],
-  "main": "dist/ooml.js",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ooml/ooml.git"
+    "url": "git+https://github.com/wilsonzlin/ooml.git"
   },
-  "keywords": [
-    "ooml",
-    "frontend",
-    "front-end",
-    "web",
-    "UI",
-    "framework"
-  ],
   "author": {
-    "email": "contact@wilsonl.in",
+    "email": "npm@wilsonl.in",
     "name": "Wilson Lin",
-    "url": "https://wilsonl.in/"
+    "url": "https://wilsonl.in"
   },
-  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ooml/ooml/issues"
+    "url": "https://github.com/wilsonzlin/ooml/issues"
   },
-  "homepage": "https://github.com/ooml/ooml#readme",
-  "dependencies": {}
+  "homepage": "https://github.com/wilsonzlin/ooml/tree/master/ooml",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "dev": "webpack --mode development --watch",
+    "build": "npm run clean && webpack --mode production",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "csstype": "^2.6.10"
+  },
+  "devDependencies": {
+    "terser-webpack-plugin": "^3.0.2",
+    "ts-loader": "^7.0.5",
+    "typescript": "^3.9.3",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
+  }
 }
