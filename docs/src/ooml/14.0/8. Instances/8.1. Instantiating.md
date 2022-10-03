@@ -1,4 +1,0 @@
-- JS Constructor
-- Assignment from object literal (conversion, not original reference)
-- Assignment from ooml instance
-- `ooml-instantiate`
