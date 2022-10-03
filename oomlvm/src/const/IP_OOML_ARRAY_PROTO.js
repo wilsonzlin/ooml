@@ -1,1 +1,0 @@
-let __IP_OOML_ARRAY_PROTO_NORMALISE_INDEX = "__OomlArrayProtoNormaliseOffset";
