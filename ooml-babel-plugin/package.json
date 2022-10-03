@@ -1,0 +1,20 @@
+{
+  "name": "ooml-babel-plugin",
+  "version": "0.0.4",
+  "description": "Babel plugin to transpile JSX into ooml templates",
+  "main": "index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wilsonzlin/ooml.git"
+  },
+  "author": {
+    "email": "npm@wilsonl.in",
+    "name": "Wilson Lin",
+    "url": "https://wilsonl.in"
+  },
+  "bugs": {
+    "url": "https://github.com/wilsonzlin/ooml/issues"
+  },
+  "homepage": "https://github.com/wilsonzlin/ooml/tree/master/ooml-babel-plugin"
+}
